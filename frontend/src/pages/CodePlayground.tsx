@@ -933,11 +933,10 @@ const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: st
     { id: 'fl-pipe-rlc', label: 'Pipe Flow (RLC Analogy)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
   som: [
-    { id: 'mech-beam-stress', label: 'Strength of Materials Studio', url: '', isNativeBlock: true, mechTool: 'beamStress' },
+    { id: 'mech-beam-stress', label: 'AcadMix Beam Calculator', url: '', isNativeBlock: true, mechTool: 'beamStress' },
     { id: 'mech-mohrs-circle', label: "Mohr's Circle Studio", url: '', isNativeBlock: true, mechTool: 'mohrsCircle' },
     { id: 'mech-material-testing', label: 'Material Testing Studio', url: '', isNativeBlock: true, mechTool: 'materialTesting' },
     { id: 'som-mohr', label: "Mohr's Circle", url: 'https://mechanicalc.com/calculators/mohrs-circle/', openLabel: 'Open Mechanicalc' },
-    { id: 'som-beam', label: 'Beam Calculator', url: 'https://structurecalcs.com/beam', openLabel: 'Open Calculator' },
     { id: 'som-truss', label: 'Truss Solver', url: 'https://structurecalcs.com/truss', openLabel: 'Open Solver' },
     { id: 'som-python', label: 'Python (SOM)', url: jupyterUrl(JUPYTER_CODES['som-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
