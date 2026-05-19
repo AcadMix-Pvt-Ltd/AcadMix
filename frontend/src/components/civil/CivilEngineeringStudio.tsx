@@ -55,7 +55,21 @@ export type CivilStudioTool =
   | 'equipment'
   | 'qcLab'
   | 'tender'
-  | 'siteLayout';
+  | 'siteLayout'
+  | 'bimRevit'
+  | 'bbs'
+  | 'rateAnalysis'
+  | 'isCodeChecker'
+  | 'safetyInspection'
+  | 'draftingPractice'
+  | 'staadFrame'
+  | 'projectControl'
+  | 'claimsDelay'
+  | 'qaDocs'
+  | 'setout'
+  | 'roadCrossSection'
+  | 'stormwater'
+  | 'drawingTakeoff';
 
 type CivilEngineeringStudioProps = {
   tool: CivilStudioTool;
@@ -280,6 +294,90 @@ const toolMeta: Record<CivilStudioTool, { title: string; subtitle: string; accen
     subtitle: 'Crane reach, storage zones, access paths and safety buffer planning',
     accent: 'indigo',
     icon: <Cube size={24} weight="duotone" />,
+  },
+  bimRevit: {
+    title: 'BIM / Revit Concept Studio',
+    subtitle: 'Model levels, grid planning, quantities and coordination issue checks',
+    accent: 'violet',
+    icon: <Cube size={24} weight="duotone" />,
+  },
+  bbs: {
+    title: 'Bar Bending Schedule Studio',
+    subtitle: 'Cut length, bends, laps, hooks, weight and wastage control',
+    accent: 'rose',
+    icon: <Wall size={24} weight="duotone" />,
+  },
+  rateAnalysis: {
+    title: 'Rate Analysis Studio',
+    subtitle: 'Material, labour, equipment, overhead and contractor margin breakdown',
+    accent: 'amber',
+    icon: <Calculator size={24} weight="duotone" />,
+  },
+  isCodeChecker: {
+    title: 'IS Code Design Checker',
+    subtitle: 'Quick compliance checks for RCC, steel, wind, seismic and serviceability',
+    accent: 'emerald',
+    icon: <CheckCircle size={24} weight="duotone" />,
+  },
+  safetyInspection: {
+    title: 'Construction Safety Inspection Studio',
+    subtitle: 'Scaffold, excavation, lifting, PPE and site-risk inspection scoring',
+    accent: 'rose',
+    icon: <WarningCircle size={24} weight="duotone" />,
+  },
+  draftingPractice: {
+    title: 'AutoCAD Drafting Practice Board',
+    subtitle: 'Scale, linework, offsets, dimensions and drawing accuracy checks',
+    accent: 'sky',
+    icon: <Blueprint size={24} weight="duotone" />,
+  },
+  staadFrame: {
+    title: 'STAAD-like Frame Modeler',
+    subtitle: 'Nodes, members, supports, loads and utilization for placement workflows',
+    accent: 'indigo',
+    icon: <Blueprint size={24} weight="duotone" />,
+  },
+  projectControl: {
+    title: 'Project Planning Cost-Control Studio',
+    subtitle: 'Earned value, planned vs actual progress, SPI/CPI and delay impact',
+    accent: 'violet',
+    icon: <Clock size={24} weight="duotone" />,
+  },
+  claimsDelay: {
+    title: 'Contract Claims & Delay Analysis Studio',
+    subtitle: 'EOT, liquidated damages, delay ownership and claim value checks',
+    accent: 'amber',
+    icon: <Calculator size={24} weight="duotone" />,
+  },
+  qaDocs: {
+    title: 'Construction QA Document Studio',
+    subtitle: 'ITP, pour card, cube register, inspection request and NCR readiness',
+    accent: 'emerald',
+    icon: <CheckCircle size={24} weight="duotone" />,
+  },
+  setout: {
+    title: 'Site Survey Layout Setout Studio',
+    subtitle: 'Coordinate setout, offsets, gridline marking and closure error checks',
+    accent: 'emerald',
+    icon: <Compass size={24} weight="duotone" />,
+  },
+  roadCrossSection: {
+    title: 'Road Estimation & Cross-Section Studio',
+    subtitle: 'Chainage-wise cut/fill, camber, shoulder and pavement layer quantities',
+    accent: 'indigo',
+    icon: <Path size={24} weight="duotone" />,
+  },
+  stormwater: {
+    title: 'Drainage & Stormwater Network Studio',
+    subtitle: 'Catchment runoff, pipe sizing, slope and manhole spacing checks',
+    accent: 'teal',
+    icon: <Drop size={24} weight="duotone" />,
+  },
+  drawingTakeoff: {
+    title: 'Quantity Takeoff From Drawing Studio',
+    subtitle: 'Drawing-scale walls, slab, openings and area/volume extraction',
+    accent: 'sky',
+    icon: <Blueprint size={24} weight="duotone" />,
   },
 };
 
@@ -2694,6 +2792,20 @@ function isAdvancedCivilTool(tool: CivilStudioTool): tool is AdvancedToolKind {
     'qcLab',
     'tender',
     'siteLayout',
+    'bimRevit',
+    'bbs',
+    'rateAnalysis',
+    'isCodeChecker',
+    'safetyInspection',
+    'draftingPractice',
+    'staadFrame',
+    'projectControl',
+    'claimsDelay',
+    'qaDocs',
+    'setout',
+    'roadCrossSection',
+    'stormwater',
+    'drawingTakeoff',
   ].includes(tool);
 }
 
@@ -2896,6 +3008,160 @@ const advancedToolInputs: Record<AdvancedToolKind, { icon: React.ReactNode; capt
     ],
     initial: { a: 42, b: 450, c: 90, d: 6 },
   },
+  bimRevit: {
+    icon: <Cube size={18} weight="duotone" />,
+    caption: 'Drag floor count and model area to update BIM quantities and clash risk.',
+    inputs: [
+      { key: 'a', label: 'Floor area', unit: 'm2', min: 80, max: 4000, step: 20 },
+      { key: 'b', label: 'Levels', min: 1, max: 30, step: 1 },
+      { key: 'c', label: 'Grid spacing', unit: 'm', min: 3, max: 10, step: 0.5 },
+      { key: 'd', label: 'MEP density', unit: '%', min: 5, max: 80, step: 5 },
+    ],
+    initial: { a: 900, b: 5, c: 6, d: 35 },
+  },
+  bbs: {
+    icon: <Wall size={18} weight="duotone" />,
+    caption: 'Drag bar diameter and cutting length to update schedule weight.',
+    inputs: [
+      { key: 'a', label: 'Bar dia', unit: 'mm', min: 8, max: 32, step: 2 },
+      { key: 'b', label: 'Cut length', unit: 'm', min: 1, max: 14, step: 0.25 },
+      { key: 'c', label: 'Quantity', unit: 'nos', min: 1, max: 500, step: 1 },
+      { key: 'd', label: 'Bend/lap add', unit: '%', min: 0, max: 35, step: 1 },
+    ],
+    initial: { a: 16, b: 5.6, c: 48, d: 12 },
+  },
+  rateAnalysis: {
+    icon: <Calculator size={18} weight="duotone" />,
+    caption: 'Drag material rate and productivity to see item-rate sensitivity.',
+    inputs: [
+      { key: 'a', label: 'Material cost', unit: '/unit', min: 500, max: 12000, step: 100 },
+      { key: 'b', label: 'Labour cost', unit: '/unit', min: 100, max: 5000, step: 50 },
+      { key: 'c', label: 'Productivity', unit: 'unit/day', min: 1, max: 80, step: 1 },
+      { key: 'd', label: 'OH + profit', unit: '%', min: 5, max: 35, step: 1 },
+    ],
+    initial: { a: 3200, b: 850, c: 12, d: 18 },
+  },
+  isCodeChecker: {
+    icon: <CheckCircle size={18} weight="duotone" />,
+    caption: 'Drag utilization and deflection ratio for a quick code-style pass/fail signal.',
+    inputs: [
+      { key: 'a', label: 'Demand/capacity', unit: '%', min: 20, max: 140, step: 5 },
+      { key: 'b', label: 'Deflection ratio', unit: 'L/', min: 120, max: 500, step: 10 },
+      { key: 'c', label: 'Min steel', unit: '%', min: 0.1, max: 2.5, step: 0.1 },
+      { key: 'd', label: 'Cover', unit: 'mm', min: 15, max: 75, step: 5 },
+    ],
+    initial: { a: 78, b: 280, c: 0.85, d: 40 },
+  },
+  safetyInspection: {
+    icon: <WarningCircle size={18} weight="duotone" />,
+    caption: 'Drag hazard severity and controls to compute site inspection risk.',
+    inputs: [
+      { key: 'a', label: 'Hazard severity', min: 1, max: 5, step: 1 },
+      { key: 'b', label: 'Likelihood', min: 1, max: 5, step: 1 },
+      { key: 'c', label: 'Controls done', unit: '%', min: 0, max: 100, step: 5 },
+      { key: 'd', label: 'Open NCRs', min: 0, max: 20, step: 1 },
+    ],
+    initial: { a: 4, b: 3, c: 70, d: 3 },
+  },
+  draftingPractice: {
+    icon: <Blueprint size={18} weight="duotone" />,
+    caption: 'Drag drawing scale and offset accuracy to score drafting readiness.',
+    inputs: [
+      { key: 'a', label: 'Drawing scale', unit: '1:x', min: 20, max: 200, step: 10 },
+      { key: 'b', label: 'Line accuracy', unit: 'mm', min: 0.5, max: 12, step: 0.5 },
+      { key: 'c', label: 'Dimensions', unit: 'nos', min: 4, max: 80, step: 1 },
+      { key: 'd', label: 'Layer errors', min: 0, max: 25, step: 1 },
+    ],
+    initial: { a: 100, b: 2, c: 28, d: 4 },
+  },
+  staadFrame: {
+    icon: <Blueprint size={18} weight="duotone" />,
+    caption: 'Drag span and load to model a placement-style frame quickly.',
+    inputs: [
+      { key: 'a', label: 'Span', unit: 'm', min: 3, max: 16, step: 0.5 },
+      { key: 'b', label: 'Height', unit: 'm', min: 2.5, max: 8, step: 0.25 },
+      { key: 'c', label: 'UDL', unit: 'kN/m', min: 2, max: 80, step: 1 },
+      { key: 'd', label: 'Section capacity', unit: 'kN-m', min: 50, max: 1200, step: 25 },
+    ],
+    initial: { a: 8, b: 3.5, c: 18, d: 420 },
+  },
+  projectControl: {
+    icon: <Clock size={18} weight="duotone" />,
+    caption: 'Drag planned and earned progress to evaluate schedule/cost health.',
+    inputs: [
+      { key: 'a', label: 'Planned value', unit: 'L', min: 10, max: 1000, step: 10 },
+      { key: 'b', label: 'Earned value', unit: 'L', min: 5, max: 1000, step: 10 },
+      { key: 'c', label: 'Actual cost', unit: 'L', min: 5, max: 1200, step: 10 },
+      { key: 'd', label: 'Delay', unit: 'days', min: 0, max: 180, step: 1 },
+    ],
+    initial: { a: 240, b: 210, c: 230, d: 18 },
+  },
+  claimsDelay: {
+    icon: <Calculator size={18} weight="duotone" />,
+    caption: 'Drag delay days and contract value to estimate EOT/LD exposure.',
+    inputs: [
+      { key: 'a', label: 'Delay days', unit: 'd', min: 0, max: 240, step: 1 },
+      { key: 'b', label: 'Excusable delay', unit: '%', min: 0, max: 100, step: 5 },
+      { key: 'c', label: 'Contract value', unit: 'L', min: 20, max: 3000, step: 20 },
+      { key: 'd', label: 'LD rate', unit: '%/week', min: 0.1, max: 2, step: 0.1 },
+    ],
+    initial: { a: 42, b: 55, c: 480, d: 0.5 },
+  },
+  qaDocs: {
+    icon: <CheckCircle size={18} weight="duotone" />,
+    caption: 'Drag inspection completion and NCR count to score QA readiness.',
+    inputs: [
+      { key: 'a', label: 'ITP coverage', unit: '%', min: 0, max: 100, step: 5 },
+      { key: 'b', label: 'Pour cards', unit: '%', min: 0, max: 100, step: 5 },
+      { key: 'c', label: 'Open NCRs', min: 0, max: 30, step: 1 },
+      { key: 'd', label: 'Cube tests', unit: '%', min: 0, max: 100, step: 5 },
+    ],
+    initial: { a: 85, b: 75, c: 4, d: 90 },
+  },
+  setout: {
+    icon: <Compass size={18} weight="duotone" />,
+    caption: 'Drag target coordinate and instrument error to check setout tolerance.',
+    inputs: [
+      { key: 'a', label: 'Easting offset', unit: 'm', min: -50, max: 50, step: 0.5 },
+      { key: 'b', label: 'Northing offset', unit: 'm', min: -50, max: 50, step: 0.5 },
+      { key: 'c', label: 'Instrument error', unit: 'mm', min: 1, max: 50, step: 1 },
+      { key: 'd', label: 'Tolerance', unit: 'mm', min: 5, max: 100, step: 5 },
+    ],
+    initial: { a: 18, b: 12, c: 8, d: 25 },
+  },
+  roadCrossSection: {
+    icon: <Path size={18} weight="duotone" />,
+    caption: 'Drag formation width and cutting depth for road cross-section quantity.',
+    inputs: [
+      { key: 'a', label: 'Formation width', unit: 'm', min: 3, max: 30, step: 0.5 },
+      { key: 'b', label: 'Cut/fill depth', unit: 'm', min: -4, max: 4, step: 0.1 },
+      { key: 'c', label: 'Chainage length', unit: 'm', min: 20, max: 2000, step: 20 },
+      { key: 'd', label: 'Side slope', unit: 'H:1V', min: 0.5, max: 3, step: 0.25 },
+    ],
+    initial: { a: 12, b: 1.2, c: 200, d: 1.5 },
+  },
+  stormwater: {
+    icon: <Drop size={18} weight="duotone" />,
+    caption: 'Drag catchment area and rainfall intensity to size stormwater pipe.',
+    inputs: [
+      { key: 'a', label: 'Catchment', unit: 'ha', min: 0.1, max: 80, step: 0.1 },
+      { key: 'b', label: 'Rainfall', unit: 'mm/h', min: 20, max: 220, step: 5 },
+      { key: 'c', label: 'Runoff coeff.', min: 0.2, max: 0.95, step: 0.05 },
+      { key: 'd', label: 'Pipe slope', unit: '%', min: 0.1, max: 5, step: 0.1 },
+    ],
+    initial: { a: 4.5, b: 95, c: 0.65, d: 0.8 },
+  },
+  drawingTakeoff: {
+    icon: <Blueprint size={18} weight="duotone" />,
+    caption: 'Drag drawing length and scale to extract wall, slab and opening quantities.',
+    inputs: [
+      { key: 'a', label: 'Plan length', unit: 'm', min: 5, max: 120, step: 1 },
+      { key: 'b', label: 'Plan width', unit: 'm', min: 5, max: 80, step: 1 },
+      { key: 'c', label: 'Wall thickness', unit: 'mm', min: 100, max: 350, step: 10 },
+      { key: 'd', label: 'Openings', unit: '%', min: 0, max: 45, step: 5 },
+    ],
+    initial: { a: 28, b: 18, c: 230, d: 15 },
+  },
 };
 
 function advancedMetrics(tool: AdvancedToolKind, v: AdvancedValues) {
@@ -2981,6 +3247,83 @@ function advancedMetrics(tool: AdvancedToolKind, v: AdvancedValues) {
       const reachOk = v.a > v.c * 0.35;
       return { m1: ['Crane coverage', coverage, '%'], m2: ['Reach', v.a, 'm'], m3: ['Storage', v.b, 'm2'], m4: ['Buffer', v.d, 'm'], ok: reachOk && coverage < 45 };
     }
+    case 'bimRevit': {
+      const grossArea = v.a * v.b;
+      const columns = Math.ceil(v.a / Math.max(v.c * v.c, 1)) * v.b;
+      const clashRisk = v.d * v.b / Math.max(v.c, 1);
+      return { m1: ['Gross model area', grossArea, 'm2'], m2: ['Grid columns', columns, 'nos'], m3: ['Clash risk', clashRisk, ''], m4: ['Levels', v.b, ''], ok: clashRisk < 45 };
+    }
+    case 'bbs': {
+      const length = v.b * (1 + v.d / 100) * v.c;
+      const unitWeight = (v.a * v.a) / 162;
+      return { m1: ['Total length', length, 'm'], m2: ['Steel weight', length * unitWeight, 'kg'], m3: ['Unit wt.', unitWeight, 'kg/m'], m4: ['Bars', v.c, 'nos'], ok: v.d <= 20 };
+    }
+    case 'rateAnalysis': {
+      const labourPerUnit = v.b / Math.max(v.c, 1);
+      const base = v.a + labourPerUnit;
+      const rate = base * (1 + v.d / 100);
+      return { m1: ['Item rate', rate, ''], m2: ['Base cost', base, ''], m3: ['Labour/unit', labourPerUnit, ''], m4: ['OH+profit', v.d, '%'], ok: v.d >= 10 && v.d <= 25 };
+    }
+    case 'isCodeChecker': {
+      const deflectionOk = v.b >= 250;
+      const steelOk = v.c >= 0.35 && v.c <= 2.2;
+      const coverOk = v.d >= 25;
+      return { m1: ['Utilization', v.a, '%'], m2: ['Deflection', `L/${fmtCompact(v.b, 0)}`, ''], m3: ['Steel ratio', v.c, '%'], m4: ['Cover', v.d, 'mm'], ok: v.a <= 100 && deflectionOk && steelOk && coverOk };
+    }
+    case 'safetyInspection': {
+      const rawRisk = v.a * v.b * 4;
+      const residual = rawRisk * (1 - v.c / 100) + v.d * 2;
+      return { m1: ['Risk score', residual, ''], m2: ['Controls', v.c, '%'], m3: ['Open NCRs', v.d, ''], m4: ['Severity x likelihood', v.a * v.b, ''], ok: residual < 18 && v.d <= 5 };
+    }
+    case 'draftingPractice': {
+      const accuracyScore = clamp(100 - v.b * 6 - v.d * 2, 0, 100);
+      const checkLoad = v.c + v.d * 3;
+      return { m1: ['Drafting score', accuracyScore, '%'], m2: ['Scale', `1:${fmtCompact(v.a, 0)}`, ''], m3: ['Check items', checkLoad, ''], m4: ['Layer errors', v.d, ''], ok: accuracyScore >= 75 && v.d <= 6 };
+    }
+    case 'staadFrame': {
+      const moment = v.c * v.a * v.a / 8;
+      const utilization = moment / Math.max(v.d, 1) * 100;
+      const lateralIndex = v.c * v.b / Math.max(v.d, 1);
+      return { m1: ['Max moment', moment, 'kN-m'], m2: ['Utilization', utilization, '%'], m3: ['Node count', 4, ''], m4: ['Drift index', lateralIndex, ''], ok: utilization <= 100 && lateralIndex < 1 };
+    }
+    case 'projectControl': {
+      const spi = v.b / Math.max(v.a, 1);
+      const cpi = v.b / Math.max(v.c, 1);
+      const forecast = v.c / Math.max(cpi, 0.1);
+      return { m1: ['SPI', spi, ''], m2: ['CPI', cpi, ''], m3: ['Forecast cost', forecast, 'L'], m4: ['Delay', v.d, 'days'], ok: spi >= 0.9 && cpi >= 0.95 };
+    }
+    case 'claimsDelay': {
+      const excusable = v.a * v.b / 100;
+      const chargeable = Math.max(0, v.a - excusable);
+      const ld = (chargeable / 7) * (v.d / 100) * v.c;
+      return { m1: ['EOT days', excusable, 'd'], m2: ['LD exposure', ld, 'L'], m3: ['Chargeable delay', chargeable, 'd'], m4: ['LD rate', v.d, '%/wk'], ok: chargeable <= 14 };
+    }
+    case 'qaDocs': {
+      const score = (v.a * 0.35 + v.b * 0.25 + v.d * 0.25) - v.c * 2;
+      return { m1: ['QA readiness', clamp(score, 0, 100), '%'], m2: ['ITP coverage', v.a, '%'], m3: ['Open NCRs', v.c, ''], m4: ['Cube tests', v.d, '%'], ok: score >= 75 && v.c <= 5 };
+    }
+    case 'setout': {
+      const distance = Math.sqrt(v.a * v.a + v.b * v.b);
+      const angularError = Math.atan2(v.b, Math.max(Math.abs(v.a), 0.1)) * 180 / Math.PI;
+      return { m1: ['Setout distance', distance, 'm'], m2: ['Bearing angle', angularError, 'deg'], m3: ['Error', v.c, 'mm'], m4: ['Tolerance', v.d, 'mm'], ok: v.c <= v.d };
+    }
+    case 'roadCrossSection': {
+      const depth = Math.abs(v.b);
+      const area = (v.a + v.d * depth) * depth;
+      const volume = area * v.c;
+      return { m1: [v.b >= 0 ? 'Fill volume' : 'Cut volume', volume, 'm3'], m2: ['Section area', area, 'm2'], m3: ['Chainage', v.c, 'm'], m4: ['Side slope', v.d, 'H:1'], ok: volume < 10000 };
+    }
+    case 'stormwater': {
+      const flow = 2.78 * v.c * v.b * v.a;
+      const dia = Math.sqrt((4 * flow / 1000) / Math.max(Math.PI * Math.sqrt(v.d / 100), 0.01)) * 1000;
+      return { m1: ['Peak runoff', flow, 'L/s'], m2: ['Pipe dia est.', dia, 'mm'], m3: ['Runoff coeff.', v.c, ''], m4: ['Slope', v.d, '%'], ok: dia <= 1800 };
+    }
+    case 'drawingTakeoff': {
+      const slab = v.a * v.b;
+      const wallLength = 2 * (v.a + v.b);
+      const wallVolume = wallLength * (v.c / 1000) * 3 * (1 - v.d / 100);
+      return { m1: ['Slab area', slab, 'm2'], m2: ['Wall volume', wallVolume, 'm3'], m3: ['Wall length', wallLength, 'm'], m4: ['Openings', v.d, '%'], ok: slab <= 5000 };
+    }
     default:
       return { m1: ['Metric A', v.a, ''], m2: ['Metric B', v.b, ''], m3: ['Metric C', v.c, ''], m4: ['Metric D', v.d, ''], ok: true };
   }
@@ -3063,16 +3406,28 @@ function AdvancedToolGraphic({
   };
 
   const panelCount = Math.max(3, Math.min(10, Math.round(values.d)));
-  const objectColor = tool === 'qcLab' || tool === 'soilLab' ? '#34d399' : tool === 'seismic' || tool === 'wind' ? '#fb7185' : accent;
+  const objectColor = ['qcLab', 'soilLab', 'isCodeChecker', 'qaDocs'].includes(tool)
+    ? '#34d399'
+    : ['seismic', 'wind', 'safetyInspection', 'claimsDelay'].includes(tool)
+      ? '#fb7185'
+      : accent;
 
   return (
     <svg ref={svgRef} viewBox="0 0 640 310" className="h-80 w-full touch-none" onPointerMove={move} onPointerUp={stop} onPointerCancel={stop}>
       <rect x="18" y="18" width="604" height="274" rx="22" fill="rgba(8,13,20,0.95)" stroke="rgba(148,163,184,0.16)" />
-      {tool === 'frame' && (
+      {['frame', 'staadFrame'].includes(tool) && (
         <g>
           <path d={`M120 226 V94 H${xA} V226 M120 94 H${xA}`} fill="none" stroke="rgba(226,232,240,0.75)" strokeWidth="10" strokeLinecap="round" />
           <line x1={xA + 48} y1={yB} x2={xA + 8} y2={yB} stroke={objectColor} strokeWidth="6" />
           <path d={`M${xA + 8} ${yB - 12} L${xA - 12} ${yB} L${xA + 8} ${yB + 12} Z`} fill={objectColor} />
+          {tool === 'staadFrame' && (
+            <>
+              <circle cx="120" cy="94" r="7" fill={accent} />
+              <circle cx={xA} cy="94" r="7" fill={accent} />
+              <circle cx="120" cy="226" r="7" fill={accent} />
+              <circle cx={xA} cy="226" r="7" fill={accent} />
+            </>
+          )}
         </g>
       )}
       {tool === 'truss' && (
@@ -3084,27 +3439,57 @@ function AdvancedToolGraphic({
           })}
         </g>
       )}
-      {['soilLab', 'qcLab', 'tender'].includes(tool) && (
+      {['soilLab', 'qcLab', 'tender', 'rateAnalysis', 'isCodeChecker', 'safetyInspection', 'draftingPractice', 'bbs', 'projectControl', 'claimsDelay', 'qaDocs'].includes(tool) && (
         <g>
           <line x1="92" x2="548" y1="224" y2="224" stroke="rgba(148,163,184,0.28)" strokeWidth="3" />
           <polyline points={`96,210 170,${210 - tA * 90} 250,${226 - tB * 120} 340,${170 - values.c * 0.35} 520,${210 - values.d * 0.03}`} fill="none" stroke={objectColor} strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
           <circle cx="250" cy={226 - tB * 120} r="10" fill={objectColor} />
+          {tool === 'bbs' && Array.from({ length: 5 }, (_, i) => <line key={i} x1={132 + i * 78} x2={184 + i * 78} y1={180 - i * 5} y2={180 - i * 5} stroke={accent} strokeWidth="6" strokeLinecap="round" />)}
+          {tool === 'rateAnalysis' && ['MAT', 'LAB', 'EQP', 'OH'].map((label, i) => <text key={label} x={132 + i * 96} y={246} fill="rgba(226,232,240,0.72)" fontSize="12" fontWeight="900">{label}</text>)}
+          {tool === 'isCodeChecker' && <path d="M422 132 l24 24 52 -62" fill="none" stroke={objectColor} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />}
+          {tool === 'safetyInspection' && <path d="M462 84 l58 106 h-116 Z" fill="rgba(251,113,133,0.14)" stroke={objectColor} strokeWidth="5" />}
+          {tool === 'draftingPractice' && <path d="M112 88 H474 V214 H112 Z M112 146 H474 M232 88 V214" fill="none" stroke={accent} strokeWidth="3" strokeDasharray="10 8" opacity="0.7" />}
+          {tool === 'projectControl' && (
+            <>
+              <rect x="116" y="102" width={Math.max(40, tA * 330)} height="20" rx="8" fill="rgba(148,163,184,0.28)" />
+              <rect x="116" y="138" width={Math.max(40, tB * 330)} height="20" rx="8" fill={objectColor} opacity="0.75" />
+              <rect x="116" y="174" width={Math.max(40, (values.c / 1200) * 330)} height="20" rx="8" fill="rgba(251,191,36,0.65)" />
+            </>
+          )}
+          {tool === 'claimsDelay' && <path d="M108 92 H512 M108 132 H512 M108 172 H512" stroke="rgba(226,232,240,0.16)" strokeWidth="3" strokeLinecap="round" />}
+          {tool === 'qaDocs' && ['ITP', 'POUR', 'CUBE', 'NCR'].map((label, i) => <rect key={label} x={116 + i * 94} y={104 + (i % 2) * 44} width="72" height="52" rx="12" fill={i === 3 ? 'rgba(251,113,133,0.14)' : 'rgba(52,211,153,0.14)'} stroke={i === 3 ? '#fb7185' : objectColor} strokeWidth="3" />)}
         </g>
       )}
-      {['earthwork', 'siteLayout'].includes(tool) && (
+      {['earthwork', 'siteLayout', 'bimRevit', 'setout', 'drawingTakeoff'].includes(tool) && (
         <g>
           <rect x="118" y="70" width={Math.max(90, xA - 118)} height={Math.max(70, 222 - yB)} fill={accent} opacity="0.16" stroke={accent} strokeWidth="3" />
           {Array.from({ length: 7 }, (_, i) => <line key={`v-${i}`} x1={118 + i * 64} x2={118 + i * 64} y1="70" y2="222" stroke="rgba(148,163,184,0.16)" />)}
           {Array.from({ length: 5 }, (_, i) => <line key={`h-${i}`} x1="118" x2="544" y1={70 + i * 38} y2={70 + i * 38} stroke="rgba(148,163,184,0.16)" />)}
           {tool === 'siteLayout' && <circle cx="322" cy="148" r={Math.max(22, values.a * 2.2)} fill="none" stroke={objectColor} strokeWidth="4" strokeDasharray="12 10" />}
+          {tool === 'bimRevit' && Array.from({ length: Math.min(12, Math.round(values.b)) }, (_, i) => <rect key={i} x={166 + i * 13} y={205 - i * 10} width={Math.max(80, xA - 210)} height="8" fill={i % 2 ? 'rgba(226,232,240,0.34)' : accent} opacity="0.72" />)}
+          {tool === 'setout' && (
+            <>
+              <line x1="322" y1="146" x2={322 + values.a * 3} y2={146 - values.b * 2} stroke={objectColor} strokeWidth="5" strokeLinecap="round" />
+              <circle cx={322 + values.a * 3} cy={146 - values.b * 2} r="11" fill={objectColor} />
+            </>
+          )}
+          {tool === 'drawingTakeoff' && (
+            <>
+              <rect x="166" y="96" width={Math.max(90, values.a * 3)} height={Math.max(70, values.b * 2.2)} fill="none" stroke={objectColor} strokeWidth="5" />
+              <rect x="212" y="96" width="42" height="14" fill="rgba(8,13,20,0.95)" stroke={objectColor} strokeWidth="3" />
+              <rect x="166" y="154" width="14" height="48" fill="rgba(8,13,20,0.95)" stroke={objectColor} strokeWidth="3" />
+            </>
+          )}
         </g>
       )}
-      {['bridge', 'columnFooting', 'masonry', 'rebar', 'formwork', 'pile', 'services', 'equipment'].includes(tool) && (
+      {['bridge', 'columnFooting', 'masonry', 'rebar', 'formwork', 'pile', 'services', 'equipment', 'stormwater', 'roadCrossSection'].includes(tool) && (
         <g>
           <rect x="96" y="210" width={Math.max(80, xA - 96)} height="24" rx="8" fill="rgba(226,232,240,0.58)" />
           <rect x="126" y={yB} width={Math.max(80, xA - 146)} height={210 - yB} rx="10" fill={accent} opacity="0.22" stroke={accent} strokeWidth="3" />
           {tool === 'pile' && Array.from({ length: Math.min(16, Math.round(values.a)) }, (_, i) => <circle key={i} cx={154 + (i % 4) * 54} cy={102 + Math.floor(i / 4) * 38} r={clamp(values.b / 90, 4, 12)} fill={objectColor} />)}
           {tool === 'services' && <path d="M130 86 C230 70 340 112 508 76" fill="none" stroke={objectColor} strokeWidth="6" strokeLinecap="round" />}
+          {tool === 'stormwater' && <path d="M112 118 C210 188 310 86 512 176" fill="none" stroke={objectColor} strokeWidth="12" strokeLinecap="round" opacity="0.8" />}
+          {tool === 'roadCrossSection' && <path d="M118 220 L246 136 H394 L522 220 Z" fill="rgba(129,140,248,0.14)" stroke={objectColor} strokeWidth="5" strokeLinejoin="round" />}
           {tool === 'equipment' && <path d="M132 206 H310 L392 150 H460" fill="none" stroke={objectColor} strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />}
         </g>
       )}

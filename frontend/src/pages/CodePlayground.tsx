@@ -19,6 +19,7 @@ import PCBDesignStudio from '../components/pcb/PCBDesignStudio';
 import VLSIDesignStudio from '../components/vlsi/VLSIDesignStudio';
 import FunctionGenerator from '../components/instrumentation/FunctionGenerator';
 import SpectrumAnalyzer from '../components/instrumentation/SpectrumAnalyzer';
+import MechanicalEngineeringStudio, { type MechanicalStudioTool } from '../components/mech/MechanicalEngineeringStudio';
 
 const LANGUAGES = [
   { id: 'python', label: 'Python', icon: <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python" className="w-5 h-5 shrink-0 drop-shadow-sm" /> },
@@ -824,6 +825,7 @@ const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: s
   structural: [
     { id: 'civil-structural-studio', label: 'Structural Studio', url: '', isNativeBlock: true, civilTool: 'structural' },
     { id: 'civil-frame-studio', label: 'Frame Analysis Studio', url: '', isNativeBlock: true, civilTool: 'frame' },
+    { id: 'civil-staad-frame-studio', label: 'STAAD-like Frame Modeler', url: '', isNativeBlock: true, civilTool: 'staadFrame' },
     { id: 'civil-truss-studio', label: 'Truss Analysis Studio', url: '', isNativeBlock: true, civilTool: 'truss' },
     { id: 'civil-bridge-studio', label: 'Bridge Basics Studio', url: '', isNativeBlock: true, civilTool: 'bridge' },
     { id: 'st-python', label: 'Python (Stiffness)', url: jupyterUrl(JUPYTER_CODES['st-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
@@ -840,6 +842,7 @@ const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: s
     { id: 'civil-hydraulics-studio', label: 'Hydraulics Studio', url: '', isNativeBlock: true, civilTool: 'hydraulics' },
     { id: 'civil-water-network-studio', label: 'Water Network Studio', url: '', isNativeBlock: true, civilTool: 'waterNetwork' },
     { id: 'civil-open-channel-studio', label: 'Open Channel Studio', url: '', isNativeBlock: true, civilTool: 'openChannel' },
+    { id: 'civil-stormwater-studio', label: 'Drainage & Stormwater Network', url: '', isNativeBlock: true, civilTool: 'stormwater' },
     { id: 'fm-python', label: 'Python (Flow)', url: jupyterUrl(JUPYTER_CODES['fm-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'fm-rlc', label: 'RLC Circuit (Pipe Analogy)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
@@ -847,14 +850,19 @@ const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: s
     { id: 'civil-survey-studio', label: 'Survey Traverse Studio', url: '', isNativeBlock: true, civilTool: 'survey' },
     { id: 'civil-leveling-studio', label: 'Survey Leveling Studio', url: '', isNativeBlock: true, civilTool: 'leveling' },
     { id: 'civil-earthwork-studio', label: 'GIS / Contour / Earthwork', url: '', isNativeBlock: true, civilTool: 'earthwork' },
+    { id: 'civil-setout-studio', label: 'Site Survey Layout Setout', url: '', isNativeBlock: true, civilTool: 'setout' },
   ],
   cad_bim: [
     { id: 'civil-cad-studio', label: 'CAD/BIM Quantity Sketcher', url: '', isNativeBlock: true, civilTool: 'cad' },
+    { id: 'civil-bim-revit-studio', label: 'BIM / Revit Concept Studio', url: '', isNativeBlock: true, civilTool: 'bimRevit' },
+    { id: 'civil-drafting-practice-studio', label: 'AutoCAD Drafting Practice', url: '', isNativeBlock: true, civilTool: 'draftingPractice' },
+    { id: 'civil-drawing-takeoff-studio', label: 'Quantity Takeoff From Drawing', url: '', isNativeBlock: true, civilTool: 'drawingTakeoff' },
     { id: 'cad-python', label: 'Python (CAD Math)', url: jupyterUrl(JUPYTER_CODES['cad-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   transportation: [
     { id: 'civil-road-studio', label: 'Road Geometry Studio', url: '', isNativeBlock: true, civilTool: 'transport' },
     { id: 'civil-pavement-studio', label: 'Pavement Design Studio', url: '', isNativeBlock: true, civilTool: 'pavement' },
+    { id: 'civil-road-cross-section-studio', label: 'Road Estimation & Cross-Section', url: '', isNativeBlock: true, civilTool: 'roadCrossSection' },
     { id: 'tr-python', label: 'Python (Traffic)', url: jupyterUrl(JUPYTER_CODES['tr-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   environmental: [
@@ -869,6 +877,8 @@ const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: s
     { id: 'civil-column-footing-studio', label: 'Column & Footing Design', url: '', isNativeBlock: true, civilTool: 'columnFooting' },
     { id: 'civil-masonry-studio', label: 'Masonry Design Studio', url: '', isNativeBlock: true, civilTool: 'masonry' },
     { id: 'civil-rebar-studio', label: 'Rebar Detailing Studio', url: '', isNativeBlock: true, civilTool: 'rebar' },
+    { id: 'civil-bbs-studio', label: 'Bar Bending Schedule Studio', url: '', isNativeBlock: true, civilTool: 'bbs' },
+    { id: 'civil-is-code-checker-studio', label: 'IS Code Design Checker', url: '', isNativeBlock: true, civilTool: 'isCodeChecker' },
     { id: 'civil-seismic-studio', label: 'Seismic Design Studio', url: '', isNativeBlock: true, civilTool: 'seismic' },
     { id: 'civil-wind-studio', label: 'Wind Load Studio', url: '', isNativeBlock: true, civilTool: 'wind' },
     { id: 'cs-python', label: 'Python (IS 456)', url: jupyterUrl(JUPYTER_CODES['cs-python-civil']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
@@ -877,13 +887,18 @@ const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: s
     { id: 'civil-estimation-studio', label: 'Quantity & BBS Studio', url: '', isNativeBlock: true, civilTool: 'estimation' },
     { id: 'civil-cost-estimator-studio', label: 'Construction Cost Estimator', url: '', isNativeBlock: true, civilTool: 'costEstimator' },
     { id: 'civil-formwork-studio', label: 'Formwork & Scaffolding', url: '', isNativeBlock: true, civilTool: 'formwork' },
+    { id: 'civil-rate-analysis-studio', label: 'Rate Analysis Studio', url: '', isNativeBlock: true, civilTool: 'rateAnalysis' },
     { id: 'civil-qc-lab-studio', label: 'Quality Control Lab Studio', url: '', isNativeBlock: true, civilTool: 'qcLab' },
+    { id: 'civil-qa-docs-studio', label: 'Construction QA Document Studio', url: '', isNativeBlock: true, civilTool: 'qaDocs' },
     { id: 'civil-tender-studio', label: 'Tender & BOQ Comparison', url: '', isNativeBlock: true, civilTool: 'tender' },
   ],
   construction_management: [
     { id: 'civil-planning-studio', label: 'Construction Planning Studio', url: '', isNativeBlock: true, civilTool: 'planning' },
+    { id: 'civil-project-control-studio', label: 'Project Planning Cost-Control', url: '', isNativeBlock: true, civilTool: 'projectControl' },
+    { id: 'civil-claims-delay-studio', label: 'Contract Claims & Delay Analysis', url: '', isNativeBlock: true, civilTool: 'claimsDelay' },
     { id: 'civil-equipment-studio', label: 'Equipment Productivity Studio', url: '', isNativeBlock: true, civilTool: 'equipment' },
     { id: 'civil-site-layout-studio', label: 'Site Layout Planning Studio', url: '', isNativeBlock: true, civilTool: 'siteLayout' },
+    { id: 'civil-safety-inspection-studio', label: 'Safety Inspection Studio', url: '', isNativeBlock: true, civilTool: 'safetyInspection' },
   ],
 };
 
@@ -898,49 +913,78 @@ const MECH_SIMULATOR_CATEGORIES = [
   { id: 'dynamics', label: 'Dynamics & Vibrations', icon: <WaveSine size={16} weight="duotone" />, accent: 'indigo' },
   { id: 'automotive', label: 'Automotive & IC Engines', icon: <Car size={16} weight="duotone" />, accent: 'rose' },
   { id: 'cad_3d', label: 'CAD / 3D Modeling', icon: <Cube size={16} weight="duotone" />, accent: 'sky' },
+  { id: 'industrial_mech', label: 'Industrial & Reliability', icon: <Gauge size={16} weight="duotone" />, accent: 'violet' },
 ];
 
-const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; noEmbed?: boolean }[]> = {
+const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; noEmbed?: boolean; isNativeBlock?: boolean; mechTool?: MechanicalStudioTool }[]> = {
   thermodynamics: [
+    { id: 'mech-thermo-cycle', label: 'Thermodynamic Cycle Studio', url: '', isNativeBlock: true, mechTool: 'thermoCycle' },
+    { id: 'mech-heat-exchanger', label: 'Heat Exchanger Studio', url: '', isNativeBlock: true, mechTool: 'heatExchanger' },
+    { id: 'mech-refrigeration', label: 'Refrigeration & AC Studio', url: '', isNativeBlock: true, mechTool: 'refrigeration' },
+    { id: 'mech-boiler-plant', label: 'Boiler / Steam Plant Studio', url: '', isNativeBlock: true, mechTool: 'boilerPlant' },
+    { id: 'mech-turbine-compressor', label: 'Turbine & Compressor Studio', url: '', isNativeBlock: true, mechTool: 'turbineCompressor' },
     { id: 'th-python', label: 'Python (Thermo)', url: jupyterUrl(JUPYTER_CODES['th-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'th-rc-thermal', label: 'RC Thermal Analogy', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
   fluid_mech: [
+    { id: 'mech-pipe-flow', label: 'Fluid Pipe Flow Studio', url: '', isNativeBlock: true, mechTool: 'pipeFlow' },
+    { id: 'mech-pump', label: 'Pump & Turbomachinery Studio', url: '', isNativeBlock: true, mechTool: 'pump' },
     { id: 'fl-python', label: 'Python (Fluids)', url: jupyterUrl(JUPYTER_CODES['fl-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'fl-pipe-rlc', label: 'Pipe Flow (RLC Analogy)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
   som: [
+    { id: 'mech-beam-stress', label: 'Strength of Materials Studio', url: '', isNativeBlock: true, mechTool: 'beamStress' },
+    { id: 'mech-mohrs-circle', label: "Mohr's Circle Studio", url: '', isNativeBlock: true, mechTool: 'mohrsCircle' },
+    { id: 'mech-material-testing', label: 'Material Testing Studio', url: '', isNativeBlock: true, mechTool: 'materialTesting' },
     { id: 'som-mohr', label: "Mohr's Circle", url: 'https://mechanicalc.com/calculators/mohrs-circle/', openLabel: 'Open Mechanicalc' },
     { id: 'som-beam', label: 'Beam Calculator', url: 'https://structurecalcs.com/beam', openLabel: 'Open Calculator' },
     { id: 'som-truss', label: 'Truss Solver', url: 'https://structurecalcs.com/truss', openLabel: 'Open Solver' },
     { id: 'som-python', label: 'Python (SOM)', url: jupyterUrl(JUPYTER_CODES['som-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   machine_design: [
+    { id: 'mech-shaft-gear', label: 'Shaft & Gear Design Studio', url: '', isNativeBlock: true, mechTool: 'shaftGear' },
+    { id: 'mech-four-bar', label: 'Four-Bar Mechanism Studio', url: '', isNativeBlock: true, mechTool: 'fourBar' },
     { id: 'md-4bar', label: '4-Bar Linkage Sim', url: 'https://mevirtuoso.com/four-bar-linkage-simulator/', openLabel: 'Open ME Virtuoso' },
     { id: 'md-python', label: 'Python (Mechanisms)', url: jupyterUrl(JUPYTER_CODES['md-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   manufacturing: [
+    { id: 'mech-cnc', label: 'CNC Machining Studio', url: '', isNativeBlock: true, mechTool: 'cnc' },
+    { id: 'mech-welding', label: 'Welding & Fabrication Studio', url: '', isNativeBlock: true, mechTool: 'welding' },
+    { id: 'mech-metrology', label: 'Metrology Studio', url: '', isNativeBlock: true, mechTool: 'metrology' },
+    { id: 'mech-casting-foundry', label: 'Casting & Foundry Studio', url: '', isNativeBlock: true, mechTool: 'castingFoundry' },
+    { id: 'mech-sheet-metal', label: 'Sheet Metal & Forming Studio', url: '', isNativeBlock: true, mechTool: 'sheetMetal' },
+    { id: 'mech-additive-manufacturing', label: 'Additive Manufacturing Studio', url: '', isNativeBlock: true, mechTool: 'additiveManufacturing' },
     { id: 'mfg-ncviewer', label: 'G-code Viewer', url: 'https://ncviewer.com/', openLabel: 'Open NC Viewer' },
     { id: 'mfg-gcodews', label: 'G-code Analyzer', url: 'https://gcode.ws/', openLabel: 'Open gCode.ws' },
     { id: 'mfg-python', label: 'Python (CNC)', url: jupyterUrl(JUPYTER_CODES['mfg-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   mechatronics: [
+    { id: 'mech-robot-arm', label: 'Robotics Arm Studio', url: '', isNativeBlock: true, mechTool: 'robotArm' },
+    { id: 'mech-pid-control', label: 'PID Control Studio', url: '', isNativeBlock: true, mechTool: 'pidControl' },
     { id: 'mt-arduino', label: 'Arduino Uno', url: 'https://wokwi.com/projects/new/arduino-uno', openLabel: 'Open in Wokwi' },
     { id: 'mt-esp32', label: 'ESP32', url: 'https://wokwi.com/projects/new/esp32', openLabel: 'Open in Wokwi' },
     { id: 'mt-pico', label: 'RPi Pico', url: 'https://wokwi.com/projects/new/pi-pico', openLabel: 'Open in Wokwi' },
     { id: 'mt-python', label: 'Python (Control)', url: jupyterUrl(JUPYTER_CODES['mt-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   dynamics: [
+    { id: 'mech-vibration', label: 'Dynamics & Vibration Studio', url: '', isNativeBlock: true, mechTool: 'vibration' },
     { id: 'dy-spring-rlc', label: 'Spring-Mass (RLC)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
     { id: 'dy-python', label: 'Python (Vibrations)', url: jupyterUrl(JUPYTER_CODES['dy-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   automotive: [
+    { id: 'mech-ic-engine', label: 'IC Engine Performance Studio', url: '', isNativeBlock: true, mechTool: 'icEngine' },
+    { id: 'mech-vehicle-dynamics', label: 'Vehicle Dynamics Studio', url: '', isNativeBlock: true, mechTool: 'vehicleDynamics' },
     { id: 'au-python', label: 'Python (Engines)', url: jupyterUrl(JUPYTER_CODES['au-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   cad_3d: [
+    { id: 'mech-cad3d-native', label: 'CAD / 3D Modeling Studio', url: '', isNativeBlock: true, mechTool: 'cad3d' },
     { id: 'cad-openscad', label: 'OpenJSCAD (Parametric)', url: 'https://openjscad.xyz/', openLabel: 'Open JSCAD' },
     { id: 'cad-threejs', label: 'Three.js Editor', url: 'https://threejs.org/editor/', openLabel: 'Open 3D Editor' },
     { id: 'cad-python', label: 'Python (CadQuery)', url: jupyterUrl(JUPYTER_CODES['cad-python-3d']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+  ],
+  industrial_mech: [
+    { id: 'mech-industrial-engineering', label: 'Industrial Engineering Studio', url: '', isNativeBlock: true, mechTool: 'industrialEngineering' },
+    { id: 'mech-maintenance-reliability', label: 'Maintenance & Reliability Studio', url: '', isNativeBlock: true, mechTool: 'maintenanceReliability' },
   ],
 };
 
@@ -2361,6 +2405,13 @@ const CodePlayground = ({ navigate, user }) => {
                     <CivilEngineeringStudio
                       tool={(_simActiveBoard as any).civilTool}
                       user={user}
+                      isFullScreen={isLabFullScreen}
+                      onExitFullScreen={() => setIsLabFullScreen(false)}
+                      onRequestFullScreen={() => setIsLabFullScreen(true)}
+                    />
+                  ) : (_simActiveBoard as any)?.mechTool ? (
+                    <MechanicalEngineeringStudio
+                      tool={(_simActiveBoard as any).mechTool}
                       isFullScreen={isLabFullScreen}
                       onExitFullScreen={() => setIsLabFullScreen(false)}
                       onRequestFullScreen={() => setIsLabFullScreen(true)}
