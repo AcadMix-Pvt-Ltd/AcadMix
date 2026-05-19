@@ -42,8 +42,8 @@ const ARENAS = [
   },
   {
     id: 'hardware-arena',
-    title: 'Hardware Arena',
-    subtitle: 'Enterprise-grade ECE problem dungeon for RTL, Embedded, and VLSI',
+    title: 'ECE Placement Lab',
+    subtitle: 'Guided ECE practice for embedded, VLSI, analog, DSP, PCB, IoT, and core-company interviews',
     icon: Cpu,
     color: 'from-emerald-500 to-teal-600',
     iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
@@ -52,7 +52,7 @@ const ARENAS = [
     shadowHover: 'hover:shadow-emerald-500/10',
     route: '/hardware-arena',
     ready: true,
-    tags: ['Embedded', 'VLSI', 'Digital', 'Analog', 'PCB'],
+    tags: ['Embedded', 'VLSI', 'DSP', 'Analog', 'PCB', 'IoT'],
   },
   {
     id: 'aptitude',
@@ -184,7 +184,7 @@ const PlacementHub = ({ navigate, user }: any) => {
           {[
             { label: 'Interview Types', value: '3', sub: 'HR · Tech · Behavioral' },
             { label: 'SQL Problems', value: '50+', sub: 'Mass recruiter patterns' },
-            { label: 'Companies', value: '15+', sub: 'Question banks' },
+            { label: 'ECE Companies', value: '15+', sub: 'Core + campus lanes' },
             { label: 'AI Feedback', value: '∞', sub: 'Unlimited practice' },
           ].map(stat => (
             <div key={stat.label} className="soft-card p-5 text-center">

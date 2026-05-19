@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WaveSine, SpeakerHigh, SpeakerSlash, Play, Pause, Pulse } from '@phosphor-icons/react';
+import { WaveSine, SpeakerHigh, SpeakerSlash, Play, Pause, Pulse, CornersIn, CornersOut } from '@phosphor-icons/react';
 
-export default function FunctionGenerator() {
+export default function FunctionGenerator({
+  isFullScreen,
+  onExitFullScreen,
+  onRequestFullScreen,
+}: {
+  isFullScreen?: boolean;
+  onExitFullScreen?: () => void;
+  onRequestFullScreen?: () => void;
+}) {
   const [f1, setF1] = useState(250);
   const [f2, setF2] = useState(257);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -207,7 +215,7 @@ export default function FunctionGenerator() {
   }, [f1, f2, isPlaying, zoom, overlayWaves]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#0B0C10] text-white rounded-xl overflow-hidden p-4 gap-4 font-sans">
+    <div className="w-full h-full min-h-0 flex flex-col bg-[#0B0C10] text-white rounded-xl overflow-hidden p-4 gap-4 font-sans">
       
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -222,6 +230,16 @@ export default function FunctionGenerator() {
         </div>
         
         <div className="flex items-center gap-3">
+          {(onExitFullScreen || onRequestFullScreen) && (
+            <button
+              type="button"
+              onClick={() => (isFullScreen ? onExitFullScreen?.() : onRequestFullScreen?.())}
+              title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-700 bg-slate-800 text-slate-400 transition-colors hover:bg-slate-700 hover:text-slate-100"
+            >
+              {isFullScreen ? <CornersIn size={16} weight="bold" /> : <CornersOut size={16} weight="bold" />}
+            </button>
+          )}
           <button 
             onClick={() => setIsAudioEnabled(!isAudioEnabled)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${isAudioEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border border-slate-700'}`}

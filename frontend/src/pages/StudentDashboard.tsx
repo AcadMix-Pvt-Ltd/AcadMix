@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Trophy, ChartLine, Fire, BookOpen, Calendar, Target, SignOut, Terminal, ArrowRight, GraduationCap, Play, Medal, Lightning, Warning, Bell, Exam, Briefcase, Sun, Moon, CalendarDots, Chalkboard, UserCircle, ListBullets, Microphone, House, FileText, Toolbox, Bus, MapPin } from '@phosphor-icons/react';
+import { Clock, Trophy, ChartLine, Fire, BookOpen, Calendar, Target, SignOut, Terminal, ArrowRight, GraduationCap, Play, Medal, Lightning, Warning, Bell, Exam, Briefcase, Sun, Moon, CalendarDots, Chalkboard, UserCircle, ListBullets, Microphone, House, FileText, Toolbox, Bus, MapPin, Cpu } from '@phosphor-icons/react';
 import { analyticsAPI, interviewAPI, resumeAPI, notificationsAPI } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 import DashboardSkeleton from '../components/DashboardSkeleton';
@@ -23,6 +23,14 @@ const getGreeting = () => {
   if (hour < 12) return 'Good Morning';
   if (hour < 17) return 'Good Afternoon';
   return 'Good Evening';
+};
+
+const getCollegeDisplayName = (user: any) => {
+  if (user?.college) return user.college;
+  const host = typeof window !== 'undefined' ? window.location.hostname : '';
+  const tenant = host.endsWith('.localhost') ? host.replace('.localhost', '') : host.split('.')[0];
+  if (tenant === 'aits') return 'AITS';
+  return tenant && tenant !== 'localhost' && tenant !== '127' ? tenant.toUpperCase() : 'AcadMix';
 };
 
 // Lazy load heavy components
@@ -96,6 +104,7 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
   const { isDark, toggle: toggleTheme } = useTheme();
   const [realNotifs, setRealNotifs] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const isEceStudent = ['ECE', 'ET', 'EEE', 'EIE', 'IOT'].includes(String(user?.department || '').toUpperCase());
 
   // Fetch real notifications from API
   useEffect(() => {
@@ -323,7 +332,7 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
           <div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-1">{getGreeting()}, <span className="gradient-text">{user?.name?.split(' ')[0]}!</span></h2>
             <p className="text-sm sm:text-base font-medium text-slate-500 dark:text-slate-400">
-              {user?.college || 'GNI'} • {user?.department || 'DS'} • Batch {user?.batch || '2026'} • Section {user?.section || 'A'}
+              {getCollegeDisplayName(user)} • {user?.department || 'DS'} • Batch {user?.batch || '2026'} • Section {user?.section || 'A'}
             </p>
           </div>
           <motion.div whileHover={cardHover} className="soft-card px-4 py-4 flex items-center gap-4 w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.75rem)] md:w-auto">
@@ -409,12 +418,13 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
           className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6"
         >
           {[
+            isEceStudent ? { id: 'hardware-arena', icon: Cpu, label: 'ECE Lab', sub: 'Core placement tools', iconBg: 'bg-emerald-50 dark:bg-emerald-500/10 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20', iconText: 'text-emerald-500', testId: 'view-ece-lab-button' } : null,
             { id: 'quiz-results', icon: BookOpen, label: 'Quiz Results', sub: 'View all attempts', iconBg: 'bg-indigo-50 dark:bg-indigo-500/10 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-500/20', iconText: 'text-indigo-500', testId: 'view-all-quizzes-button' },
             { id: 'semester-results', icon: Calendar, label: 'Semester Results', sub: 'Check your grades', iconBg: 'bg-teal-50 dark:bg-teal-500/10 group-hover:bg-teal-100 dark:group-hover:bg-teal-500/20', iconText: 'text-teal-500', testId: 'view-semester-results-button' },
             { id: 'analytics', icon: ChartLine, label: 'Analytics', sub: 'Track performance', iconBg: 'bg-amber-50 dark:bg-amber-500/10 group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20', iconText: 'text-amber-500', testId: 'view-analytics-button' },
             { id: 'code-playground', icon: Terminal, label: 'Code Playground', sub: 'Practice coding', iconBg: 'bg-purple-50 dark:bg-purple-500/10 group-hover:bg-purple-100 dark:group-hover:bg-purple-500/20', iconText: 'text-purple-500', testId: 'view-code-playground-button' },
             { id: 'career-toolkit', icon: Toolbox, label: 'Career Toolkit', sub: '10 AI career tools', iconBg: 'bg-cyan-50 dark:bg-cyan-500/10 group-hover:bg-cyan-100 dark:group-hover:bg-cyan-500/20', iconText: 'text-cyan-500', testId: 'view-career-toolkit-button' },
-          ].map((item: any) => {
+          ].filter(Boolean).map((item: any) => {
             const Icon = item.icon;
             return (
               <motion.button key={item.id} variants={itemVariants} whileHover={cardHover} whileTap={{ scale: 0.97 }}

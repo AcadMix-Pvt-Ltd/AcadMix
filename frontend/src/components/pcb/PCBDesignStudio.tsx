@@ -299,7 +299,7 @@ export default function PCBDesignStudio({ user, isFullScreen: externalFullScreen
   return (
     <div className={effectiveFullScreen 
       ? "fixed inset-0 z-[100] w-screen h-screen flex flex-col bg-gray-950" 
-      : "w-full h-full flex flex-col bg-gray-950 rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50 relative"
+      : "w-full h-full min-h-0 flex flex-col bg-gray-950 rounded-3xl overflow-hidden shadow-2xl border border-gray-800/50 relative"
     }>
 
       {/* ── Fullscreen Prompt Overlay (when embedded) ── */}

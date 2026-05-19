@@ -425,7 +425,7 @@ function VLSIDesignStudioInternal({ user, isFullScreen, onExitFullScreen, onRequ
   }, [verilogCode]);
 
   return (
-    <div className="w-full h-full flex bg-[#0B0F19] text-slate-200 overflow-hidden relative">
+    <div className="w-full h-full min-h-0 flex bg-[#0B0F19] text-slate-200 overflow-hidden relative">
 
       {/* ── Fullscreen Prompt Overlay (when embedded) ── */}
       {!isFullScreen && onRequestFullScreen && (

@@ -14,9 +14,11 @@ import SpiceChart from '../components/SpiceChart';
 import { Simulation as EEcircuitSimulation } from 'eecircuit-engine';
 import DSPBlockSimulator from '../components/dsp/DSPBlockSimulator';
 import SettlementCalculator from '../components/civil/SettlementCalculator';
+import CivilEngineeringStudio, { type CivilStudioTool } from '../components/civil/CivilEngineeringStudio';
 import PCBDesignStudio from '../components/pcb/PCBDesignStudio';
 import VLSIDesignStudio from '../components/vlsi/VLSIDesignStudio';
 import FunctionGenerator from '../components/instrumentation/FunctionGenerator';
+import SpectrumAnalyzer from '../components/instrumentation/SpectrumAnalyzer';
 
 const LANGUAGES = [
   { id: 'python', label: 'Python', icon: <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" alt="Python" className="w-5 h-5 shrink-0 drop-shadow-sm" /> },
@@ -495,6 +497,47 @@ print(f"Base circle: Ø{2*r_base:.1f}mm")
 print(f"Addendum circle: Ø{2*r_addendum}mm")
 print(f"Dedendum circle: Ø{2*r_dedendum:.1f}mm")
 print(f"Tooth thickness: {np.pi*m/2:.2f}mm")`,
+  'sw-python': `import numpy as np
+# Overcurrent Relay Pickup and Operating Time
+fault_current = 1200  # A
+ct_ratio = 200 / 5
+plug_setting = 1.0
+tds = 0.2
+pickup_secondary = 5 * plug_setting
+fault_secondary = fault_current / ct_ratio
+psm = fault_secondary / pickup_secondary
+time_sec = 0.14 * tds / ((psm ** 0.02) - 1)
+print("=== IDMT Overcurrent Relay ===")
+print(f"Fault current: {fault_current} A")
+print(f"Secondary current: {fault_secondary:.2f} A")
+print(f"PSM: {psm:.2f}")
+print(f"Operating time: {time_sec:.3f} s")`,
+
+  'num-python': `import numpy as np
+# EEE Numerical Toolkit: PF Correction
+P_kw = 50
+pf_initial = 0.72
+pf_target = 0.95
+phi1 = np.arccos(pf_initial)
+phi2 = np.arccos(pf_target)
+q_initial = P_kw * np.tan(phi1)
+q_target = P_kw * np.tan(phi2)
+kvar_required = q_initial - q_target
+print("=== Power Factor Correction ===")
+print(f"Real power: {P_kw} kW")
+print(f"Reactive power before: {q_initial:.2f} kVAR")
+print(f"Reactive power after: {q_target:.2f} kVAR")
+print(f"Capacitor bank required: {kvar_required:.2f} kVAR")`,
+
+  'placement-python': `import numpy as np
+# Quick EEE Placement Calculator: Transformer Regulation
+V_no_load = 230
+V_full_load = 218
+regulation = (V_no_load - V_full_load) / V_full_load * 100
+print("=== Transformer Voltage Regulation ===")
+print(f"No-load voltage: {V_no_load} V")
+print(f"Full-load voltage: {V_full_load} V")
+print(f"Voltage regulation: {regulation:.2f}%")`,
 };
 
 
@@ -602,7 +645,7 @@ endmodule`
   dsp: [
     { id: 'dsp-native', label: 'AcadMix DSP (Native)', url: '', isNativeBlock: true },
     { id: 'dsp-octave', label: 'GNU Octave', url: 'https://octave-online.net/', openLabel: 'Open Octave' },
-    { id: 'dsp-academo-fft', label: 'Spectrum Analyzer', url: 'https://academo.org/demos/spectrum-analyzer/?embedded=true', openLabel: 'Open Spectrum Analyzer' },
+    { id: 'inst-spectrum', label: 'Spectrum Analyzer', url: '', isNativeBlock: true },
     { id: 'dsp-academo-scope', label: 'Virtual Oscilloscope', url: 'https://academo.org/demos/virtual-oscilloscope/?embedded=true', openLabel: 'Open Oscilloscope' },
     { id: 'dsp-musiclab', label: 'MusicLab Spectrogram', url: 'https://musiclab.chromeexperiments.com/Spectrogram/', openLabel: 'Open MusicLab' },
     { id: 'dsp-fft', label: 'Falstad Fourier', url: 'https://www.falstad.com/fourier/', openLabel: 'Open Falstad' },
@@ -629,7 +672,7 @@ endmodule`
     { id: 'em-python', label: 'Python (Antennas)', url: jupyterUrl(JUPYTER_CODES['em-python-ece']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   network_analysis: [
-    { id: 'net-vdiv', label: 'Voltage Divider', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=vdivide.txt', openLabel: 'Open CircuitJS' },
+    { id: 'net-vdiv', label: 'Voltage Divider', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=voltdivide.txt', openLabel: 'Open CircuitJS' },
     { id: 'net-wheatstone', label: 'Wheatstone Bridge', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=wheatstone.txt', openLabel: 'Open CircuitJS' },
     { id: 'net-rlc', label: 'RLC Series', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open CircuitJS' },
     { id: 'net-thevenin', label: 'Thevenin Equivalent', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=thevenin.txt', openLabel: 'Open CircuitJS' },
@@ -639,7 +682,7 @@ endmodule`
     { id: 'inst-scope', label: 'Virtual Oscilloscope', url: 'https://academo.org/demos/virtual-oscilloscope/?embedded=true', openLabel: 'Open Scope' },
     { id: 'inst-funcgen', label: 'Function Generator', url: '', isNativeBlock: true },
     { id: 'inst-funcgen-legacy', label: 'Function Gen (Legacy)', url: 'https://academo.org/demos/wave-interference-beat-frequency/?embedded=true', openLabel: 'Open Legacy' },
-    { id: 'inst-spectrum', label: 'Spectrum Analyzer', url: 'https://academo.org/demos/spectrum-analyzer/?embedded=true', openLabel: 'Open Spectrum' },
+    { id: 'inst-spectrum', label: 'Spectrum Analyzer', url: '', isNativeBlock: true },
     { id: 'inst-filter', label: 'Low-Pass Filter (RC)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=filt-lopass.txt', openLabel: 'Open CircuitJS' },
     { id: 'inst-python', label: 'Python (Measurements)', url: jupyterUrl(JUPYTER_CODES['inst-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
@@ -661,9 +704,11 @@ const EEE_SIMULATOR_CATEGORIES = [
   { id: 'industrial_automation', label: 'Industrial Automation', icon: <Cpu size={16} weight="duotone" />, accent: 'teal' },
   { id: 'measurements', label: 'Measurements & Instrumentation', icon: <Gauge size={16} weight="duotone" />, accent: 'sky' },
   { id: 'renewable_energy', label: 'Renewable Energy', icon: <SunHorizon size={16} weight="duotone" />, accent: 'emerald' },
+  { id: 'protection_switchgear', label: 'Protection & Switchgear', icon: <WarningCircle size={16} weight="duotone" />, accent: 'rose' },
+  { id: 'numerical_lab', label: 'MATLAB/Python Numerical Lab', icon: <Terminal size={16} weight="duotone" />, accent: 'indigo' },
 ];
 
-const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; noEmbed?: boolean; octaveUrl?: string }[]> = {
+const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; noEmbed?: boolean; octaveUrl?: string; isNativeBlock?: boolean }[]> = {
   power_electronics: [
     { id: 'pe-blank', label: 'Blank Circuit', url: 'https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcA2aAOMB2ALGXyEBOAbmAmwmwFMBaMMAKACcQUFDxCRsKBmEbqh7ce-YUJR1BkEJByYAHiGC4ALpzV8hOvYb37MBg5QCMvIbsPG6Zjlx5A', openLabel: 'Open in CircuitJS' },
     { id: 'pe-halfwave', label: 'Half-Wave Rectifier', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=rectify.txt', openLabel: 'Open in CircuitJS' },
@@ -672,9 +717,13 @@ const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: str
     { id: 'pe-voltdouble', label: 'Voltage Doubler', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=voltdouble.txt', openLabel: 'Open in CircuitJS' },
     { id: 'pe-555pwm', label: '555 PWM', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=555pulsemod.txt', openLabel: 'Open in CircuitJS' },
     { id: 'pe-schmitt', label: 'Schmitt Trigger', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=amp-schmitt.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'pe-diode', label: 'Power Diode', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=diodevar.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'pe-zener', label: 'Zener Regulator', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=zenerref.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'pe-octave', label: 'Octave / MATLAB', url: OCTAVE_URL, openLabel: 'Open Octave' },
   ],
   control_systems: [
     { id: 'cs-python', label: 'Python (Controls)', url: jupyterUrl(JUPYTER_CODES['cs-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'cs-octave', label: 'Octave / MATLAB', url: OCTAVE_URL, openLabel: 'Open Octave' },
     { id: 'cs-opamp', label: 'Op-Amp', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=opamp.txt', openLabel: 'Open in CircuitJS' },
     { id: 'cs-integrator', label: 'Integrator', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=amp-integ.txt', openLabel: 'Open in CircuitJS' },
     { id: 'cs-differentiator', label: 'Differentiator', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=amp-dfdx.txt', openLabel: 'Open in CircuitJS' },
@@ -687,10 +736,13 @@ const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: str
     { id: 'em-inductive', label: 'Inductive Kickback', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=inductkick.txt', openLabel: 'Open in CircuitJS' },
     { id: 'em-powerfactor', label: 'Power Factor', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=powerfactor1.txt', openLabel: 'Open in CircuitJS' },
     { id: 'em-pfc', label: 'Power Factor Correction', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=powerfactor2.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'em-motor-control', label: 'Motor Control (ACC PLC)', url: 'https://accautomation.ca/simulator/acc-plc-simulator.html', openLabel: 'Open ACC PLC' },
+    { id: 'em-wokwi-motor', label: 'Motor Driver (Arduino)', url: 'https://wokwi.com/projects/new/arduino-uno', openLabel: 'Open in Wokwi' },
     { id: 'em-python', label: 'Python (Machines)', url: jupyterUrl(JUPYTER_CODES['em-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   power_systems: [
     { id: 'ps-python', label: 'Python (Load Flow)', url: jupyterUrl(JUPYTER_CODES['ps-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'ps-octave', label: 'Octave / MATLAB', url: OCTAVE_URL, openLabel: 'Open Octave' },
     { id: 'ps-phaseseq', label: 'Phase-Sequence Network', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=phaseseq.txt', openLabel: 'Open in CircuitJS' },
     { id: 'ps-longdist', label: 'Long Distance Transmission', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=longdist.txt', openLabel: 'Open in CircuitJS' },
     { id: 'ps-tl', label: 'Transmission Line', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=tl.txt', openLabel: 'Open in CircuitJS' },
@@ -698,14 +750,23 @@ const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: str
     { id: 'ps-powerfactor', label: 'Power Factor', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=powerfactor1.txt', openLabel: 'Open in CircuitJS' },
   ],
   industrial_automation: [
+    { id: 'ia-acc-plc', label: 'ACC PLC Simulator', url: 'https://accautomation.ca/simulator/acc-plc-simulator.html', openLabel: 'Open ACC PLC' },
+    { id: 'ia-acc-panel', label: 'ACC Control Panel', url: 'https://accautomation.ca/simulator/acc-panel-scene.html', openLabel: 'Open Scene' },
+    { id: 'ia-acc-traffic', label: 'ACC Traffic Light', url: 'https://accautomation.ca/simulator/acc-traffic-scene.html', openLabel: 'Open Scene' },
+    { id: 'ia-acc-conveyor', label: 'ACC Conveyor', url: 'https://accautomation.ca/simulator/acc-conveyor-scene.html', openLabel: 'Open Scene' },
+    { id: 'ia-acc-tank', label: 'ACC Tank Fill', url: 'https://accautomation.ca/simulator/acc-tank-scene.html', openLabel: 'Open Scene' },
+    { id: 'ia-acc-palletizer', label: 'ACC Pick & Place', url: 'https://accautomation.ca/simulator/acc-palletizer-scene.html', openLabel: 'Open Scene' },
     { id: 'ia-plcfiddle', label: 'PLC Fiddle (Ladder)', url: 'https://www.plcfiddle.com/', openLabel: 'Open PLC Fiddle' },
     { id: 'ia-arduino-plc', label: 'Arduino (PLC Sim)', url: 'https://wokwi.com/projects/new/arduino-uno', openLabel: 'Open in Wokwi' },
     { id: 'ia-esp32-scada', label: 'ESP32 (SCADA Node)', url: 'https://wokwi.com/projects/new/esp32', openLabel: 'Open in Wokwi' },
     { id: 'ia-pico-vfd', label: 'RPi Pico (VFD Sim)', url: 'https://wokwi.com/projects/new/pi-pico', openLabel: 'Open in Wokwi' },
   ],
   measurements: [
+    { id: 'mi-scope', label: 'Virtual Oscilloscope', url: 'https://academo.org/demos/virtual-oscilloscope/?embedded=true', openLabel: 'Open Scope' },
+    { id: 'inst-funcgen', label: 'Function Generator', url: '', openLabel: 'Open Function Gen', isNativeBlock: true },
+    { id: 'inst-spectrum', label: 'Spectrum Analyzer', url: '', isNativeBlock: true },
     { id: 'mi-wheatstone', label: 'Wheatstone Bridge', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=wheatstone.txt', openLabel: 'Open in CircuitJS' },
-    { id: 'mi-voltdivide', label: 'Voltage Divider', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=vdivide.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'net-vdiv', label: 'Voltage Divider', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=voltdivide.txt', openLabel: 'Open CircuitJS' },
     { id: 'mi-thevenin', label: 'Thevenin Theorem', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=thevenin.txt', openLabel: 'Open in CircuitJS' },
     { id: 'mi-norton', label: 'Norton Theorem', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=norton.txt', openLabel: 'Open in CircuitJS' },
     { id: 'mi-python', label: 'Python (Analysis)', url: jupyterUrl(JUPYTER_CODES['mi-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
@@ -714,8 +775,34 @@ const EEE_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: str
     { id: 're-diode', label: 'Solar Cell (Diode)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=diodevar.txt', openLabel: 'Open in CircuitJS' },
     { id: 're-fullrect', label: 'Full-Wave Rectifier', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=fullrect.txt', openLabel: 'Open in CircuitJS' },
     { id: 're-voltdouble', label: 'Voltage Doubler', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=voltdouble.txt', openLabel: 'Open in CircuitJS' },
+    { id: 're-battery', label: 'Battery / Charger Model', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=cap.txt', openLabel: 'Open in CircuitJS' },
+    { id: 're-iot', label: 'Solar IoT Monitor', url: 'https://wokwi.com/projects/new/esp32', openLabel: 'Open in Wokwi' },
     { id: 're-python', label: 'Python (Modeling)', url: jupyterUrl(JUPYTER_CODES['re-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 're-esp32', label: 'ESP32 (IoT Monitor)', url: 'https://wokwi.com/projects/new/esp32', openLabel: 'Open in Wokwi' },
+  ],
+  protection_switchgear: [
+    { id: 'sw-python', label: 'Python (Relay Curves)', url: jupyterUrl(JUPYTER_CODES['sw-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'sw-octave', label: 'Octave / MATLAB', url: OCTAVE_URL, openLabel: 'Open Octave' },
+    { id: 'sw-relay-plc', label: 'Relay Logic (ACC PLC)', url: 'https://accautomation.ca/simulator/acc-plc-simulator.html', openLabel: 'Open ACC PLC' },
+    { id: 'sw-inductive', label: 'Inductive Kickback', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=inductkick.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'sw-transformer', label: 'CT/PT Transformer Model', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=transformer.txt', openLabel: 'Open in CircuitJS' },
+    { id: 'sw-phase-sequence', label: 'Phase Sequence', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=phaseseq.txt', openLabel: 'Open in CircuitJS' },
+  ],
+  numerical_lab: [
+    { id: 'num-python', label: 'Python EEE Calculator', url: jupyterUrl(JUPYTER_CODES['num-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'num-octave', label: 'Octave / MATLAB', url: OCTAVE_URL, openLabel: 'Open Octave' },
+    { id: 'num-loadflow', label: 'Python Load Flow', url: jupyterUrl(JUPYTER_CODES['ps-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'num-control', label: 'Python Control Systems', url: jupyterUrl(JUPYTER_CODES['cs-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'num-machines', label: 'Python Machines', url: jupyterUrl(JUPYTER_CODES['em-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'num-renewable', label: 'Python Renewable', url: jupyterUrl(JUPYTER_CODES['re-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+  ],
+  eee_placement: [
+    { id: 'plc-practice', label: 'PLC Practice', url: 'https://accautomation.ca/simulator/acc-plc-simulator.html', openLabel: 'Open ACC PLC' },
+    { id: 'placement-numerical', label: 'EEE Numerical Practice', url: jupyterUrl(JUPYTER_CODES['placement-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+    { id: 'placement-circuit', label: 'Circuit Debugging', url: 'https://lushprojects.com/circuitjs/circuitjs.html?ctz=CQAgjCAMB0l3BWcA2aAOMB2ALGXyEBOAbmAmwmwFMBaMMAKACcQUFDxCRsKBmEbqh7ce-YUJR1BkEJByYAHiGC4ALpzV8hOvYb37MBg5QCMvIbsPG6Zjlx5A', openLabel: 'Open CircuitJS' },
+    { id: 'placement-octave', label: 'MATLAB/Octave Practice', url: OCTAVE_URL, openLabel: 'Open Octave' },
+    { id: 'placement-career', label: 'AcadMix Career Toolkit', url: '/career', openLabel: 'Open Toolkit', noEmbed: true },
+    { id: 'placement-hub', label: 'AcadMix Placement Hub', url: '/placement-prep', openLabel: 'Open Placement Hub', noEmbed: true },
   ],
 };
 
@@ -729,40 +816,74 @@ const CIVIL_SIMULATOR_CATEGORIES = [
   { id: 'transportation', label: 'Transportation Engg', icon: <Path size={16} weight="duotone" />, accent: 'indigo' },
   { id: 'environmental', label: 'Environmental Engg', icon: <Tree size={16} weight="duotone" />, accent: 'teal' },
   { id: 'concrete_steel', label: 'Concrete & Steel Design', icon: <Wall size={16} weight="duotone" />, accent: 'rose' },
+  { id: 'estimation_quantity', label: 'Estimation & Quantity', icon: <ChartBar size={16} weight="duotone" />, accent: 'amber' },
+  { id: 'construction_management', label: 'Construction Management', icon: <Clock size={16} weight="duotone" />, accent: 'violet' },
 ];
 
-const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; isNativeBlock?: boolean }[]> = {
+const CIVIL_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; noEmbed?: boolean; isNativeBlock?: boolean; civilTool?: CivilStudioTool }[]> = {
   structural: [
+    { id: 'civil-structural-studio', label: 'Structural Studio', url: '', isNativeBlock: true, civilTool: 'structural' },
+    { id: 'civil-frame-studio', label: 'Frame Analysis Studio', url: '', isNativeBlock: true, civilTool: 'frame' },
+    { id: 'civil-truss-studio', label: 'Truss Analysis Studio', url: '', isNativeBlock: true, civilTool: 'truss' },
+    { id: 'civil-bridge-studio', label: 'Bridge Basics Studio', url: '', isNativeBlock: true, civilTool: 'bridge' },
     { id: 'st-python', label: 'Python (Stiffness)', url: jupyterUrl(JUPYTER_CODES['st-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
-    { id: 'st-beam', label: 'Beam Calculator', url: 'https://structurecalcs.com/beam', openLabel: 'Open Calculator' },
-    { id: 'st-truss', label: 'Truss Solver', url: 'https://structurecalcs.com/truss', openLabel: 'Open Solver' },
-    { id: 'st-frame', label: 'Frame Analysis', url: 'https://structurecalcs.com/beam', openLabel: 'Open Analyzer' },
   ],
   geotechnical: [
+    { id: 'civil-geotech-studio', label: 'Bearing Capacity Studio', url: '', isNativeBlock: true, civilTool: 'geotech' },
+    { id: 'civil-retaining-studio', label: 'Retaining Wall & Slope Studio', url: '', isNativeBlock: true, civilTool: 'retaining' },
+    { id: 'civil-soil-lab-studio', label: 'Soil Classification & Compaction', url: '', isNativeBlock: true, civilTool: 'soilLab' },
+    { id: 'civil-pile-studio', label: 'Pile Group Studio', url: '', isNativeBlock: true, civilTool: 'pile' },
     { id: 'geo-python', label: 'Python (Soil)', url: jupyterUrl(JUPYTER_CODES['geo-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'geo-settle-native', label: 'Settlement Calc (Native)', url: '', isNativeBlock: true },
   ],
   fluid_mechanics: [
+    { id: 'civil-hydraulics-studio', label: 'Hydraulics Studio', url: '', isNativeBlock: true, civilTool: 'hydraulics' },
+    { id: 'civil-water-network-studio', label: 'Water Network Studio', url: '', isNativeBlock: true, civilTool: 'waterNetwork' },
+    { id: 'civil-open-channel-studio', label: 'Open Channel Studio', url: '', isNativeBlock: true, civilTool: 'openChannel' },
     { id: 'fm-python', label: 'Python (Flow)', url: jupyterUrl(JUPYTER_CODES['fm-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'fm-rlc', label: 'RLC Circuit (Pipe Analogy)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
   surveying: [
-    { id: 'sv-leaflet', label: 'OpenStreetMap', url: 'https://www.openstreetmap.org/', openLabel: 'Open OSM' },
-    { id: 'sv-qgis', label: 'QGIS Cloud', url: 'https://qgiscloud.com/', openLabel: 'Open QGIS Cloud' },
+    { id: 'civil-survey-studio', label: 'Survey Traverse Studio', url: '', isNativeBlock: true, civilTool: 'survey' },
+    { id: 'civil-leveling-studio', label: 'Survey Leveling Studio', url: '', isNativeBlock: true, civilTool: 'leveling' },
+    { id: 'civil-earthwork-studio', label: 'GIS / Contour / Earthwork', url: '', isNativeBlock: true, civilTool: 'earthwork' },
   ],
   cad_bim: [
+    { id: 'civil-cad-studio', label: 'CAD/BIM Quantity Sketcher', url: '', isNativeBlock: true, civilTool: 'cad' },
     { id: 'cad-python', label: 'Python (CAD Math)', url: jupyterUrl(JUPYTER_CODES['cad-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   transportation: [
+    { id: 'civil-road-studio', label: 'Road Geometry Studio', url: '', isNativeBlock: true, civilTool: 'transport' },
+    { id: 'civil-pavement-studio', label: 'Pavement Design Studio', url: '', isNativeBlock: true, civilTool: 'pavement' },
     { id: 'tr-python', label: 'Python (Traffic)', url: jupyterUrl(JUPYTER_CODES['tr-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
-    { id: 'tr-osm', label: 'OpenStreetMap (Roads)', url: 'https://www.openstreetmap.org/', openLabel: 'Open OSM' },
-    { id: 'tr-sumo', label: 'SUMO Traffic Sim', url: 'https://sumo.dlr.de/docs/', openLabel: 'Open SUMO Docs', externalUrl: 'https://sumo.dlr.de/docs/Downloads.php', externalLabel: 'Download SUMO' },
   ],
   environmental: [
+    { id: 'civil-environment-studio', label: 'Environmental Systems Studio', url: '', isNativeBlock: true, civilTool: 'environment' },
+    { id: 'civil-services-studio', label: 'Building Services Civil Studio', url: '', isNativeBlock: true, civilTool: 'services' },
     { id: 'env-python', label: 'Python (WTP/STP)', url: jupyterUrl(JUPYTER_CODES['env-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   concrete_steel: [
+    { id: 'civil-rcc-studio', label: 'RCC Beam Design Studio', url: '', isNativeBlock: true, civilTool: 'concrete' },
+    { id: 'civil-steel-studio', label: 'Steel Structure Design Studio', url: '', isNativeBlock: true, civilTool: 'steel' },
+    { id: 'civil-mix-design-studio', label: 'Concrete Mix Design Studio', url: '', isNativeBlock: true, civilTool: 'mixDesign' },
+    { id: 'civil-column-footing-studio', label: 'Column & Footing Design', url: '', isNativeBlock: true, civilTool: 'columnFooting' },
+    { id: 'civil-masonry-studio', label: 'Masonry Design Studio', url: '', isNativeBlock: true, civilTool: 'masonry' },
+    { id: 'civil-rebar-studio', label: 'Rebar Detailing Studio', url: '', isNativeBlock: true, civilTool: 'rebar' },
+    { id: 'civil-seismic-studio', label: 'Seismic Design Studio', url: '', isNativeBlock: true, civilTool: 'seismic' },
+    { id: 'civil-wind-studio', label: 'Wind Load Studio', url: '', isNativeBlock: true, civilTool: 'wind' },
     { id: 'cs-python', label: 'Python (IS 456)', url: jupyterUrl(JUPYTER_CODES['cs-python-civil']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
+  ],
+  estimation_quantity: [
+    { id: 'civil-estimation-studio', label: 'Quantity & BBS Studio', url: '', isNativeBlock: true, civilTool: 'estimation' },
+    { id: 'civil-cost-estimator-studio', label: 'Construction Cost Estimator', url: '', isNativeBlock: true, civilTool: 'costEstimator' },
+    { id: 'civil-formwork-studio', label: 'Formwork & Scaffolding', url: '', isNativeBlock: true, civilTool: 'formwork' },
+    { id: 'civil-qc-lab-studio', label: 'Quality Control Lab Studio', url: '', isNativeBlock: true, civilTool: 'qcLab' },
+    { id: 'civil-tender-studio', label: 'Tender & BOQ Comparison', url: '', isNativeBlock: true, civilTool: 'tender' },
+  ],
+  construction_management: [
+    { id: 'civil-planning-studio', label: 'Construction Planning Studio', url: '', isNativeBlock: true, civilTool: 'planning' },
+    { id: 'civil-equipment-studio', label: 'Equipment Productivity Studio', url: '', isNativeBlock: true, civilTool: 'equipment' },
+    { id: 'civil-site-layout-studio', label: 'Site Layout Planning Studio', url: '', isNativeBlock: true, civilTool: 'siteLayout' },
   ],
 };
 
@@ -903,6 +1024,7 @@ const CodePlayground = ({ navigate, user }) => {
   const _simBoards = _activeBoards[simCategory] || [];
   const _simActiveBoard = _simBoards.find(b => b.id === wokwiBoard) || _simBoards[0];
   const _simAccent = SIM_ACCENT_CLASSES[_simCat.accent] || SIM_ACCENT_CLASSES.teal;
+  const _isNativeSurface = Boolean((_simActiveBoard as any)?.isNativeBlock || (_simActiveBoard as any)?.isNativeWasm);
   const [rPlots, setRPlots] = useState([]);
   const [remoteImages, setRemoteImages] = useState([]);
   const [webrLoading, setWebrLoading] = useState(false);
@@ -2058,7 +2180,7 @@ const CodePlayground = ({ navigate, user }) => {
         </div>
       ) : (language === 'ecelab' || language === 'eeelab' || language === 'civillab' || language === 'mechlab') ? (
         // ECE / EEE / Civil Lab — multi-simulator panel
-        <div className="flex-1 overflow-hidden flex flex-col" style={{ overscrollBehavior: 'contain' }}>
+        <div className={`flex-1 flex flex-col ${_isNativeSurface && !isLabFullScreen ? 'overflow-y-auto custom-scrollbar' : 'overflow-hidden'}`} style={{ overscrollBehavior: 'contain' }}>
           <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-4 w-full flex flex-col flex-1 min-h-0" style={{ overscrollBehavior: 'contain' }}>
             {/* Category Tabs + Board Selector Toolbar */}
             <div className="soft-card p-3 shrink-0 mb-4 space-y-2">
@@ -2111,6 +2233,7 @@ const CodePlayground = ({ navigate, user }) => {
                       </button>
                     </div>
                   )}
+                  {!((_simActiveBoard as any)?.isNativeBlock || (_simActiveBoard as any)?.isNativeWasm) && (
                   <a
                     href={(useOctaveMode && (_simActiveBoard as any)?.octaveUrl) || _simActiveBoard?.url || '#'}
                     target="_blank"
@@ -2119,6 +2242,7 @@ const CodePlayground = ({ navigate, user }) => {
                   >
                     {useOctaveMode && (_simActiveBoard as any)?.octaveUrl ? 'Open Octave' : (_simActiveBoard?.openLabel || 'Open External')} ↗
                   </a>
+                  )}
                   <button 
                     onClick={() => setIsLabFullScreen(!isLabFullScreen)} 
                     title={isLabFullScreen ? "Exit Full Screen" : "Full Screen"} 
@@ -2181,7 +2305,7 @@ const CodePlayground = ({ navigate, user }) => {
               )}
             </div>
             {/* Navigation helper for CircuitJS-based simulators */}
-            {((['analog', 'digital', 'power_electronics', 'control_systems', 'electrical_machines', 'power_systems', 'fluid_mechanics', 'communication', 'dsp', 'measurements', 'renewable_energy', 'dynamics'].includes(simCategory)) && !(_simActiveBoard as any)?.isNativeWasm) && (
+            {((['analog', 'digital', 'power_electronics', 'control_systems', 'electrical_machines', 'power_systems', 'fluid_mechanics', 'communication', 'dsp', 'measurements', 'renewable_energy', 'protection_switchgear', 'dynamics'].includes(simCategory)) && !((_simActiveBoard as any)?.isNativeWasm || (_simActiveBoard as any)?.isNativeBlock)) && (
               <div className={`flex items-center gap-4 text-xs font-medium px-4 py-2 rounded-xl mb-2 ${
                 SIM_ACCENT_CLASSES[_simCat.accent]?.pill || 'bg-slate-100 text-slate-600'
               }`}>
@@ -2212,7 +2336,16 @@ const CodePlayground = ({ navigate, user }) => {
               </div>
             )}
             {/* Simulator iframe — or external-launch card for noEmbed boards */}
-            <div className={isLabFullScreen ? "fixed inset-0 z-[100] bg-[#0B0C10] w-screen h-screen flex flex-col" : "soft-card overflow-hidden flex-1 min-h-0 rounded-2xl relative"} style={{ overscrollBehavior: 'contain' }}>
+            <div
+              className={
+                isLabFullScreen
+                  ? "fixed inset-0 z-[100] bg-[#0B0C10] w-screen h-screen flex flex-col"
+                  : _isNativeSurface
+                    ? "soft-card overflow-hidden shrink-0 min-h-[760px] lg:min-h-[780px] rounded-2xl relative"
+                    : "soft-card overflow-hidden flex-1 min-h-0 rounded-2xl relative"
+              }
+              style={{ overscrollBehavior: 'contain' }}
+            >
               {isLabFullScreen && !((_simActiveBoard as any)?.isNativeBlock || (_simActiveBoard as any)?.isNativeWasm) && (
                 <button
                   onClick={() => setIsLabFullScreen(false)}
@@ -2223,9 +2356,21 @@ const CodePlayground = ({ navigate, user }) => {
                 </button>
               )}
               {(_simActiveBoard as any)?.isNativeBlock ? (
-                <div className="w-full h-full p-2 bg-[#0B0C10]">
-                  {(_simActiveBoard as any)?.id === 'geo-settle-native' ? (
-                    <SettlementCalculator />
+                <div className="w-full h-full min-h-0 overflow-hidden bg-[#0B0C10] p-2">
+                  {(_simActiveBoard as any)?.civilTool ? (
+                    <CivilEngineeringStudio
+                      tool={(_simActiveBoard as any).civilTool}
+                      user={user}
+                      isFullScreen={isLabFullScreen}
+                      onExitFullScreen={() => setIsLabFullScreen(false)}
+                      onRequestFullScreen={() => setIsLabFullScreen(true)}
+                    />
+                  ) : (_simActiveBoard as any)?.id === 'geo-settle-native' ? (
+                    <SettlementCalculator
+                      isFullScreen={isLabFullScreen}
+                      onExitFullScreen={() => setIsLabFullScreen(false)}
+                      onRequestFullScreen={() => setIsLabFullScreen(true)}
+                    />
                   ) : (_simActiveBoard as any)?.id === 'pcb-native' ? (
                     <PCBDesignStudio 
                       user={user} 
@@ -2240,8 +2385,18 @@ const CodePlayground = ({ navigate, user }) => {
                       onExitFullScreen={() => setIsLabFullScreen(false)}
                       onRequestFullScreen={() => setIsLabFullScreen(true)} 
                     />
+                  ) : (_simActiveBoard as any)?.id === 'inst-spectrum' ? (
+                    <SpectrumAnalyzer
+                      isFullScreen={isLabFullScreen}
+                      onExitFullScreen={() => setIsLabFullScreen(false)}
+                      onRequestFullScreen={() => setIsLabFullScreen(true)}
+                    />
                   ) : (_simActiveBoard as any)?.id === 'inst-funcgen' ? (
-                    <FunctionGenerator />
+                    <FunctionGenerator
+                      isFullScreen={isLabFullScreen}
+                      onExitFullScreen={() => setIsLabFullScreen(false)}
+                      onRequestFullScreen={() => setIsLabFullScreen(true)}
+                    />
                   ) : (
                     <DSPBlockSimulator 
                       isFullScreen={isLabFullScreen} 
@@ -2251,7 +2406,7 @@ const CodePlayground = ({ navigate, user }) => {
                   )}
                 </div>
               ) : (_simActiveBoard as any)?.isNativeWasm ? (
-                <div className="w-full h-full p-2">
+                <div className="w-full h-full min-h-0 overflow-hidden p-2">
                   <SimulationIDE 
                     key={(_simActiveBoard as any)?.id}
                     language={(_simActiveBoard as any)?.nativeLanguage} 
@@ -2271,7 +2426,7 @@ const CodePlayground = ({ navigate, user }) => {
                   <div className="text-center max-w-md">
                     <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">{_simActiveBoard?.label}</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                      This simulator runs in its own environment and opens in a new tab. Build, simulate, and test your circuits with zero compile queues.
+                      This tool runs in its own environment and opens in a new tab. Use it for full-screen modeling, simulation, design, or analysis workflows.
                     </p>
                   </div>
                   <a
@@ -2287,7 +2442,7 @@ const CodePlayground = ({ navigate, user }) => {
                   </a>
                   <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    No compile queues — instant simulation
+                    External web tool
                   </p>
                 </div>
               ) : (
@@ -2336,16 +2491,6 @@ const CodePlayground = ({ navigate, user }) => {
               const externalTools: { label: string; url: string }[] = [];
               if (language === 'ecelab' && simCategory === 'embedded') {
                 externalTools.push({ label: 'Tinkercad', url: 'https://www.tinkercad.com/circuits' });
-              }
-              if (language === 'civillab') {
-                if (['cad_bim', 'concrete_steel'].includes(simCategory)) {
-                  externalTools.push({ label: 'SketchUp', url: 'https://app.sketchup.com/' });
-                  externalTools.push({ label: 'Onshape', url: 'https://cad.onshape.com/' });
-                  externalTools.push({ label: 'TinkerCAD 3D', url: 'https://www.tinkercad.com/' });
-                }
-                if (['surveying', 'environmental'].includes(simCategory)) {
-                  externalTools.push({ label: 'Google Earth', url: 'https://earth.google.com/web/' });
-                }
               }
               if (externalTools.length === 0) return null;
               return (

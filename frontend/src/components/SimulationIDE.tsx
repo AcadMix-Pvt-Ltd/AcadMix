@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, Download, TerminalWindow } from '@phosphor-icons/react';
+import { Play, Download, TerminalWindow, CornersIn } from '@phosphor-icons/react';
 
 interface SimulationIDEProps {
   language: 'verilog' | 'spice' | 'python';
@@ -24,16 +24,17 @@ export default function SimulationIDE({
   const [code, setCode] = useState(defaultCode);
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
+    <div className="flex h-full min-h-0 flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center gap-2">
           {isFullScreen && onExitFullScreen && (
             <button 
               onClick={onExitFullScreen}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 font-bold text-[10px] uppercase tracking-widest mr-2"
+              title="Exit Full Screen"
+              className="mr-2 flex h-9 w-9 items-center justify-center rounded-xl border border-gray-700 bg-gray-800 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-100"
             >
-              Exit
+              <CornersIn size={16} weight="bold" />
             </button>
           )}
           <TerminalWindow size={20} className="text-gray-500" />
@@ -53,7 +54,7 @@ export default function SimulationIDE({
       </div>
 
       {/* Split Pane */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Editor Pane */}
         <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 h-full">
           <Editor

@@ -269,7 +269,7 @@ export default function DSPBlockSimulator({ isFullScreen, onExitFullScreen, onRe
   }, [nodes, edges]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm relative">
+    <div className="w-full h-full min-h-0 flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl overflow-hidden shadow-sm relative">
       {/* Short screen prompt overlay */}
       {!isFullScreen && onRequestFullScreen && (
         <div className="absolute inset-0 z-[100] backdrop-blur-sm bg-black/5 dark:bg-white/5 flex flex-col items-center justify-center pointer-events-auto">
@@ -300,9 +300,10 @@ export default function DSPBlockSimulator({ isFullScreen, onExitFullScreen, onRe
           {isFullScreen && onExitFullScreen && (
             <button 
               onClick={onExitFullScreen}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20 font-bold text-[10px] uppercase tracking-widest"
+              title="Exit Full Screen"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-700 bg-gray-800 text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-100"
             >
-              <CornersIn size={14} weight="bold" /> Exit
+              <CornersIn size={16} weight="bold" />
             </button>
           )}
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-md shadow-indigo-500/20">

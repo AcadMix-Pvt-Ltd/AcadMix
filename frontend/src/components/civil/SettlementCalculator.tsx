@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowsDownUp, Stack, Calculator, Download, Info } from '@phosphor-icons/react';
+import { ArrowsDownUp, Stack, Calculator, Download, Info, CornersIn, CornersOut } from '@phosphor-icons/react';
 
 interface SoilParams {
   thickness: number;          // H (m)
@@ -11,7 +11,15 @@ interface SoilParams {
   stressIncrement: number;    // delta_sigma (kPa)
 }
 
-export default function SettlementCalculator() {
+export default function SettlementCalculator({
+  isFullScreen,
+  onExitFullScreen,
+  onRequestFullScreen,
+}: {
+  isFullScreen?: boolean;
+  onExitFullScreen?: () => void;
+  onRequestFullScreen?: () => void;
+}) {
   const [params, setParams] = useState<SoilParams>({
     thickness: 5.0,
     voidRatio: 0.85,
@@ -67,20 +75,32 @@ export default function SettlementCalculator() {
   }, [params]);
 
   return (
-    <div className="w-full h-full flex flex-col bg-[#0B0C10] text-gray-300 font-sans overflow-hidden">
+    <div className="w-full h-full min-h-0 flex flex-col bg-[#0B0C10] text-gray-300 font-sans overflow-hidden">
       {/* Header */}
-      <div className="flex items-center px-6 py-4 border-b border-white/10 bg-[#1F2833]/50">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mr-4">
-          <Stack size={24} className="text-amber-400" weight="duotone" />
+      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-white/10 bg-[#1F2833]/50">
+        <div className="flex items-center min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center mr-4 shrink-0">
+            <Stack size={24} className="text-amber-400" weight="duotone" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-xl font-bold text-white tracking-wide truncate">1D Consolidation Settlement</h2>
+            <p className="text-xs text-gray-400 font-medium truncate">Native Geotechnical Analysis Tool</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-white tracking-wide">1D Consolidation Settlement</h2>
-          <p className="text-xs text-gray-400 font-medium">Native Geotechnical Analysis Tool</p>
-        </div>
+        {(onExitFullScreen || onRequestFullScreen) && (
+          <button
+            type="button"
+            onClick={() => (isFullScreen ? onExitFullScreen?.() : onRequestFullScreen?.())}
+            title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-slate-200"
+          >
+            {isFullScreen ? <CornersIn size={16} weight="bold" /> : <CornersOut size={16} weight="bold" />}
+          </button>
+        )}
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Left Panel - Inputs */}
         <div className="w-1/2 p-6 overflow-y-auto border-r border-white/10 custom-scrollbar">
           <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-widest mb-6 flex items-center gap-2">
