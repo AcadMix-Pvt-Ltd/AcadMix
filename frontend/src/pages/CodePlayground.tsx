@@ -916,7 +916,7 @@ const MECH_SIMULATOR_CATEGORIES = [
   { id: 'industrial_mech', label: 'Industrial & Reliability', icon: <Gauge size={16} weight="duotone" />, accent: 'violet' },
 ];
 
-const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; noEmbed?: boolean; isNativeBlock?: boolean; mechTool?: MechanicalStudioTool }[]> = {
+const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: string; openLabel?: string; externalUrl?: string; externalLabel?: string; octaveUrl?: string; noEmbed?: boolean; isNativeBlock?: boolean; mechTool?: MechanicalStudioTool; civilTool?: CivilStudioTool }[]> = {
   thermodynamics: [
     { id: 'mech-thermo-cycle', label: 'Thermodynamic Cycle Studio', url: '', isNativeBlock: true, mechTool: 'thermoCycle' },
     { id: 'mech-heat-exchanger', label: 'Heat Exchanger Studio', url: '', isNativeBlock: true, mechTool: 'heatExchanger' },
@@ -937,7 +937,7 @@ const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: st
     { id: 'mech-mohrs-circle', label: "Mohr's Circle Studio", url: '', isNativeBlock: true, mechTool: 'mohrsCircle' },
     { id: 'mech-material-testing', label: 'Material Testing Studio', url: '', isNativeBlock: true, mechTool: 'materialTesting' },
     { id: 'som-mohr', label: "Mohr's Circle", url: 'https://mechanicalc.com/calculators/mohrs-circle/', openLabel: 'Open Mechanicalc' },
-    { id: 'som-truss', label: 'Truss Solver', url: 'https://structurecalcs.com/truss', openLabel: 'Open Solver' },
+    { id: 'mech-truss-solver', label: 'AcadMix Truss Solver', url: '', isNativeBlock: true, civilTool: 'truss' },
     { id: 'som-python', label: 'Python (SOM)', url: jupyterUrl(JUPYTER_CODES['som-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   machine_design: [
