@@ -552,6 +552,23 @@ export const feesAPI = {
   createOrder: (data) => api.post('/fees/create-order', data),
   verifyPayment: (data) => api.post('/fees/verify-payment', data),
   bulkGenerateInvoices: (data) => api.post('/admin/fees/invoices/bulk', data),
+  getReceipt: (receiptNo) => api.get(`/fees/receipts/${receiptNo}`),
+  verifyReceipt: (token) => api.get(`/fees/receipts/verify/${token}`),
+  financeSummary: () => api.get('/finance/summary'),
+  searchStudents: (q) => api.get('/finance/students/search', { params: { q } }),
+  studentLedger: (studentId) => api.get(`/finance/students/${studentId}/ledger`),
+  createFeeStructure: (data) => api.post('/finance/fee-structures', data),
+  addFeeStructureItem: (id, data) => api.post(`/finance/fee-structures/${id}/items`, data),
+  generateAllocations: (data) => api.post('/finance/allocations/generate', data),
+  createConcession: (data) => api.post('/finance/concessions', data),
+  reviewConcession: (id, data) => api.put(`/finance/concessions/${id}/review`, data),
+  createRefund: (data) => api.post('/finance/refunds', data),
+  reviewRefund: (id, data) => api.put(`/finance/refunds/${id}/review`, data),
+  currentCashierSession: () => api.get('/cashier/sessions/current'),
+  openCashierSession: (data) => api.post('/cashier/sessions/open', data),
+  closeCashierSession: (data) => api.post('/cashier/sessions/close', data),
+  collectCashierFee: (data) => api.post('/cashier/collections', data),
+  cashierDayClose: () => api.get('/cashier/day-close'),
 };
 
 // Interview War Room — AI Mock Interviews

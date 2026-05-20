@@ -178,6 +178,8 @@ const LoginPage = ({ onLogin }) => {
     { role: 'Teacher', collegeId: 'T001', password: 'teacher123', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', icon: '👨‍🏫' },
     { role: 'HOD', collegeId: 'HOD001', password: 'hod123', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700', icon: '👔' },
     { role: 'Principal', collegeId: 'PRIN001', password: 'teacher123', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700', icon: '🏫' },
+    { role: 'Cashier', collegeId: 'CASHIER001', password: 'cashier123', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700', icon: 'Rs' },
+    { role: 'Finance', collegeId: 'FINANCE001', password: 'finance123', color: 'bg-sky-50 hover:bg-sky-100 text-sky-700', icon: 'FN' },
   ];
 
   const handleSubmit = async (e) => {

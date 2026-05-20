@@ -497,6 +497,52 @@ async def _seed_db():
             else:
                 logger.info("[startup] Security 'SECURITY001' already exists. Skipping seed.")
 
+            # 10. Seed Finance Office users for quick-login demo
+            finance_demo_users = [
+                {
+                    "email": "CASHIER001",
+                    "name": "Anita Rao",
+                    "password": "cashier123",
+                    "role": "cashier",
+                    "department": "Accounts - Cash Counter",
+                },
+                {
+                    "email": "FINANCE001",
+                    "name": "Vikram Mehta",
+                    "password": "finance123",
+                    "role": "finance_officer",
+                    "department": "Finance Office",
+                },
+            ]
+            for demo in finance_demo_users:
+                finance_r = await session.execute(
+                    select(models.User).where(models.User.email == demo["email"])
+                )
+                if not finance_r.scalars().first():
+                    finance_user = models.User(
+                        name=demo["name"],
+                        email=demo["email"],
+                        password_hash=hash_password(demo["password"]),
+                        role=demo["role"],
+                        college_id=college.id,
+                    )
+                    try:
+                        session.add(finance_user)
+                        await session.flush()
+                        finance_profile = models.UserProfile(
+                            user_id=finance_user.id,
+                            college_id=college.id,
+                            department=demo["department"],
+                        )
+                        session.add(finance_profile)
+                        await session.commit()
+                        logger.info("[startup] Finance demo user '%s' seeded with college_id=%s", demo["email"], college.id)
+                    except IntegrityError:
+                        await session.rollback()
+                        logger.info("[startup] Finance demo user '%s' was seeded by another worker. Skipping.", demo["email"])
+                else:
+                    logger.info("[startup] Finance demo user '%s' already exists. Skipping seed.", demo["email"])
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

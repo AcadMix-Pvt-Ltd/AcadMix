@@ -17,6 +17,8 @@ const downloadReceipt = (txn) => {
     '              FEE PAYMENT RECEIPT',
     '═══════════════════════════════════════════',
     '',
+    `  Receipt No    : ${txn.receipt_no || 'N/A'}`,
+    `  Invoice No    : ${txn.invoice_no || 'N/A'}`,
     `  Payment ID    : ${txn.payment_id}`,
     `  Fee Type      : ${txn.fee_type}`,
     `  Academic Year : ${txn.academic_year}`,
@@ -24,6 +26,7 @@ const downloadReceipt = (txn) => {
     `  Status        : ${txn.status === 'success' ? 'PAID ✓' : txn.status.toUpperCase()}`,
     `  Transaction   : ${txn.transaction_ref || 'N/A'}`,
     `  Date          : ${formatDate(txn.paid_at)}`,
+    `  Verify        : ${txn.verification_token ? `${window.location.origin}/fees/verify/${txn.verification_token}` : 'N/A'}`,
     '',
     '═══════════════════════════════════════════',
     '  This is a computer-generated receipt.',
@@ -291,6 +294,7 @@ const FeePaymentModule = ({ user }) => {
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-700/50">
                       <th className="text-left text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 py-3 px-4">Fee Type</th>
+                      <th className="text-left text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 py-3 px-4">Receipt</th>
                       <th className="text-left text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 py-3 px-4">Year</th>
                       <th className="text-right text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 py-3 px-4">Amount</th>
                       <th className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 py-3 px-4">Status</th>
@@ -314,6 +318,7 @@ const FeePaymentModule = ({ user }) => {
                             <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{txn.fee_type}</span>
                           </div>
                         </td>
+                        <td className="py-3.5 px-4 text-xs font-bold text-indigo-500">{txn.receipt_no || '—'}</td>
                         <td className="py-3.5 px-4 text-sm text-slate-500 dark:text-slate-400">{txn.academic_year}</td>
                         <td className="py-3.5 px-4 text-sm font-extrabold text-slate-900 dark:text-white text-right">₹{txn.amount?.toLocaleString('en-IN')}</td>
                         <td className="py-3.5 px-4 text-center">
