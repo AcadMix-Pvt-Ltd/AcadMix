@@ -15,6 +15,7 @@ import {
   WaveSine,
   Wrench,
 } from '@phosphor-icons/react';
+import AcadMixCadStudio from './AcadMixCadStudio';
 
 export type MechanicalStudioTool =
   | 'thermoCycle'
@@ -281,7 +282,7 @@ export default function MechanicalEngineeringStudio({ tool, isFullScreen, onExit
 
   if (tool === 'cad3d') {
     return (
-      <CadModelingStudio
+      <AcadMixCadStudio
         isFullScreen={isFullScreen}
         onExitFullScreen={onExitFullScreen}
         onRequestFullScreen={onRequestFullScreen}
