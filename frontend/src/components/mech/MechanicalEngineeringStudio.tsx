@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Car,
   CheckCircle,
@@ -623,9 +623,11 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
   );
 }
 
-type CadSketchTool = 'select' | 'rectangle' | 'circle' | 'slot' | 'rib' | 'hole';
+type CadSketchTool = 'select' | 'line' | 'rectangle' | 'circle' | 'slot' | 'rib' | 'hole';
 type CadRenderMode = 'wireframe' | 'shaded' | 'realistic' | 'section';
 type CadViewMode = 'iso' | 'top' | 'front' | 'right';
+type CadConstraintKind = 'locked' | 'equal' | 'horizontal' | 'vertical' | 'centered';
+type CadResizeHandle = 'e' | 's' | 'se' | 'radius' | 'line-end';
 type CadShape = {
   id: string;
   type: Exclude<CadSketchTool, 'select'>;
@@ -638,10 +640,12 @@ type CadShape = {
   label: string;
   material: string;
   operation: 'add' | 'cut';
+  constraints?: CadConstraintKind[];
 };
 
 const cadToolLabels: Record<CadSketchTool, string> = {
   select: 'Select',
+  line: 'Line',
   rectangle: 'Rectangle',
   circle: 'Circle',
   slot: 'Slot',
@@ -650,10 +654,10 @@ const cadToolLabels: Record<CadSketchTool, string> = {
 };
 
 const defaultCadShapes: CadShape[] = [
-  { id: 'base', type: 'rectangle', x: 160, y: 118, w: 220, h: 112, radius: 0, depth: 28, label: 'Base plate', material: 'aluminium', operation: 'add' },
-  { id: 'boss', type: 'circle', x: 270, y: 174, w: 72, h: 72, radius: 36, depth: 48, label: 'Center boss', material: 'steel', operation: 'add' },
-  { id: 'mount-a', type: 'slot', x: 186, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot A', material: 'rubber', operation: 'cut' },
-  { id: 'mount-b', type: 'slot', x: 300, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot B', material: 'rubber', operation: 'cut' },
+  { id: 'base', type: 'rectangle', x: 160, y: 118, w: 220, h: 112, radius: 0, depth: 28, label: 'Base plate', material: 'aluminium', operation: 'add', constraints: ['centered'] },
+  { id: 'boss', type: 'circle', x: 270, y: 174, w: 72, h: 72, radius: 36, depth: 48, label: 'Center boss', material: 'steel', operation: 'add', constraints: ['equal'] },
+  { id: 'mount-a', type: 'slot', x: 186, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot A', material: 'rubber', operation: 'cut', constraints: ['horizontal'] },
+  { id: 'mount-b', type: 'slot', x: 300, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot B', material: 'rubber', operation: 'cut', constraints: ['horizontal'] },
 ];
 
 const cadMaterials: Record<string, { name: string; density: number; color: string; dark: string; light: string; finish: string; pattern: string }> = {
@@ -674,8 +678,10 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
   const [renderMode, setRenderMode] = useState<CadRenderMode>('realistic');
   const [viewMode, setViewMode] = useState<CadViewMode>('iso');
   const [snap, setSnap] = useState(5);
+  const [history, setHistory] = useState<CadShape[][]>([]);
+  const [future, setFuture] = useState<CadShape[][]>([]);
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [drag, setDrag] = useState<{ id: string; dx: number; dy: number } | null>(null);
+  const [drag, setDrag] = useState<{ mode: 'move' | 'resize' | 'draw'; id: string; dx: number; dy: number; handle?: CadResizeHandle } | null>(null);
   const selected = shapes.find((shape) => shape.id === selectedId) || shapes[0];
   const solidVolume = shapes.reduce((sum, shape) => sum + (shape.operation === 'cut' ? -1 : 1) * cadArea(shape) * shape.depth, 0);
   const mass = shapes.reduce((sum, shape) => {
@@ -683,41 +689,137 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
     return sum + cadArea(shape) * shape.depth / 1000 * cadMaterials[shape.material].density;
   }, 0);
   const maxDepth = Math.max(...shapes.map((shape) => shape.depth), 1);
-  const underDefined = shapes.filter((shape) => shape.w <= 0 || shape.h <= 0 || shape.depth <= 0).length;
+  const constructionCount = shapes.filter((shape) => shape.type === 'line').length;
+  const constraintCount = shapes.reduce((sum, shape) => sum + (shape.constraints?.length || 0), 0);
+  const underDefined = shapes.filter((shape) => !shape.constraints?.length || shape.w <= 0 || shape.h <= 0 || shape.depth <= 0).length;
+  const sketchScore = Math.max(35, Math.min(98, 58 + constraintCount * 6 + shapes.length * 2 - underDefined * 8));
+  const modelFeatures = useMemo(() => shapes.filter((shape) => shape.type !== 'line'), [shapes]);
 
-  const updateShape = (id: string, patch: Partial<CadShape>) => {
-    setShapes((prev) => prev.map((shape) => shape.id === id ? { ...shape, ...patch } : shape));
+  const pushHistory = (snapshot = shapes) => {
+    setHistory((prev) => [...prev.slice(-24), snapshot.map((shape) => ({ ...shape, constraints: [...(shape.constraints || [])] }))]);
+    setFuture([]);
   };
 
-  const addShape = (type: Exclude<CadSketchTool, 'select'>) => {
+  const updateShape = (id: string, patch: Partial<CadShape>, record = true) => {
+    if (record) pushHistory();
+    setShapes((prev) => prev.map((shape) => {
+      if (shape.id !== id) return shape;
+      const next = { ...shape, ...patch };
+      return applyCadConstraints(next);
+    }));
+  };
+
+  const undo = () => {
+    setHistory((prev) => {
+      if (!prev.length) return prev;
+      const previous = prev[prev.length - 1];
+      setFuture((items) => [shapes, ...items.slice(0, 24)]);
+      setShapes(previous);
+      setSelectedId(previous[0]?.id || '');
+      return prev.slice(0, -1);
+    });
+  };
+
+  const redo = () => {
+    setFuture((prev) => {
+      if (!prev.length) return prev;
+      const next = prev[0];
+      setHistory((items) => [...items.slice(-24), shapes]);
+      setShapes(next);
+      setSelectedId(next[0]?.id || '');
+      return prev.slice(1);
+    });
+  };
+
+  const makeShape = (type: Exclude<CadSketchTool, 'select'>, x: number, y: number): CadShape => {
     const nextId = `${type}-${Date.now().toString(36).slice(-5)}`;
-    const base: Record<Exclude<CadSketchTool, 'select'>, Pick<CadShape, 'w' | 'h' | 'radius' | 'label' | 'operation'>> = {
+    const base: Record<Exclude<CadSketchTool, 'select'>, Pick<CadShape, 'w' | 'h' | 'radius' | 'label' | 'operation' | 'constraints'>> = {
+      line: { w: 92, h: 0, radius: 0, label: 'Construction line', operation: 'add', constraints: ['horizontal'] },
       rectangle: { w: 108, h: 64, radius: 0, label: 'New pad', operation: 'add' },
       circle: { w: 74, h: 74, radius: 37, label: 'New boss', operation: 'add' },
       slot: { w: 118, h: 34, radius: 17, label: 'New slot', operation: 'cut' },
       rib: { w: 142, h: 28, radius: 0, label: 'New rib', operation: 'add' },
       hole: { w: 44, h: 44, radius: 22, label: 'New hole', operation: 'cut' },
     }[type];
-    const shape: CadShape = { id: nextId, type, x: 210 + shapes.length * 8, y: 140 + shapes.length * 6, depth: type === 'hole' ? 36 : 24, material: type === 'hole' || type === 'slot' ? 'rubber' : selectedMaterial, ...base };
+    return { id: nextId, type, x, y, depth: type === 'hole' ? 36 : type === 'line' ? 0 : 24, material: type === 'hole' || type === 'slot' ? 'rubber' : selectedMaterial, ...base };
+  };
+
+  const addShape = (type: Exclude<CadSketchTool, 'select'>, origin?: { x: number; y: number }) => {
+    const x = origin ? snapPoint(origin, snap).x : 210 + shapes.length * 8;
+    const y = origin ? snapPoint(origin, snap).y : 140 + shapes.length * 6;
+    const shape = makeShape(type, x, y);
+    pushHistory();
     setShapes((prev) => [...prev, shape]);
-    setSelectedId(nextId);
-    setActiveTool('select');
+    setSelectedId(shape.id);
+    return shape;
   };
 
   const pointerDown = (event: React.PointerEvent<SVGElement>, shape: CadShape) => {
     event.stopPropagation();
+    if (shape.constraints?.includes('locked')) {
+      setSelectedId(shape.id);
+      return;
+    }
+    pushHistory();
     setSelectedId(shape.id);
     const point = svgPointer(event, svgRef.current);
-    setDrag({ id: shape.id, dx: point.x - shape.x, dy: point.y - shape.y });
+    setDrag({ mode: 'move', id: shape.id, dx: point.x - shape.x, dy: point.y - shape.y });
     svgRef.current?.setPointerCapture(event.pointerId);
+  };
+
+  const handleDown = (event: React.PointerEvent<SVGElement>, shape: CadShape, handle: CadResizeHandle) => {
+    event.stopPropagation();
+    if (shape.constraints?.includes('locked')) return;
+    pushHistory();
+    setSelectedId(shape.id);
+    const point = svgPointer(event, svgRef.current);
+    setDrag({ mode: 'resize', id: shape.id, dx: point.x, dy: point.y, handle });
+    svgRef.current?.setPointerCapture(event.pointerId);
+  };
+
+  const sketchPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
+    if (activeTool === 'select') {
+      setSelectedId(selectedId);
+      return;
+    }
+    const point = snapPoint(svgPointer(event, svgRef.current), snap);
+    const shape = addShape(activeTool, point);
+    if (activeTool === 'line') {
+      setDrag({ mode: 'draw', id: shape.id, dx: point.x, dy: point.y, handle: 'line-end' });
+      svgRef.current?.setPointerCapture(event.pointerId);
+    }
   };
 
   const pointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
     if (!drag) return;
     const point = svgPointer(event, svgRef.current);
-    const x = Math.round((point.x - drag.dx) / snap) * snap;
-    const y = Math.round((point.y - drag.dy) / snap) * snap;
-    updateShape(drag.id, { x: clamp(x, 28, 508), y: clamp(y, 28, 292) });
+    const target = shapes.find((shape) => shape.id === drag.id);
+    if (!target) return;
+    const snapped = snapPoint(point, snap);
+    if (drag.mode === 'move') {
+      const x = Math.round((point.x - drag.dx) / snap) * snap;
+      const y = Math.round((point.y - drag.dy) / snap) * snap;
+      updateShape(drag.id, { x: clamp(x, 28, 532), y: clamp(y, 28, 312) }, false);
+      return;
+    }
+    if (drag.mode === 'draw' || drag.handle === 'line-end') {
+      const w = snapped.x - target.x;
+      const h = snapped.y - target.y;
+      updateShape(drag.id, { w: clamp(w, -440, 440), h: clamp(h, -260, 260) }, false);
+      return;
+    }
+    if (drag.handle === 'radius') {
+      const radius = clamp(Math.hypot(snapped.x - target.x, snapped.y - target.y), 6, 160);
+      updateShape(drag.id, { radius, w: radius * 2, h: radius * 2 }, false);
+      return;
+    }
+    const width = drag.handle === 's' ? target.w : clamp(Math.abs(snapped.x - target.x) * 2, 8, 420);
+    const height = drag.handle === 'e' ? target.h : clamp(Math.abs(snapped.y - target.y) * 2, 8, 260);
+    updateShape(drag.id, {
+      w: width,
+      h: height,
+      radius: target.type === 'circle' || target.type === 'hole' ? Math.min(width, height) / 2 : target.type === 'slot' ? height / 2 : target.radius,
+    }, false);
   };
 
   const stopDrag = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -725,7 +827,21 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
     if (svgRef.current?.hasPointerCapture(event.pointerId)) svgRef.current.releasePointerCapture(event.pointerId);
   };
 
-  const exportSketch = shapes.map((shape) => `${shape.label}: ${shape.type} x=${shape.x} y=${shape.y} w=${shape.w} h=${shape.h} depth=${shape.depth}`).join('\n');
+  const toggleConstraint = (constraint: CadConstraintKind) => {
+    if (!selected) return;
+    pushHistory();
+    setShapes((prev) => prev.map((shape) => {
+      if (shape.id !== selected.id) return shape;
+      const current = new Set(shape.constraints || []);
+      if (current.has(constraint)) current.delete(constraint);
+      else current.add(constraint);
+      let next: CadShape = { ...shape, constraints: Array.from(current) };
+      if (constraint === 'centered' && current.has('centered')) next = { ...next, x: 280, y: 170 };
+      return applyCadConstraints(next);
+    }));
+  };
+
+  const exportSketch = shapes.map((shape) => `${shape.label}: ${shape.type} x=${fmt(shape.x, 0)} y=${fmt(shape.y, 0)} w=${fmt(shape.w, 0)} h=${fmt(shape.h, 0)} depth=${fmt(shape.depth, 0)} constraints=${(shape.constraints || []).join(',') || 'none'}`).join('\n');
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#F4F7FB] text-slate-900">
@@ -742,7 +858,7 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <CadTopPill label="Native CAD" value="Sketch + Extrude" />
-            <CadTopPill label="Model" value={underDefined ? 'Under defined' : 'Ready'} tone={underDefined ? 'warn' : 'good'} />
+            <CadTopPill label="Sketch" value={`${sketchScore}% defined`} tone={underDefined ? 'warn' : 'good'} />
             {(onExitFullScreen || onRequestFullScreen) && (
               <button
                 type="button"
@@ -768,7 +884,7 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                     <button
                       key={toolKey}
                       type="button"
-                      onClick={() => toolKey === 'select' ? setActiveTool('select') : addShape(toolKey)}
+                      onClick={() => setActiveTool(toolKey)}
                       className={`rounded-xl border px-3 py-3 text-left text-xs font-black shadow-sm transition-colors ${activeTool === toolKey ? 'border-sky-300 bg-sky-50 text-sky-700' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white'}`}
                     >
                       {cadToolLabels[toolKey]}
@@ -793,7 +909,12 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs font-semibold text-slate-500">
                         <span>F{index + 1} / {shape.type}</span>
-                        <span>{cadMaterials[shape.material].name}</span>
+                        <span>{shape.type === 'line' ? 'Construction' : cadMaterials[shape.material].name}</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {(shape.constraints || []).map((constraint) => (
+                          <span key={constraint} className="rounded-full bg-white px-2 py-0.5 text-[9px] font-black uppercase text-slate-500 ring-1 ring-slate-200">{constraint}</span>
+                        ))}
                       </div>
                     </button>
                   ))}
@@ -833,6 +954,10 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                 <input type="number" min={1} max={25} value={snap} onChange={(event) => setSnap(clamp(Number(event.target.value), 1, 25))} className="w-12 bg-transparent text-sky-700 outline-none" />
                 mm
               </label>
+              <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                <button type="button" onClick={undo} disabled={!history.length} className="rounded-lg px-3 py-1.5 text-xs font-black text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40">Undo</button>
+                <button type="button" onClick={redo} disabled={!future.length} className="rounded-lg px-3 py-1.5 text-xs font-black text-slate-600 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40">Redo</button>
+              </div>
               <div className="ml-auto rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-bold text-slate-500">Command: {activeTool === 'select' ? 'SELECT' : cadToolLabels[activeTool].toUpperCase()}</div>
             </div>
 
@@ -841,11 +966,11 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                 <div className="mb-3 flex items-center justify-between">
                   <div>
                     <div className="text-sm font-black text-slate-950">2D Sketch Plane</div>
-                    <div className="text-xs text-slate-500">Editable profile geometry in millimeters</div>
+                    <div className="text-xs text-slate-500">Click the plane to place tools. Drag features and resize grips with snap.</div>
                   </div>
                   <div className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-black text-sky-700">XY Plane</div>
                 </div>
-                <svg ref={svgRef} viewBox="0 0 560 340" onPointerMove={pointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag} className="h-[500px] w-full touch-none rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <svg ref={svgRef} viewBox="0 0 560 340" onPointerDown={sketchPointerDown} onPointerMove={pointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag} className="h-[500px] w-full touch-none rounded-2xl border border-slate-200 bg-white shadow-sm">
                   <defs>
                     <pattern id="cad-grid" width="20" height="20" patternUnits="userSpaceOnUse">
                       <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(148,163,184,0.22)" strokeWidth="1" />
@@ -855,7 +980,7 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                   <line x1="24" x2="536" y1="300" y2="300" stroke="rgba(37,99,235,0.32)" />
                   <line x1="40" x2="40" y1="24" y2="316" stroke="rgba(37,99,235,0.32)" />
                   {shapes.map((shape) => (
-                    <CadSketchShape key={shape.id} shape={shape} selected={shape.id === selectedId} onPointerDown={pointerDown} />
+                    <CadSketchShape key={shape.id} shape={shape} selected={shape.id === selectedId} onPointerDown={pointerDown} onHandlePointerDown={handleDown} />
                   ))}
                 </svg>
               </section>
@@ -875,7 +1000,7 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                     </filter>
                   </defs>
                   <line x1="64" x2="504" y1="286" y2="286" stroke="rgba(100,116,139,0.28)" />
-                  {shapes.map((shape, index) => (
+                  {modelFeatures.map((shape, index) => (
                     <CadSolidShape key={shape.id} shape={shape} selected={shape.id === selectedId} z={index * 6} maxDepth={maxDepth} renderMode={renderMode} viewMode={viewMode} />
                   ))}
                   <CadViewCube viewMode={viewMode} />
@@ -888,9 +1013,10 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <CadMetric label="Features" value={String(shapes.length)} />
+                <CadMetric label="Sketch lines" value={String(constructionCount)} />
                 <CadMetric label="Mass" value={fmt(mass / 1000, 2)} unit="kg" tone="good" />
                 <CadMetric label="Volume" value={fmt(Math.max(solidVolume, 0) / 1000, 1)} unit="cm3" />
-                <CadMetric label="Max depth" value={fmt(maxDepth, 0)} unit="mm" />
+                <CadMetric label="Constraints" value={String(constraintCount)} />
               </div>
 
               <Panel className="border-slate-200 bg-white">
@@ -918,10 +1044,11 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
               </Panel>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Validation</div>
-                <div className="space-y-2 text-sm font-bold">
-                  <div className="flex justify-between"><span className="text-slate-500">Sketch state</span><span className={underDefined ? 'text-amber-600' : 'text-emerald-600'}>{underDefined ? 'Needs dimensions' : 'Dimensioned'}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">Manufacturing</span><span className="text-emerald-600">Printable</span></div>
+                  <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Validation</div>
+                  <div className="space-y-2 text-sm font-bold">
+                    <div className="flex justify-between"><span className="text-slate-500">Sketch state</span><span className={underDefined ? 'text-amber-600' : 'text-emerald-600'}>{underDefined ? 'Needs dimensions' : 'Dimensioned'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Definition score</span><span className="text-sky-700">{sketchScore}%</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Manufacturing</span><span className="text-emerald-600">{modelFeatures.length ? 'Printable' : 'Sketch only'}</span></div>
                   <div className="flex justify-between"><span className="text-slate-500">Render</span><span className="capitalize text-sky-700">{renderMode}</span></div>
                 </div>
               </div>
@@ -939,6 +1066,21 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                     <CadNumber label="Height" value={selected.h} unit="mm" onChange={(value) => updateShape(selected.id, { h: Math.max(8, value) })} />
                     <CadNumber label="Radius" value={selected.radius} unit="mm" onChange={(value) => updateShape(selected.id, { radius: Math.max(0, value) })} />
                     <CadNumber label="Extrude" value={selected.depth} unit="mm" onChange={(value) => updateShape(selected.id, { depth: Math.max(1, value) })} />
+                  </div>
+                  <div className="border-t border-slate-200 p-4">
+                    <div className="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Constraints</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['locked', 'equal', 'horizontal', 'vertical', 'centered'] as const).map((constraint) => (
+                        <button
+                          key={constraint}
+                          type="button"
+                          onClick={() => toggleConstraint(constraint)}
+                          className={`rounded-xl border px-3 py-2 text-xs font-black capitalize ${selected.constraints?.includes(constraint) ? 'border-indigo-300 bg-indigo-50 text-indigo-700' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-white'}`}
+                        >
+                          {constraint}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <div className="border-t border-slate-200 p-4">
                     <div className="grid grid-cols-2 gap-2">
@@ -998,10 +1140,53 @@ function CadMetric({ label, value, unit, tone }: { label: string; value: string;
 }
 
 function cadArea(shape: CadShape) {
+  if (shape.type === 'line') return 0;
   if (shape.type === 'circle' || shape.type === 'hole') return Math.PI * Math.pow(shape.radius || shape.w / 2, 2);
   if (shape.type === 'slot') return Math.max(shape.w - shape.h, 0) * shape.h + Math.PI * Math.pow(shape.h / 2, 2);
   if (shape.type === 'rib') return shape.w * shape.h * 0.72;
   return shape.w * shape.h;
+}
+
+function snapPoint(point: { x: number; y: number }, snap: number) {
+  const step = Math.max(1, snap || 1);
+  return {
+    x: Math.round(point.x / step) * step,
+    y: Math.round(point.y / step) * step,
+  };
+}
+
+function applyCadConstraints(shape: CadShape): CadShape {
+  const constraints = shape.constraints || [];
+  let next = { ...shape };
+  if (constraints.includes('equal')) {
+    const size = Math.max(8, Math.max(Math.abs(next.w), Math.abs(next.h)));
+    next = { ...next, w: size, h: size, radius: next.type === 'circle' || next.type === 'hole' ? size / 2 : next.radius };
+  }
+  if (constraints.includes('horizontal') && next.type === 'line') next = { ...next, h: 0 };
+  if (constraints.includes('vertical') && next.type === 'line') next = { ...next, w: 0 };
+  if (constraints.includes('centered')) next = { ...next, x: 280, y: 170 };
+  return next;
+}
+
+function cadBounds(shape: CadShape) {
+  if (shape.type === 'line') {
+    return {
+      left: Math.min(shape.x, shape.x + shape.w),
+      right: Math.max(shape.x, shape.x + shape.w),
+      top: Math.min(shape.y, shape.y + shape.h),
+      bottom: Math.max(shape.y, shape.y + shape.h),
+    };
+  }
+  return {
+    left: shape.x - Math.abs(shape.w) / 2,
+    right: shape.x + Math.abs(shape.w) / 2,
+    top: shape.y - Math.abs(shape.h) / 2,
+    bottom: shape.y + Math.abs(shape.h) / 2,
+  };
+}
+
+function lineLength(shape: CadShape) {
+  return Math.hypot(shape.w, shape.h);
 }
 
 function CadNumber({ label, value, unit, onChange }: { label: string; value: number; unit: string; onChange: (value: number) => void }) {
@@ -1016,48 +1201,131 @@ function CadNumber({ label, value, unit, onChange }: { label: string; value: num
   );
 }
 
-function CadSketchShape({ shape, selected, onPointerDown }: { shape: CadShape; selected: boolean; onPointerDown: (event: React.PointerEvent<SVGElement>, shape: CadShape) => void }) {
+function CadSketchShape({
+  shape,
+  selected,
+  onPointerDown,
+  onHandlePointerDown,
+}: {
+  shape: CadShape;
+  selected: boolean;
+  onPointerDown: (event: React.PointerEvent<SVGElement>, shape: CadShape) => void;
+  onHandlePointerDown: (event: React.PointerEvent<SVGElement>, shape: CadShape, handle: CadResizeHandle) => void;
+}) {
   const material = cadMaterials[shape.material];
   const stroke = selected ? '#2563eb' : shape.operation === 'cut' ? '#f43f5e' : material.dark;
   const fill = selected ? 'rgba(37,99,235,0.12)' : shape.operation === 'cut' ? 'rgba(244,63,94,0.08)' : `${material.color}22`;
+  const locked = shape.constraints?.includes('locked');
+  if (shape.type === 'line') {
+    return (
+      <g>
+        <g onPointerDown={(event) => onPointerDown(event, shape)} className={locked ? 'cursor-not-allowed' : 'cursor-move'}>
+          <line x1={shape.x} y1={shape.y} x2={shape.x + shape.w} y2={shape.y + shape.h} stroke={selected ? '#2563eb' : '#64748b'} strokeWidth={selected ? 3 : 2} strokeLinecap="round" />
+          <CadShapeLabel shape={shape} />
+        </g>
+        {selected && <CadShapeHandles shape={shape} onHandlePointerDown={onHandlePointerDown} />}
+      </g>
+    );
+  }
   if (shape.type === 'circle' || shape.type === 'hole') {
     return (
-      <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-        <circle cx={shape.x} cy={shape.y} r={shape.radius} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
-        <CadShapeLabel shape={shape} />
+      <g>
+        <g onPointerDown={(event) => onPointerDown(event, shape)} className={locked ? 'cursor-not-allowed' : 'cursor-move'}>
+          <circle cx={shape.x} cy={shape.y} r={shape.radius} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
+          <CadShapeLabel shape={shape} />
+        </g>
+        {selected && <CadShapeHandles shape={shape} onHandlePointerDown={onHandlePointerDown} />}
       </g>
     );
   }
   if (shape.type === 'slot') {
     return (
-      <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-        <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx={shape.h / 2} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
-        <CadShapeLabel shape={shape} />
+      <g>
+        <g onPointerDown={(event) => onPointerDown(event, shape)} className={locked ? 'cursor-not-allowed' : 'cursor-move'}>
+          <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx={shape.h / 2} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
+          <CadShapeLabel shape={shape} />
+        </g>
+        {selected && <CadShapeHandles shape={shape} onHandlePointerDown={onHandlePointerDown} />}
       </g>
     );
   }
   if (shape.type === 'rib') {
     const points = `${shape.x - shape.w / 2},${shape.y + shape.h / 2} ${shape.x},${shape.y - shape.h / 2} ${shape.x + shape.w / 2},${shape.y + shape.h / 2}`;
     return (
-      <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-        <polygon points={points} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
-        <CadShapeLabel shape={shape} />
+      <g>
+        <g onPointerDown={(event) => onPointerDown(event, shape)} className={locked ? 'cursor-not-allowed' : 'cursor-move'}>
+          <polygon points={points} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
+          <CadShapeLabel shape={shape} />
+        </g>
+        {selected && <CadShapeHandles shape={shape} onHandlePointerDown={onHandlePointerDown} />}
       </g>
     );
   }
   return (
-    <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-      <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx="4" fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
-      <CadShapeLabel shape={shape} />
+    <g>
+      <g onPointerDown={(event) => onPointerDown(event, shape)} className={locked ? 'cursor-not-allowed' : 'cursor-move'}>
+        <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx="4" fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
+        <CadShapeLabel shape={shape} />
+      </g>
+      {selected && <CadShapeHandles shape={shape} onHandlePointerDown={onHandlePointerDown} />}
     </g>
   );
 }
 
 function CadShapeLabel({ shape }: { shape: CadShape }) {
+  const bounds = cadBounds(shape);
+  const isLine = shape.type === 'line';
+  const length = isLine ? lineLength(shape) : shape.w;
   return (
     <g className="pointer-events-none">
-      <text x={shape.x} y={shape.y + shape.h / 2 + 18} textAnchor="middle" fill="#475569" fontSize="10" fontWeight="800">{shape.label}</text>
-      <text x={shape.x} y={shape.y - shape.h / 2 - 8} textAnchor="middle" fill="#2563eb" fontSize="10" fontWeight="900">{fmt(shape.w, 0)} x {fmt(shape.h, 0)}</text>
+      <text x={shape.x} y={bounds.bottom + 18} textAnchor="middle" fill="#475569" fontSize="10" fontWeight="800">{shape.label}</text>
+      {isLine ? (
+        <text x={(shape.x + shape.x + shape.w) / 2} y={(shape.y + shape.y + shape.h) / 2 - 10} textAnchor="middle" fill="#2563eb" fontSize="10" fontWeight="900">{fmt(length, 0)} mm</text>
+      ) : (
+        <>
+          <text x={shape.x} y={bounds.top - 8} textAnchor="middle" fill="#2563eb" fontSize="10" fontWeight="900">{fmt(shape.w, 0)} x {fmt(shape.h, 0)}</text>
+          <CadDimensionLines shape={shape} />
+        </>
+      )}
+    </g>
+  );
+}
+
+function CadDimensionLines({ shape }: { shape: CadShape }) {
+  const bounds = cadBounds(shape);
+  const y = bounds.bottom + 30;
+  const x = bounds.right + 22;
+  return (
+    <g opacity="0.86">
+      <line x1={bounds.left} y1={y} x2={bounds.right} y2={y} stroke="#2563eb" strokeWidth="1.4" />
+      <path d={`M${bounds.left} ${y - 4} L${bounds.left} ${y + 4} M${bounds.right} ${y - 4} L${bounds.right} ${y + 4}`} stroke="#2563eb" strokeWidth="1.4" />
+      <text x={shape.x} y={y - 5} textAnchor="middle" fill="#2563eb" fontSize="9" fontWeight="900">{fmt(shape.w, 0)} mm</text>
+      <line x1={x} y1={bounds.top} x2={x} y2={bounds.bottom} stroke="#0f766e" strokeWidth="1.4" />
+      <path d={`M${x - 4} ${bounds.top} L${x + 4} ${bounds.top} M${x - 4} ${bounds.bottom} L${x + 4} ${bounds.bottom}`} stroke="#0f766e" strokeWidth="1.4" />
+      <text x={x + 10} y={shape.y + 4} fill="#0f766e" fontSize="9" fontWeight="900">{fmt(shape.h, 0)} mm</text>
+    </g>
+  );
+}
+
+function CadShapeHandles({ shape, onHandlePointerDown }: { shape: CadShape; onHandlePointerDown: (event: React.PointerEvent<SVGElement>, shape: CadShape, handle: CadResizeHandle) => void }) {
+  const bounds = cadBounds(shape);
+  if (shape.constraints?.includes('locked')) return null;
+  if (shape.type === 'line') {
+    return (
+      <g>
+        <circle cx={shape.x} cy={shape.y} r="5" fill="#ffffff" stroke="#2563eb" strokeWidth="2" />
+        <circle cx={shape.x + shape.w} cy={shape.y + shape.h} r="6" fill="#2563eb" stroke="#ffffff" strokeWidth="2" className="cursor-crosshair" onPointerDown={(event) => onHandlePointerDown(event, shape, 'line-end')} />
+      </g>
+    );
+  }
+  if (shape.type === 'circle' || shape.type === 'hole') {
+    return <circle cx={shape.x + shape.radius} cy={shape.y} r="6" fill="#ffffff" stroke="#2563eb" strokeWidth="2" className="cursor-ew-resize" onPointerDown={(event) => onHandlePointerDown(event, shape, 'radius')} />;
+  }
+  return (
+    <g>
+      <rect x={bounds.right - 5} y={shape.y - 5} width="10" height="10" rx="3" fill="#ffffff" stroke="#2563eb" strokeWidth="2" className="cursor-ew-resize" onPointerDown={(event) => onHandlePointerDown(event, shape, 'e')} />
+      <rect x={shape.x - 5} y={bounds.bottom - 5} width="10" height="10" rx="3" fill="#ffffff" stroke="#2563eb" strokeWidth="2" className="cursor-ns-resize" onPointerDown={(event) => onHandlePointerDown(event, shape, 's')} />
+      <rect x={bounds.right - 5} y={bounds.bottom - 5} width="10" height="10" rx="3" fill="#2563eb" stroke="#ffffff" strokeWidth="2" className="cursor-nwse-resize" onPointerDown={(event) => onHandlePointerDown(event, shape, 'se')} />
     </g>
   );
 }
