@@ -557,13 +557,107 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
   return (
     <svg ref={svgRef} viewBox="0 0 640 320" className="h-80 w-full touch-none" onPointerMove={move} onPointerUp={stop} onPointerCancel={stop}>
       <rect x="18" y="18" width="604" height="284" rx="22" fill="rgba(8,13,20,0.95)" stroke="rgba(148,163,184,0.16)" />
-      {['thermoCycle', 'heatExchanger', 'icEngine', 'refrigeration', 'boilerPlant', 'turbineCompressor'].includes(tool) && (
+      {tool === 'thermoCycle' && (
         <g>
-          <path d={`M120 230 C190 ${yB} 290 84 390 ${yB} S520 230 548 104`} fill="none" stroke={objectColor} strokeWidth="6" strokeLinecap="round" />
-          <circle cx="180" cy="206" r="34" fill="rgba(251,113,133,0.14)" stroke={objectColor} strokeWidth="4" />
-          <rect x="404" y="98" width="84" height="86" rx="18" fill="rgba(226,232,240,0.08)" stroke={accent} strokeWidth="4" />
-          {['heatExchanger', 'refrigeration', 'boilerPlant'].includes(tool) && <path d="M158 128 H500 M158 158 H500 M158 188 H500" stroke={accent} strokeWidth="5" strokeLinecap="round" opacity="0.6" />}
-          {tool === 'turbineCompressor' && <path d="M304 92 L442 140 L304 188 Z M304 188 L196 154 L304 92" fill="rgba(45,212,191,0.12)" stroke={objectColor} strokeWidth="5" strokeLinejoin="round" />}
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">P-V cycle</text>
+          <line x1="86" y1="238" x2="322" y2="238" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <line x1="86" y1="238" x2="86" y2="78" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <path
+            d={`M118 222 C132 ${190 - tA * 44} 158 ${162 - tB * 40} 206 ${142 - tB * 46} C252 ${124 - tA * 32} 292 ${132 + tB * 8} 296 166 C300 210 198 232 118 222 Z`}
+            fill="rgba(251,113,133,0.12)"
+            stroke={objectColor}
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+          <circle cx="118" cy="222" r="7" fill={objectColor} />
+          <circle cx="206" cy={142 - tB * 46} r="7" fill={objectColor} />
+          <circle cx="296" cy="166" r="7" fill={objectColor} />
+          <path d="M388 94 h120 v140 h-120z" fill="rgba(226,232,240,0.06)" stroke={accent} strokeWidth="4" />
+          <rect x="402" y={118 + tA * 44} width="92" height="24" rx="5" fill={objectColor} opacity="0.85" />
+          <line x1="448" y1={118 + tA * 44} x2="448" y2="226" stroke="rgba(226,232,240,0.72)" strokeWidth="8" strokeLinecap="round" />
+          <path d="M364 126 C336 146 336 182 364 204" fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <path d="M530 132 C560 150 560 184 530 206" fill="none" stroke="#38bdf8" strokeWidth="5" strokeLinecap="round" />
+          <text x="406" y="82" fill="rgba(226,232,240,0.66)" fontSize="12" fontWeight="800">piston state</text>
+        </g>
+      )}
+      {tool === 'heatExchanger' && (
+        <g>
+          <text x="76" y="68" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">counter-flow tube bundle</text>
+          <rect x="112" y="96" width="404" height="126" rx="34" fill="rgba(251,191,36,0.08)" stroke={objectColor} strokeWidth="5" />
+          <path d="M94 132 H540 M94 186 H540" stroke="rgba(226,232,240,0.42)" strokeWidth="9" strokeLinecap="round" />
+          <path d="M118 132 C166 102 204 162 252 132 S336 102 384 132 S468 162 516 132" fill="none" stroke="#fb7185" strokeWidth="7" strokeLinecap="round" />
+          <path d="M516 186 C468 216 430 156 382 186 S298 216 250 186 S166 156 118 186" fill="none" stroke="#38bdf8" strokeWidth="7" strokeLinecap="round" />
+          {[170, 238, 306, 374, 442].map((x) => (
+            <path key={x} d={`M${x} 104 v110`} stroke="rgba(226,232,240,0.22)" strokeWidth="5" strokeLinecap="round" />
+          ))}
+          <path d="M88 132 l22 -16 v32z M548 186 l-22 -16 v32z" fill={objectColor} />
+          <path d="M548 132 l-22 -16 v32z M88 186 l22 -16 v32z" fill={accent} />
+          <text x="122" y="256" fill="rgba(251,113,133,0.8)" fontSize="12" fontWeight="900">hot stream</text>
+          <text x="428" y="256" fill="rgba(56,189,248,0.85)" fontSize="12" fontWeight="900">cold stream</text>
+        </g>
+      )}
+      {tool === 'refrigeration' && (
+        <g>
+          <text x="72" y="62" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">vapour compression loop</text>
+          <path d="M168 132 H430 V222 H168 Z" fill="none" stroke="rgba(226,232,240,0.26)" strokeWidth="8" strokeLinejoin="round" />
+          <circle cx="168" cy="132" r="34" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" strokeWidth="5" />
+          <path d="M152 132 l26 -16 v32z" fill="#38bdf8" />
+          <rect x="374" y="102" width="112" height="60" rx="15" fill="rgba(251,113,133,0.12)" stroke="#fb7185" strokeWidth="5" />
+          <path d="M392 118 H468 M392 132 H468 M392 146 H468" stroke="#fb7185" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+          <path d="M430 222 l-20 -24 h40z" fill="rgba(226,232,240,0.08)" stroke={accent} strokeWidth="5" strokeLinejoin="round" />
+          <rect x="112" y="192" width="112" height="60" rx="15" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" strokeWidth="5" />
+          <path d="M130 208 H206 M130 222 H206 M130 236 H206" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+          <path d="M214 132 H330 M300 92 C318 118 318 146 300 172" stroke={objectColor} strokeWidth="5" strokeLinecap="round" fill="none" />
+          <text x="130" y="86" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="800">compressor</text>
+          <text x="392" y="88" fill="rgba(251,113,133,0.76)" fontSize="12" fontWeight="800">condenser</text>
+          <text x="126" y="272" fill="rgba(56,189,248,0.78)" fontSize="12" fontWeight="800">evaporator</text>
+          <text x="386" y="272" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="800">expansion</text>
+        </g>
+      )}
+      {tool === 'boilerPlant' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">steam plant heat balance</text>
+          <rect x="104" y="112" width="112" height="118" rx="22" fill="rgba(251,113,133,0.12)" stroke={objectColor} strokeWidth="5" />
+          <path d="M126 216 C136 188 152 202 160 176 C170 204 190 188 196 216" fill="#f97316" opacity="0.9" />
+          <circle cx="160" cy="126" r="34" fill="rgba(226,232,240,0.08)" stroke="rgba(226,232,240,0.34)" strokeWidth="4" />
+          <path d="M216 152 H310" stroke="rgba(226,232,240,0.48)" strokeWidth="8" strokeLinecap="round" />
+          <path d="M310 102 L418 152 L310 202 Z" fill="rgba(45,212,191,0.12)" stroke="#2dd4bf" strokeWidth="5" strokeLinejoin="round" />
+          <path d="M418 152 H502 V230 H286 V202" fill="none" stroke="rgba(226,232,240,0.34)" strokeWidth="7" strokeLinejoin="round" />
+          <rect x="454" y="206" width="80" height="48" rx="14" fill="rgba(56,189,248,0.12)" stroke="#38bdf8" strokeWidth="5" />
+          <circle cx="286" cy="202" r="19" fill="rgba(226,232,240,0.08)" stroke={accent} strokeWidth="5" />
+          <path d="M273 202 l22 -13 v26z" fill={accent} />
+          <text x="122" y="258" fill="rgba(251,113,133,0.78)" fontSize="12" fontWeight="900">boiler</text>
+          <text x="330" y="230" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">turbine</text>
+          <text x="454" y="276" fill="rgba(56,189,248,0.8)" fontSize="12" fontWeight="900">condenser</text>
+        </g>
+      )}
+      {tool === 'turbineCompressor' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">stage work and velocity triangles</text>
+          <rect x="96" y="98" width="248" height="126" rx="32" fill="rgba(45,212,191,0.08)" stroke={objectColor} strokeWidth="5" />
+          {[130, 172, 214, 256, 298].map((x, index) => (
+            <path key={x} d={`M${x} 118 C${x + 28} ${132 + index * 6} ${x - 18} ${184 - index * 4} ${x + 20} 204`} fill="none" stroke={index % 2 ? accent : objectColor} strokeWidth="6" strokeLinecap="round" />
+          ))}
+          <path d="M70 160 H96 M344 160 H404" stroke="rgba(226,232,240,0.5)" strokeWidth="9" strokeLinecap="round" />
+          <path d="M404 218 l74 -124 l74 124z" fill="rgba(226,232,240,0.05)" stroke="rgba(226,232,240,0.38)" strokeWidth="4" strokeLinejoin="round" />
+          <path d={`M432 208 L${482 + tA * 46} ${116 + tB * 20} L532 208`} fill="none" stroke={objectColor} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M432 208 H532 M482 116 V208" stroke="rgba(226,232,240,0.18)" strokeWidth="3" />
+          <text x="124" y="250" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">rotor and stator row</text>
+          <text x="424" y="250" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">velocity triangle</text>
+        </g>
+      )}
+      {tool === 'icEngine' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">engine brake power setup</text>
+          <rect x="118" y="90" width="176" height="146" rx="24" fill="rgba(251,113,133,0.1)" stroke={objectColor} strokeWidth="5" />
+          <rect x="154" y={124 + tA * 50} width="104" height="28" rx="7" fill={objectColor} opacity="0.88" />
+          <line x1="206" y1={152 + tA * 50} x2="206" y2="236" stroke="rgba(226,232,240,0.62)" strokeWidth="8" strokeLinecap="round" />
+          <circle cx="206" cy="236" r="34" fill="rgba(226,232,240,0.07)" stroke={accent} strokeWidth="5" />
+          <path d="M206 236 L240 236" stroke={accent} strokeWidth="7" strokeLinecap="round" />
+          <path d="M356 114 H508 M356 154 H508 M356 194 H508" stroke="rgba(226,232,240,0.18)" strokeWidth="5" strokeLinecap="round" />
+          <path d={`M366 218 C412 ${196 - tB * 70} 456 ${196 - tA * 38} 520 108`} fill="none" stroke={objectColor} strokeWidth="6" strokeLinecap="round" />
+          <text x="142" y="266" fill="rgba(251,113,133,0.78)" fontSize="12" fontWeight="900">piston and crank</text>
+          <text x="364" y="266" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">torque speed map</text>
         </g>
       )}
       {['pipeFlow', 'pump'].includes(tool) && (
