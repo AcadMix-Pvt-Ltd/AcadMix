@@ -1,6 +1,6 @@
 import React, { useMemo, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { CameraControls, Environment, ContactShadows, Box, Line } from '@react-three/drei';
+import { CameraControls, ContactShadows, Box } from '@react-three/drei';
 import type { CircuitGraph } from './types';
 import { getCatalogEntry } from './componentCatalog';
 
@@ -75,7 +75,8 @@ export default function PCB3DViewer({ graph }: PCB3DViewerProps) {
         {/* Lighting */}
         <ambientLight intensity={0.4} />
         <directionalLight position={[10, 20, 10]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
-        <Environment preset="city" />
+        <hemisphereLight args={['#ffffff', '#0f172a', 0.8]} />
+        <pointLight position={[-8, 8, -6]} intensity={0.4} color="#60a5fa" />
 
         {/* Board Substrate */}
         <group position={[0, 0, 0]}>
