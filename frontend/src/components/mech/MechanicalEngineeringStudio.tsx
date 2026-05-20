@@ -27,6 +27,9 @@ export type MechanicalStudioTool =
   | 'dragWindTunnel'
   | 'beamStress'
   | 'mohrsCircle'
+  | 'torsionShaft'
+  | 'columnBuckling'
+  | 'pressureVessel'
   | 'shaftGear'
   | 'fourBar'
   | 'cnc'
@@ -80,6 +83,9 @@ const toolMeta: Record<MechanicalStudioTool, { title: string; subtitle: string; 
   dragWindTunnel: { title: 'Wind Tunnel & Drag Studio', subtitle: 'Drag force, Reynolds number, dynamic pressure and wake behavior', accent: 'indigo', icon: <Gauge size={24} weight="duotone" /> },
   beamStress: { title: 'Strength of Materials Studio', subtitle: 'Beam stress, deflection, shear and factor of safety checks', accent: 'amber', icon: <Wrench size={24} weight="duotone" /> },
   mohrsCircle: { title: "Mohr's Circle Studio", subtitle: 'Principal stress, max shear and rotated stress visualization', accent: 'indigo', icon: <WaveSine size={24} weight="duotone" /> },
+  torsionShaft: { title: 'Torsion Shaft Studio', subtitle: 'Shaft shear stress, polar moment, twist angle and torque capacity', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
+  columnBuckling: { title: 'Column Buckling Studio', subtitle: 'Euler critical load, end conditions, slenderness and load utilization', accent: 'amber', icon: <Wrench size={24} weight="duotone" /> },
+  pressureVessel: { title: 'Pressure Vessel Studio', subtitle: 'Thin cylinder hoop stress, longitudinal stress and joint efficiency checks', accent: 'rose', icon: <Gauge size={24} weight="duotone" /> },
   shaftGear: { title: 'Shaft & Gear Design Studio', subtitle: 'Torque, shaft diameter, gear ratio and key stress checks', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
   fourBar: { title: 'Four-Bar Mechanism Studio', subtitle: 'Linkage geometry, transmission angle and Grashof condition', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
   cnc: { title: 'CNC Machining Studio', subtitle: 'Feed, spindle speed, MRR, cycle time and surface finish estimate', accent: 'emerald', icon: <Wrench size={24} weight="duotone" /> },
@@ -157,6 +163,24 @@ const toolConfig: Record<MechanicalStudioTool, { caption: string; inputs: MechIn
     { key: 'c', label: 'Tau xy', unit: 'MPa', min: -150, max: 150, step: 5 },
     { key: 'd', label: 'Angle', unit: 'deg', min: 0, max: 90, step: 1 },
   ], initial: { a: 120, b: 35, c: 45, d: 30 } },
+  torsionShaft: { caption: 'Drag torque and shaft diameter to inspect shear stress and twist.', inputs: [
+    { key: 'a', label: 'Torque', unit: 'kN-m', min: 0.1, max: 80, step: 0.1 },
+    { key: 'b', label: 'Diameter', unit: 'mm', min: 10, max: 220, step: 1 },
+    { key: 'c', label: 'Length', unit: 'm', min: 0.2, max: 8, step: 0.1 },
+    { key: 'd', label: 'G modulus', unit: 'GPa', min: 25, max: 90, step: 1 },
+  ], initial: { a: 4.5, b: 55, c: 1.8, d: 80 } },
+  columnBuckling: { caption: 'Drag column length and end factor to check Euler buckling safety.', inputs: [
+    { key: 'a', label: 'Length', unit: 'm', min: 0.5, max: 12, step: 0.1 },
+    { key: 'b', label: 'K factor', min: 0.5, max: 2.2, step: 0.05 },
+    { key: 'c', label: 'E', unit: 'GPa', min: 60, max: 220, step: 5 },
+    { key: 'd', label: 'Load', unit: 'kN', min: 1, max: 1500, step: 5 },
+  ], initial: { a: 3.2, b: 1, c: 200, d: 180 } },
+  pressureVessel: { caption: 'Drag pressure and shell thickness to evaluate thin pressure vessel stress.', inputs: [
+    { key: 'a', label: 'Pressure', unit: 'MPa', min: 0.1, max: 25, step: 0.1 },
+    { key: 'b', label: 'Diameter', unit: 'mm', min: 100, max: 4000, step: 10 },
+    { key: 'c', label: 'Thickness', unit: 'mm', min: 2, max: 120, step: 1 },
+    { key: 'd', label: 'Joint eff.', unit: '%', min: 55, max: 100, step: 1 },
+  ], initial: { a: 2.4, b: 900, c: 14, d: 85 } },
   shaftGear: { caption: 'Drag torque and speed for shaft and gear checks.', inputs: [
     { key: 'a', label: 'Power', unit: 'kW', min: 1, max: 500, step: 1 },
     { key: 'b', label: 'Speed', unit: 'rpm', min: 50, max: 5000, step: 50 },
@@ -441,6 +465,30 @@ function mechMetrics(tool: MechanicalStudioTool, v: MechValues): { m1: [string, 
       const center = (v.a + v.b) / 2;
       const radius = Math.sqrt(Math.pow((v.a - v.b) / 2, 2) + v.c * v.c);
       return { m1: metric('Sigma 1', center + radius, 'MPa'), m2: metric('Sigma 2', center - radius, 'MPa'), m3: metric('Max shear', radius, 'MPa'), m4: metric('Angle', v.d, 'deg'), ok: center + radius < 250 };
+    }
+    case 'torsionShaft': {
+      const torqueNmm = v.a * 1e6;
+      const polarJ = Math.PI * Math.pow(v.b, 4) / 32;
+      const shear = (16 * torqueNmm) / Math.max(Math.PI * Math.pow(v.b, 3), 1);
+      const twist = torqueNmm * (v.c * 1000) / Math.max(polarJ * v.d * 1000, 1) * (180 / Math.PI);
+      const capacity = Math.PI * Math.pow(v.b, 3) * 80 / 16 / 1e6;
+      return { m1: metric('Max shear', shear, 'MPa'), m2: metric('Twist angle', twist, 'deg'), m3: metric('Polar J', polarJ / 10000, 'cm4'), m4: metric('Torque cap.', capacity, 'kN-m'), ok: shear < 80 && twist < 4 };
+    }
+    case 'columnBuckling': {
+      const assumedI = 8500 * 1e-8;
+      const effectiveLength = v.b * v.a;
+      const pcr = Math.PI * Math.PI * v.c * 1e9 * assumedI / Math.max(effectiveLength * effectiveLength, 0.01) / 1000;
+      const utilization = v.d / Math.max(pcr, 1) * 100;
+      const slenderness = effectiveLength * 1000 / 45;
+      return { m1: metric('Euler Pcr', pcr, 'kN'), m2: metric('Utilization', utilization, '%'), m3: metric('Slenderness', slenderness, ''), m4: metric('Effective L', effectiveLength, 'm'), ok: utilization < 80 && slenderness < 180 };
+    }
+    case 'pressureVessel': {
+      const efficiency = Math.max(v.d / 100, 0.1);
+      const hoop = v.a * v.b / Math.max(2 * v.c * efficiency, 0.1);
+      const longitudinal = v.a * v.b / Math.max(4 * v.c * efficiency, 0.1);
+      const thinRatio = v.b / Math.max(v.c, 0.1);
+      const margin = 160 / Math.max(hoop, 1);
+      return { m1: metric('Hoop stress', hoop, 'MPa'), m2: metric('Long. stress', longitudinal, 'MPa'), m3: metric('D/t ratio', thinRatio, ''), m4: metric('Margin', margin, 'x'), ok: hoop < 160 && thinRatio > 20 };
     }
     case 'shaftGear': {
       const torque = 9550 * v.a / Math.max(v.b, 1);
@@ -782,14 +830,99 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
           <text x="214" y="204" fill="rgba(251,113,133,0.82)" fontSize="12" fontWeight="900">drag</text>
         </g>
       )}
-      {['beamStress', 'mohrsCircle', 'vibration', 'materialTesting', 'metrology'].includes(tool) && (
+      {tool === 'beamStress' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">beam SFD/BMD and deflection</text>
+          <line x1="92" x2="548" y1="170" y2="170" stroke="rgba(226,232,240,0.72)" strokeWidth="12" strokeLinecap="round" />
+          <path d="M110 170 l-30 58 h60z M530 170 l-30 58 h60z" fill="none" stroke="rgba(226,232,240,0.64)" strokeWidth="5" strokeLinejoin="round" />
+          <path d={`M${xA} 72 V154`} stroke={objectColor} strokeWidth="8" strokeLinecap="round" />
+          <path d={`M${xA - 22} 132 L${xA} 170 L${xA + 22} 132 Z`} fill={objectColor} />
+          <path d={`M108 192 C206 ${206 + tB * 26} 412 ${206 + tB * 26} 532 192`} fill="none" stroke="#38bdf8" strokeWidth="5" strokeLinecap="round" />
+          <path d={`M112 250 L${xA} ${250 - tB * 82} L536 250`} fill="rgba(251,191,36,0.12)" stroke="#fbbf24" strokeWidth="4" strokeLinejoin="round" />
+          <text x="126" y="96" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="800">point load</text>
+          <text x="368" y="236" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">bending moment</text>
+        </g>
+      )}
+      {tool === 'mohrsCircle' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">stress transform and Mohr circle</text>
+          <line x1="88" y1="220" x2="306" y2="220" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <line x1="197" y1="248" x2="197" y2="88" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <circle cx="197" cy="166" r={Math.max(28, Math.min(82, Math.sqrt(Math.pow((values.a - values.b) / 2, 2) + values.c * values.c) * 0.55))} fill="rgba(129,140,248,0.1)" stroke={accent} strokeWidth="5" />
+          <circle cx={197 + (values.a - values.b) * 0.12} cy={166 - values.c * 0.35} r="7" fill={objectColor} />
+          <circle cx={197 - (values.a - values.b) * 0.12} cy={166 + values.c * 0.35} r="7" fill={objectColor} />
+          <rect x="398" y="116" width="92" height="92" rx="12" fill="rgba(226,232,240,0.07)" stroke="rgba(226,232,240,0.42)" strokeWidth="5" transform={`rotate(${values.d} 444 162)`} />
+          <path d="M444 80 V112 M444 212 V244 M360 162 H392 M496 162 H532" stroke={objectColor} strokeWidth="6" strokeLinecap="round" />
+          <path d="M382 112 l20 -12 M506 212 l-20 12 M382 212 l20 12 M506 112 l-20 -12" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="118" y="260" fill="rgba(129,140,248,0.82)" fontSize="12" fontWeight="900">sigma-tau plane</text>
+          <text x="392" y="260" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">rotated element</text>
+        </g>
+      )}
+      {tool === 'materialTesting' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">tensile test and stress-strain curve</text>
+          <rect x="112" y="122" width="92" height="92" rx="12" fill="rgba(226,232,240,0.06)" stroke="rgba(226,232,240,0.32)" strokeWidth="4" />
+          <path d={`M158 82 V126 M158 210 V252`} stroke="rgba(226,232,240,0.52)" strokeWidth="10" strokeLinecap="round" />
+          <path d={`M142 126 C146 ${146 + tB * 24} 146 ${188 - tA * 28} 142 210 H174 C170 ${188 - tA * 28} 170 ${146 + tB * 24} 174 126 Z`} fill="rgba(251,191,36,0.12)" stroke={objectColor} strokeWidth="5" />
+          <path d="M138 88 l20 -28 l20 28 M138 246 l20 28 l20 -28" fill="none" stroke="#fb7185" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="292" y1="244" x2="540" y2="244" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <line x1="292" y1="244" x2="292" y2="88" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <path d={`M306 232 C346 214 374 ${190 - tB * 54} 404 ${176 - tA * 40} C444 ${156 - tA * 34} 488 ${136 + tB * 18} 526 ${112 + tA * 24}`} fill="none" stroke={accent} strokeWidth="6" strokeLinecap="round" />
+          <circle cx={404 + tA * 82} cy={176 - tB * 70} r="8" fill="#fb7185" />
+          <text x="318" y="264" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">stress-strain</text>
+        </g>
+      )}
+      {tool === 'torsionShaft' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">torsion shaft twist and shear</text>
+          <path d={`M134 160 C196 ${122 - tB * 12} 390 ${122 - tB * 12} 512 160 C390 ${198 + tB * 12} 196 ${198 + tB * 12} 134 160 Z`} fill="rgba(167,139,250,0.14)" stroke={objectColor} strokeWidth="6" />
+          {[188, 246, 304, 362, 420].map((x, index) => (
+            <path key={x} d={`M${x} ${132 - tB * 9} C${x + 26} 152 ${x - 26} 168 ${x} ${188 + tB * 9}`} stroke="rgba(226,232,240,0.36)" strokeWidth="4" strokeLinecap="round" fill="none" transform={`rotate(${index * 7 + tA * 22} ${x} 160)`} />
+          ))}
+          <path d="M108 160 C108 114 158 112 166 152 M166 152 l-20 -16 M166 152 l-8 -24" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M538 160 C538 206 488 208 480 168 M480 168 l20 16 M480 168 l8 24" fill="none" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="322" cy="160" r={26 + tB * 32} fill="none" stroke="rgba(226,232,240,0.22)" strokeWidth="5" />
+          <path d={`M322 160 L${322 + 54 * Math.cos(tA * 4)} ${160 + 54 * Math.sin(tA * 4)}`} stroke="#fb7185" strokeWidth="5" strokeLinecap="round" />
+          <text x="152" y="246" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">applied torque</text>
+          <text x="386" y="246" fill="rgba(167,139,250,0.82)" fontSize="12" fontWeight="900">angle of twist</text>
+        </g>
+      )}
+      {tool === 'columnBuckling' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">Euler column buckling mode</text>
+          <path d="M268 86 H388 M268 238 H388" stroke="rgba(226,232,240,0.46)" strokeWidth="8" strokeLinecap="round" />
+          <path d={`M328 92 C${328 + (tB - 0.5) * 120} 132 ${328 - tA * 70} 190 328 232`} fill="none" stroke={objectColor} strokeWidth="10" strokeLinecap="round" />
+          <path d="M328 56 V86 M328 238 V272" stroke="#fb7185" strokeWidth="7" strokeLinecap="round" />
+          <path d="M306 70 L328 94 L350 70 M306 258 L328 234 L350 258" fill="none" stroke="#fb7185" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="92" y1="244" x2="210" y2="244" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <line x1="92" y1="244" x2="92" y2="96" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <path d={`M104 226 C132 ${210 - tB * 50} 160 ${170 - tA * 50} 204 ${112 + tB * 20}`} fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="106" y="82" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">Pcr curve</text>
+          <text x="414" y="162" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">end condition K</text>
+        </g>
+      )}
+      {tool === 'pressureVessel' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">thin pressure vessel stress state</text>
+          <ellipse cx="320" cy="160" rx={132 + tB * 54} ry={54 + tA * 18} fill="rgba(251,113,133,0.12)" stroke={objectColor} strokeWidth="6" />
+          <ellipse cx={190 - tB * 18} cy="160" rx="28" ry={54 + tA * 18} fill="rgba(226,232,240,0.06)" stroke="rgba(226,232,240,0.34)" strokeWidth="4" />
+          <ellipse cx={450 + tB * 18} cy="160" rx="28" ry={54 + tA * 18} fill="rgba(226,232,240,0.06)" stroke="rgba(226,232,240,0.34)" strokeWidth="4" />
+          {[240, 288, 336, 384].map((x) => (
+            <path key={x} d={`M${x} ${106 - tA * 8} V${214 + tA * 8}`} stroke="rgba(226,232,240,0.20)" strokeWidth="4" strokeLinecap="round" />
+          ))}
+          <path d="M320 92 V56 M320 228 V264 M148 160 H104 M492 160 H536" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" />
+          <path d="M320 56 l-18 24 h36z M320 264 l-18 -24 h36z M104 160 l24 -18 v36z M536 160 l-24 -18 v36z" fill="#fbbf24" opacity="0.9" />
+          <path d="M248 110 C292 82 348 82 392 110 M248 210 C292 238 348 238 392 210" stroke="#38bdf8" strokeWidth="5" fill="none" strokeLinecap="round" />
+          <text x="118" y="258" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">internal pressure</text>
+          <text x="386" y="258" fill="rgba(56,189,248,0.82)" fontSize="12" fontWeight="900">hoop stress</text>
+        </g>
+      )}
+      {['vibration', 'metrology'].includes(tool) && (
         <g>
           <line x1="96" x2={xA} y1="224" y2="224" stroke="rgba(226,232,240,0.72)" strokeWidth="12" strokeLinecap="round" />
           <path d={`M${(96 + xA) / 2} 92 V210`} stroke={objectColor} strokeWidth="7" strokeLinecap="round" />
           <path d={`M${(96 + xA) / 2 - 18} 184 L${(96 + xA) / 2} 218 L${(96 + xA) / 2 + 18} 184 Z`} fill={objectColor} />
-          {tool === 'mohrsCircle' && <circle cx="390" cy="158" r={Math.max(32, Math.abs(values.c) * 0.5)} fill="none" stroke={accent} strokeWidth="5" />}
           {tool === 'vibration' && <path d="M120 124 C160 84 200 164 240 124 S320 84 360 124 S440 164 480 124" fill="none" stroke={accent} strokeWidth="5" />}
-          {tool === 'materialTesting' && <path d={`M160 236 C230 224 280 ${230 - tA * 80} 348 ${210 - tB * 80} S460 128 520 112`} fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />}
           {tool === 'metrology' && <path d="M150 130 H492 M170 114 V146 M472 114 V146 M234 186 H430" stroke={accent} strokeWidth="6" strokeLinecap="round" />}
         </g>
       )}
