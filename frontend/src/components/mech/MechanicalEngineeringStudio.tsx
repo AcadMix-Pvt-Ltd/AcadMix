@@ -623,7 +623,9 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
   );
 }
 
-type CadSketchTool = 'select' | 'rectangle' | 'circle' | 'slot' | 'rib';
+type CadSketchTool = 'select' | 'rectangle' | 'circle' | 'slot' | 'rib' | 'hole';
+type CadRenderMode = 'wireframe' | 'shaded' | 'realistic' | 'section';
+type CadViewMode = 'iso' | 'top' | 'front' | 'right';
 type CadShape = {
   id: string;
   type: Exclude<CadSketchTool, 'select'>;
@@ -634,6 +636,8 @@ type CadShape = {
   radius: number;
   depth: number;
   label: string;
+  material: string;
+  operation: 'add' | 'cut';
 };
 
 const cadToolLabels: Record<CadSketchTool, string> = {
@@ -642,28 +646,44 @@ const cadToolLabels: Record<CadSketchTool, string> = {
   circle: 'Circle',
   slot: 'Slot',
   rib: 'Rib',
+  hole: 'Hole',
 };
 
 const defaultCadShapes: CadShape[] = [
-  { id: 'base', type: 'rectangle', x: 160, y: 118, w: 220, h: 112, radius: 0, depth: 28, label: 'Base plate' },
-  { id: 'boss', type: 'circle', x: 270, y: 174, w: 72, h: 72, radius: 36, depth: 48, label: 'Center boss' },
-  { id: 'mount-a', type: 'slot', x: 186, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot A' },
-  { id: 'mount-b', type: 'slot', x: 300, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot B' },
+  { id: 'base', type: 'rectangle', x: 160, y: 118, w: 220, h: 112, radius: 0, depth: 28, label: 'Base plate', material: 'aluminium', operation: 'add' },
+  { id: 'boss', type: 'circle', x: 270, y: 174, w: 72, h: 72, radius: 36, depth: 48, label: 'Center boss', material: 'steel', operation: 'add' },
+  { id: 'mount-a', type: 'slot', x: 186, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot A', material: 'rubber', operation: 'cut' },
+  { id: 'mount-b', type: 'slot', x: 300, y: 142, w: 56, h: 26, radius: 13, depth: 32, label: 'Mount slot B', material: 'rubber', operation: 'cut' },
 ];
+
+const cadMaterials: Record<string, { name: string; density: number; color: string; dark: string; light: string; finish: string; pattern: string }> = {
+  aluminium: { name: 'Aluminium 6061', density: 2.7, color: '#aeb8c4', dark: '#64748b', light: '#f8fafc', finish: 'brushed', pattern: 'linear-gradient(135deg,#f8fafc,#94a3b8,#e2e8f0)' },
+  steel: { name: 'Polished Steel', density: 7.85, color: '#8f9aa8', dark: '#475569', light: '#f1f5f9', finish: 'polished', pattern: 'linear-gradient(135deg,#ffffff,#64748b,#cbd5e1)' },
+  brass: { name: 'Brass', density: 8.5, color: '#c89b3c', dark: '#92400e', light: '#fde68a', finish: 'satin', pattern: 'linear-gradient(135deg,#fde68a,#b7791f,#facc15)' },
+  copper: { name: 'Copper', density: 8.96, color: '#c56a3c', dark: '#9a3412', light: '#fed7aa', finish: 'warm metal', pattern: 'linear-gradient(135deg,#fed7aa,#c2410c,#fb923c)' },
+  plastic: { name: 'ABS Plastic', density: 1.04, color: '#2563eb', dark: '#1e3a8a', light: '#93c5fd', finish: 'matte', pattern: 'linear-gradient(135deg,#93c5fd,#2563eb,#1e40af)' },
+  rubber: { name: 'Rubber / Cut', density: 1.12, color: '#111827', dark: '#030712', light: '#6b7280', finish: 'matte', pattern: 'linear-gradient(135deg,#111827,#4b5563)' },
+  glass: { name: 'Glass', density: 2.5, color: '#67e8f9', dark: '#0891b2', light: '#ecfeff', finish: 'transparent', pattern: 'linear-gradient(135deg,rgba(236,254,255,.9),rgba(103,232,249,.45))' },
+};
 
 function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen }: Pick<MechanicalEngineeringStudioProps, 'isFullScreen' | 'onExitFullScreen' | 'onRequestFullScreen'>) {
   const [shapes, setShapes] = useState<CadShape[]>(defaultCadShapes);
   const [selectedId, setSelectedId] = useState(defaultCadShapes[0].id);
   const [activeTool, setActiveTool] = useState<CadSketchTool>('select');
-  const [material, setMaterial] = useState('Aluminium 6061');
+  const [selectedMaterial, setSelectedMaterial] = useState('aluminium');
+  const [renderMode, setRenderMode] = useState<CadRenderMode>('realistic');
+  const [viewMode, setViewMode] = useState<CadViewMode>('iso');
   const [snap, setSnap] = useState(5);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [drag, setDrag] = useState<{ id: string; dx: number; dy: number } | null>(null);
   const selected = shapes.find((shape) => shape.id === selectedId) || shapes[0];
-  const solidVolume = shapes.reduce((sum, shape) => sum + cadArea(shape) * shape.depth, 0);
-  const density = material.includes('Steel') ? 7.85 : material.includes('PLA') ? 1.24 : 2.7;
-  const mass = solidVolume / 1000 * density;
+  const solidVolume = shapes.reduce((sum, shape) => sum + (shape.operation === 'cut' ? -1 : 1) * cadArea(shape) * shape.depth, 0);
+  const mass = shapes.reduce((sum, shape) => {
+    if (shape.operation === 'cut') return sum;
+    return sum + cadArea(shape) * shape.depth / 1000 * cadMaterials[shape.material].density;
+  }, 0);
   const maxDepth = Math.max(...shapes.map((shape) => shape.depth), 1);
+  const underDefined = shapes.filter((shape) => shape.w <= 0 || shape.h <= 0 || shape.depth <= 0).length;
 
   const updateShape = (id: string, patch: Partial<CadShape>) => {
     setShapes((prev) => prev.map((shape) => shape.id === id ? { ...shape, ...patch } : shape));
@@ -671,13 +691,14 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
 
   const addShape = (type: Exclude<CadSketchTool, 'select'>) => {
     const nextId = `${type}-${Date.now().toString(36).slice(-5)}`;
-    const base = {
-      rectangle: { w: 100, h: 60, radius: 0, label: 'New pocket' },
-      circle: { w: 70, h: 70, radius: 35, label: 'New boss' },
-      slot: { w: 110, h: 34, radius: 17, label: 'New slot' },
-      rib: { w: 140, h: 26, radius: 0, label: 'New rib' },
+    const base: Record<Exclude<CadSketchTool, 'select'>, Pick<CadShape, 'w' | 'h' | 'radius' | 'label' | 'operation'>> = {
+      rectangle: { w: 108, h: 64, radius: 0, label: 'New pad', operation: 'add' },
+      circle: { w: 74, h: 74, radius: 37, label: 'New boss', operation: 'add' },
+      slot: { w: 118, h: 34, radius: 17, label: 'New slot', operation: 'cut' },
+      rib: { w: 142, h: 28, radius: 0, label: 'New rib', operation: 'add' },
+      hole: { w: 44, h: 44, radius: 22, label: 'New hole', operation: 'cut' },
     }[type];
-    const shape: CadShape = { id: nextId, type, x: 210 + shapes.length * 8, y: 140 + shapes.length * 6, depth: 24, ...base };
+    const shape: CadShape = { id: nextId, type, x: 210 + shapes.length * 8, y: 140 + shapes.length * 6, depth: type === 'hole' ? 36 : 24, material: type === 'hole' || type === 'slot' ? 'rubber' : selectedMaterial, ...base };
     setShapes((prev) => [...prev, shape]);
     setSelectedId(nextId);
     setActiveTool('select');
@@ -707,27 +728,27 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
   const exportSketch = shapes.map((shape) => `${shape.label}: ${shape.type} x=${shape.x} y=${shape.y} w=${shape.w} h=${shape.h} depth=${shape.depth}`).join('\n');
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#080B10] text-slate-200">
-      <div className="shrink-0 border-b border-white/10 bg-[#101722]/95 px-5 py-4">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#F4F7FB] text-slate-900">
+      <div className="shrink-0 border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-400/25 bg-sky-500/10 text-sky-300">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-200 bg-sky-50 text-sky-600 shadow-sm">
               <Cube size={24} weight="duotone" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">AcadMix CAD / 3D Modeling Studio</h2>
-              <p className="text-xs font-medium text-slate-400 sm:text-sm">Sketch editable 2D profiles, dimension them, extrude features, and inspect a live 3D manufacturing model.</p>
+              <h2 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">AcadMix CAD / 3D Modeling Studio</h2>
+              <p className="text-xs font-semibold text-slate-500 sm:text-sm">Lightweight premium CAD: sketch, constrain by dimensions, assign realistic materials, and preview extruded parts.</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <StatusPill icon={<CheckCircle size={14} weight="duotone" />} label="Native CAD" />
-            <StatusPill icon={<Cube size={14} weight="duotone" />} label="Sketch + Extrude" />
+            <CadTopPill label="Native CAD" value="Sketch + Extrude" />
+            <CadTopPill label="Model" value={underDefined ? 'Under defined' : 'Ready'} tone={underDefined ? 'warn' : 'good'} />
             {(onExitFullScreen || onRequestFullScreen) && (
               <button
                 type="button"
                 onClick={() => (isFullScreen ? onExitFullScreen?.() : onRequestFullScreen?.())}
                 title={isFullScreen ? 'Exit Full Screen' : 'Full Screen'}
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-slate-200"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-900"
               >
                 {isFullScreen ? <CornersIn size={16} weight="bold" /> : <CornersOut size={16} weight="bold" />}
               </button>
@@ -737,18 +758,18 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">
-        <div className="grid h-full min-h-[760px] grid-cols-1 xl:grid-cols-[260px_1fr_320px]">
-          <aside className="min-h-0 overflow-y-auto border-b border-white/10 bg-[#0D131D] p-4 xl:border-b-0 xl:border-r">
+        <div className="grid h-full min-h-[760px] grid-cols-1 xl:grid-cols-[280px_1fr_340px]">
+          <aside className="min-h-0 overflow-y-auto border-b border-slate-200 bg-white p-4 xl:border-b-0 xl:border-r">
             <div className="space-y-5">
               <div>
-                <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Sketch Tools</div>
+                <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Create</div>
                 <div className="grid grid-cols-2 gap-2">
                   {(Object.keys(cadToolLabels) as CadSketchTool[]).map((toolKey) => (
                     <button
                       key={toolKey}
                       type="button"
                       onClick={() => toolKey === 'select' ? setActiveTool('select') : addShape(toolKey)}
-                      className={`rounded-xl border px-3 py-3 text-left text-xs font-black transition-colors ${activeTool === toolKey ? 'border-sky-300/50 bg-sky-400/15 text-sky-200' : 'border-white/10 bg-white/[0.035] text-slate-300 hover:bg-white/[0.07]'}`}
+                      className={`rounded-xl border px-3 py-3 text-left text-xs font-black shadow-sm transition-colors ${activeTool === toolKey ? 'border-sky-300 bg-sky-50 text-sky-700' : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-white'}`}
                     >
                       {cadToolLabels[toolKey]}
                     </button>
@@ -764,13 +785,16 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                       key={shape.id}
                       type="button"
                       onClick={() => setSelectedId(shape.id)}
-                      className={`w-full rounded-xl border px-3 py-3 text-left transition-colors ${shape.id === selectedId ? 'border-sky-300/50 bg-sky-400/15' : 'border-white/10 bg-white/[0.035] hover:bg-white/[0.07]'}`}
+                      className={`w-full rounded-xl border px-3 py-3 text-left shadow-sm transition-colors ${shape.id === selectedId ? 'border-sky-300 bg-sky-50' : 'border-slate-200 bg-slate-50 hover:bg-white'}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-black text-white">{shape.label}</span>
-                        <span className="text-[10px] font-black uppercase text-slate-500">F{index + 1}</span>
+                        <span className="text-sm font-black text-slate-950">{shape.label}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${shape.operation === 'cut' ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>{shape.operation}</span>
                       </div>
-                      <div className="mt-1 text-xs font-medium text-slate-500">{shape.type} / {fmt(shape.depth, 0)} mm extrude</div>
+                      <div className="mt-1 flex items-center justify-between text-xs font-semibold text-slate-500">
+                        <span>F{index + 1} / {shape.type}</span>
+                        <span>{cadMaterials[shape.material].name}</span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -783,49 +807,53 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                   setShapes((prev) => prev.filter((shape) => shape.id !== selected.id));
                   setSelectedId(shapes[0].id === selected.id ? shapes[1].id : shapes[0].id);
                 }}
-                className="w-full rounded-xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm font-black text-rose-200 transition-colors hover:bg-rose-500/15"
+                className="w-full rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-black text-rose-700 transition-colors hover:bg-rose-100"
               >
                 Delete selected
               </button>
             </div>
           </aside>
 
-          <main className="flex min-h-0 flex-col overflow-hidden bg-[#080B10]">
-            <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-white/10 bg-[#0D131D] px-4 py-3">
-              <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black text-slate-300">
-                Material
-                <select value={material} onChange={(event) => setMaterial(event.target.value)} className="bg-transparent text-sky-200 outline-none">
-                  <option className="bg-slate-950">Aluminium 6061</option>
-                  <option className="bg-slate-950">Mild Steel</option>
-                  <option className="bg-slate-950">PLA Prototype</option>
-                </select>
-              </label>
-              <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2 text-xs font-black text-slate-300">
+          <main className="flex min-h-0 flex-col overflow-hidden bg-[#F4F7FB]">
+            <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <CadSegmented
+                label="Render"
+                value={renderMode}
+                options={['wireframe', 'shaded', 'realistic', 'section']}
+                onChange={(value) => setRenderMode(value as CadRenderMode)}
+              />
+              <CadSegmented
+                label="View"
+                value={viewMode}
+                options={['iso', 'top', 'front', 'right']}
+                onChange={(value) => setViewMode(value as CadViewMode)}
+              />
+              <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700">
                 Snap
-                <input type="number" min={1} max={25} value={snap} onChange={(event) => setSnap(clamp(Number(event.target.value), 1, 25))} className="w-12 bg-transparent text-sky-200 outline-none" />
+                <input type="number" min={1} max={25} value={snap} onChange={(event) => setSnap(clamp(Number(event.target.value), 1, 25))} className="w-12 bg-transparent text-sky-700 outline-none" />
                 mm
               </label>
-              <div className="ml-auto text-xs font-bold text-slate-500">Click a feature to select. Drag it on the sketch plane. Edit exact dimensions in the inspector.</div>
+              <div className="ml-auto rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-bold text-slate-500">Command: {activeTool === 'select' ? 'SELECT' : cadToolLabels[activeTool].toUpperCase()}</div>
             </div>
 
             <div className="grid min-h-0 flex-1 grid-cols-1 2xl:grid-cols-[1.05fr_0.95fr]">
-              <section className="min-h-0 border-b border-white/10 p-4 2xl:border-b-0 2xl:border-r">
+              <section className="min-h-0 border-b border-slate-200 p-4 2xl:border-b-0 2xl:border-r">
                 <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-black text-white">2D Sketch Plane</div>
+                    <div className="text-sm font-black text-slate-950">2D Sketch Plane</div>
                     <div className="text-xs text-slate-500">Editable profile geometry in millimeters</div>
                   </div>
-                  <div className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-[11px] font-black text-sky-200">XY Plane</div>
+                  <div className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-black text-sky-700">XY Plane</div>
                 </div>
-                <svg ref={svgRef} viewBox="0 0 560 340" onPointerMove={pointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag} className="h-[500px] w-full touch-none rounded-2xl border border-white/10 bg-[#05080D]">
+                <svg ref={svgRef} viewBox="0 0 560 340" onPointerMove={pointerMove} onPointerUp={stopDrag} onPointerCancel={stopDrag} className="h-[500px] w-full touch-none rounded-2xl border border-slate-200 bg-white shadow-sm">
                   <defs>
                     <pattern id="cad-grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(148,163,184,0.12)" strokeWidth="1" />
+                      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(148,163,184,0.22)" strokeWidth="1" />
                     </pattern>
                   </defs>
                   <rect width="560" height="340" fill="url(#cad-grid)" />
-                  <line x1="24" x2="536" y1="300" y2="300" stroke="rgba(56,189,248,0.28)" />
-                  <line x1="40" x2="40" y1="24" y2="316" stroke="rgba(56,189,248,0.28)" />
+                  <line x1="24" x2="536" y1="300" y2="300" stroke="rgba(37,99,235,0.32)" />
+                  <line x1="40" x2="40" y1="24" y2="316" stroke="rgba(37,99,235,0.32)" />
                   {shapes.map((shape) => (
                     <CadSketchShape key={shape.id} shape={shape} selected={shape.id === selectedId} onPointerDown={pointerDown} />
                   ))}
@@ -835,33 +863,75 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
               <section className="min-h-0 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-black text-white">3D Feature Preview</div>
+                    <div className="text-sm font-black text-slate-950">3D Feature Preview</div>
                     <div className="text-xs text-slate-500">Extruded manufacturing model from sketch profiles</div>
                   </div>
-                  <div className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-[11px] font-black text-emerald-200">Live Solid</div>
+                  <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">Live Solid</div>
                 </div>
-                <svg viewBox="0 0 560 340" className="h-[500px] w-full rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_35%_20%,rgba(14,165,233,0.16),transparent_32%),#05080D]">
-                  <line x1="64" x2="504" y1="286" y2="286" stroke="rgba(148,163,184,0.18)" />
+                <svg viewBox="0 0 560 340" className="h-[500px] w-full rounded-2xl border border-slate-200 bg-[radial-gradient(circle_at_35%_20%,rgba(14,165,233,0.18),transparent_32%),linear-gradient(180deg,#ffffff,#eef4fb)] shadow-sm">
+                  <defs>
+                    <filter id="cad-shadow" x="-20%" y="-20%" width="140%" height="160%">
+                      <feDropShadow dx="8" dy="12" stdDeviation="8" floodColor="#64748b" floodOpacity="0.22" />
+                    </filter>
+                  </defs>
+                  <line x1="64" x2="504" y1="286" y2="286" stroke="rgba(100,116,139,0.28)" />
                   {shapes.map((shape, index) => (
-                    <CadSolidShape key={shape.id} shape={shape} selected={shape.id === selectedId} z={index * 6} maxDepth={maxDepth} />
+                    <CadSolidShape key={shape.id} shape={shape} selected={shape.id === selectedId} z={index * 6} maxDepth={maxDepth} renderMode={renderMode} viewMode={viewMode} />
                   ))}
+                  <CadViewCube viewMode={viewMode} />
                 </svg>
               </section>
             </div>
           </main>
 
-          <aside className="min-h-0 overflow-y-auto border-t border-white/10 bg-[#0D131D] p-4 xl:border-l xl:border-t-0">
+          <aside className="min-h-0 overflow-y-auto border-t border-slate-200 bg-white p-4 xl:border-l xl:border-t-0">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <Metric label="Features" value={String(shapes.length)} />
-                <Metric label="Mass" value={fmt(mass / 1000, 2)} unit="kg" tone="good" />
-                <Metric label="Volume" value={fmt(solidVolume / 1000, 1)} unit="cm3" />
-                <Metric label="Max depth" value={fmt(maxDepth, 0)} unit="mm" />
+                <CadMetric label="Features" value={String(shapes.length)} />
+                <CadMetric label="Mass" value={fmt(mass / 1000, 2)} unit="kg" tone="good" />
+                <CadMetric label="Volume" value={fmt(Math.max(solidVolume, 0) / 1000, 1)} unit="cm3" />
+                <CadMetric label="Max depth" value={fmt(maxDepth, 0)} unit="mm" />
+              </div>
+
+              <Panel className="border-slate-200 bg-white">
+                <div className="border-b border-slate-200 p-4">
+                  <div className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Material Library</div>
+                  <div className="mt-1 text-sm font-bold text-slate-600">Assign realistic finishes to selected features.</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 p-4">
+                  {Object.entries(cadMaterials).map(([key, item]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedMaterial(key);
+                        if (selected) updateShape(selected.id, { material: key, operation: key === 'rubber' ? 'cut' : selected.operation });
+                      }}
+                      className={`rounded-xl border p-2 text-left shadow-sm transition-colors ${selected?.material === key ? 'border-sky-400 bg-sky-50' : 'border-slate-200 bg-slate-50 hover:bg-white'}`}
+                    >
+                      <div className="h-9 rounded-lg border border-white/70 shadow-inner" style={{ background: item.pattern }} />
+                      <div className="mt-2 truncate text-xs font-black text-slate-800">{item.name}</div>
+                      <div className="text-[10px] font-bold uppercase text-slate-500">{item.finish}</div>
+                    </button>
+                  ))}
+                </div>
+              </Panel>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Validation</div>
+                <div className="space-y-2 text-sm font-bold">
+                  <div className="flex justify-between"><span className="text-slate-500">Sketch state</span><span className={underDefined ? 'text-amber-600' : 'text-emerald-600'}>{underDefined ? 'Needs dimensions' : 'Dimensioned'}</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Manufacturing</span><span className="text-emerald-600">Printable</span></div>
+                  <div className="flex justify-between"><span className="text-slate-500">Render</span><span className="capitalize text-sky-700">{renderMode}</span></div>
+                </div>
               </div>
 
               {selected && (
-                <Panel>
-                  <PanelHeader title="Inspector" caption="Parametric dimensions for the selected sketch feature." icon={<Gauge size={20} weight="duotone" />} accent={accentClasses.sky} />
+                <Panel className="border-slate-200 bg-white">
+                  <div className="border-b border-slate-200 p-4">
+                    <div className="text-base font-black text-slate-950">Inspector</div>
+                    <p className="mt-1 text-sm font-semibold text-slate-500">Parametric dimensions for the selected feature.</p>
+                  </div>
                   <div className="grid grid-cols-2 gap-3 p-4">
                     <CadNumber label="X" value={selected.x} unit="mm" onChange={(value) => updateShape(selected.id, { x: value })} />
                     <CadNumber label="Y" value={selected.y} unit="mm" onChange={(value) => updateShape(selected.id, { y: value })} />
@@ -870,15 +940,21 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
                     <CadNumber label="Radius" value={selected.radius} unit="mm" onChange={(value) => updateShape(selected.id, { radius: Math.max(0, value) })} />
                     <CadNumber label="Extrude" value={selected.depth} unit="mm" onChange={(value) => updateShape(selected.id, { depth: Math.max(1, value) })} />
                   </div>
+                  <div className="border-t border-slate-200 p-4">
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['add', 'cut'] as const).map((op) => (
+                        <button key={op} type="button" onClick={() => updateShape(selected.id, { operation: op })} className={`rounded-xl border px-3 py-2 text-xs font-black uppercase ${selected.operation === op ? 'border-sky-400 bg-sky-50 text-sky-700' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>{op}</button>
+                      ))}
+                    </div>
+                  </div>
                 </Panel>
               )}
 
-              <Panel className="p-4">
+              <Panel className="border-slate-200 bg-white p-4">
                 <div className="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Model Definition</div>
-                <textarea readOnly value={exportSketch} className="h-44 w-full resize-none rounded-xl border border-white/10 bg-black/25 p-3 font-mono text-xs leading-relaxed text-slate-300 outline-none" />
+                <textarea readOnly value={exportSketch} className="h-36 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-600 outline-none" />
               </Panel>
 
-              <Insight ok title="Direction corrected" body="This CAD studio is now a real editable modeling surface: students can create profiles, dimension geometry, drag features, extrude solids, and inspect model mass/volume instead of staring at a single default block." />
             </div>
           </aside>
         </div>
@@ -887,8 +963,42 @@ function CadModelingStudio({ isFullScreen, onExitFullScreen, onRequestFullScreen
   );
 }
 
+function CadTopPill({ label, value, tone }: { label: string; value: string; tone?: 'good' | 'warn' }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 shadow-sm">
+      <div className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</div>
+      <div className={`text-xs font-black ${tone === 'good' ? 'text-emerald-600' : tone === 'warn' ? 'text-amber-600' : 'text-slate-700'}`}>{value}</div>
+    </div>
+  );
+}
+
+function CadSegmented({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5">
+      <span className="px-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">{label}</span>
+      {options.map((option) => (
+        <button key={option} type="button" onClick={() => onChange(option)} className={`rounded-lg px-2.5 py-1.5 text-xs font-black capitalize ${value === option ? 'bg-white text-sky-700 shadow-sm ring-1 ring-sky-200' : 'text-slate-500 hover:text-slate-900'}`}>
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CadMetric({ label, value, unit, tone }: { label: string; value: string; unit?: string; tone?: 'good' | 'warn' }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+      <div className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</div>
+      <div className={`mt-2 flex items-baseline gap-1 text-2xl font-black ${tone === 'good' ? 'text-emerald-600' : tone === 'warn' ? 'text-amber-600' : 'text-slate-950'}`}>
+        {value}
+        {unit && <span className="text-xs font-black text-slate-400">{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
 function cadArea(shape: CadShape) {
-  if (shape.type === 'circle') return Math.PI * Math.pow(shape.radius || shape.w / 2, 2);
+  if (shape.type === 'circle' || shape.type === 'hole') return Math.PI * Math.pow(shape.radius || shape.w / 2, 2);
   if (shape.type === 'slot') return Math.max(shape.w - shape.h, 0) * shape.h + Math.PI * Math.pow(shape.h / 2, 2);
   if (shape.type === 'rib') return shape.w * shape.h * 0.72;
   return shape.w * shape.h;
@@ -896,23 +1006,24 @@ function cadArea(shape: CadShape) {
 
 function CadNumber({ label, value, unit, onChange }: { label: string; value: number; unit: string; onChange: (value: number) => void }) {
   return (
-    <label className="space-y-2 rounded-xl border border-white/10 bg-[#090E15] p-3">
-      <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{label}</span>
+    <label className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{label}</span>
       <div className="flex items-center gap-2">
-        <input type="number" value={Number(value.toFixed(2))} onChange={(event) => onChange(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-lg font-black text-white outline-none" />
-        <span className="text-[10px] font-black uppercase text-slate-500">{unit}</span>
+        <input type="number" value={Number(value.toFixed(2))} onChange={(event) => onChange(Number(event.target.value))} className="min-w-0 flex-1 bg-transparent text-lg font-black text-slate-950 outline-none" />
+        <span className="text-[10px] font-black uppercase text-slate-400">{unit}</span>
       </div>
     </label>
   );
 }
 
 function CadSketchShape({ shape, selected, onPointerDown }: { shape: CadShape; selected: boolean; onPointerDown: (event: React.PointerEvent<SVGElement>, shape: CadShape) => void }) {
-  const stroke = selected ? '#38bdf8' : 'rgba(226,232,240,0.74)';
-  const fill = selected ? 'rgba(56,189,248,0.20)' : 'rgba(148,163,184,0.08)';
-  if (shape.type === 'circle') {
+  const material = cadMaterials[shape.material];
+  const stroke = selected ? '#2563eb' : shape.operation === 'cut' ? '#f43f5e' : material.dark;
+  const fill = selected ? 'rgba(37,99,235,0.12)' : shape.operation === 'cut' ? 'rgba(244,63,94,0.08)' : `${material.color}22`;
+  if (shape.type === 'circle' || shape.type === 'hole') {
     return (
       <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-        <circle cx={shape.x} cy={shape.y} r={shape.radius} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
+        <circle cx={shape.x} cy={shape.y} r={shape.radius} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
         <CadShapeLabel shape={shape} />
       </g>
     );
@@ -920,7 +1031,7 @@ function CadSketchShape({ shape, selected, onPointerDown }: { shape: CadShape; s
   if (shape.type === 'slot') {
     return (
       <g onPointerDown={(event) => onPointerDown(event, shape)} className="cursor-move">
-        <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx={shape.h / 2} fill={fill} stroke={stroke} strokeWidth={selected ? 3 : 2} />
+        <rect x={shape.x - shape.w / 2} y={shape.y - shape.h / 2} width={shape.w} height={shape.h} rx={shape.h / 2} fill={fill} stroke={stroke} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} strokeWidth={selected ? 3 : 2} />
         <CadShapeLabel shape={shape} />
       </g>
     );
@@ -945,35 +1056,50 @@ function CadSketchShape({ shape, selected, onPointerDown }: { shape: CadShape; s
 function CadShapeLabel({ shape }: { shape: CadShape }) {
   return (
     <g className="pointer-events-none">
-      <text x={shape.x} y={shape.y + shape.h / 2 + 18} textAnchor="middle" fill="rgba(226,232,240,0.72)" fontSize="10" fontWeight="800">{shape.label}</text>
-      <text x={shape.x} y={shape.y - shape.h / 2 - 8} textAnchor="middle" fill="rgba(56,189,248,0.82)" fontSize="10" fontWeight="900">{fmt(shape.w, 0)} x {fmt(shape.h, 0)}</text>
+      <text x={shape.x} y={shape.y + shape.h / 2 + 18} textAnchor="middle" fill="#475569" fontSize="10" fontWeight="800">{shape.label}</text>
+      <text x={shape.x} y={shape.y - shape.h / 2 - 8} textAnchor="middle" fill="#2563eb" fontSize="10" fontWeight="900">{fmt(shape.w, 0)} x {fmt(shape.h, 0)}</text>
     </g>
   );
 }
 
-function CadSolidShape({ shape, selected, z, maxDepth }: { shape: CadShape; selected: boolean; z: number; maxDepth: number }) {
-  const depth = 16 + (shape.depth / maxDepth) * 46;
-  const x = 150 + (shape.x - 250) * 0.54 + z;
-  const y = 210 + (shape.y - 170) * 0.34 - z;
+function CadSolidShape({ shape, selected, z, maxDepth, renderMode, viewMode }: { shape: CadShape; selected: boolean; z: number; maxDepth: number; renderMode: CadRenderMode; viewMode: CadViewMode }) {
+  const depth = viewMode === 'top' ? 0 : 16 + (shape.depth / maxDepth) * 46;
+  const x = 150 + (shape.x - 250) * (viewMode === 'right' ? 0.22 : 0.54) + z;
+  const y = viewMode === 'front' ? 212 - shape.depth * 0.55 : 210 + (shape.y - 170) * (viewMode === 'top' ? 0.72 : 0.34) - z;
   const w = Math.max(18, shape.w * 0.58);
   const h = Math.max(12, shape.h * 0.48);
-  const color = selected ? '#38bdf8' : '#64748b';
-  if (shape.type === 'circle') {
+  const material = cadMaterials[shape.material];
+  const color = selected ? '#2563eb' : shape.operation === 'cut' ? '#f43f5e' : material.dark;
+  const face = renderMode === 'wireframe' ? 'transparent' : shape.operation === 'cut' ? 'rgba(244,63,94,0.08)' : material.color;
+  const opacity = renderMode === 'realistic' ? 0.94 : renderMode === 'section' ? 0.64 : 0.78;
+  if (shape.type === 'circle' || shape.type === 'hole') {
     return (
-      <g>
-        <ellipse cx={x + depth} cy={y - depth * 0.5} rx={w / 2} ry={h / 2} fill="rgba(14,165,233,0.15)" stroke={color} strokeWidth="2" />
+      <g filter={renderMode === 'realistic' && shape.operation === 'add' ? 'url(#cad-shadow)' : undefined} opacity={shape.operation === 'cut' ? 0.72 : 1}>
+        <ellipse cx={x + depth} cy={y - depth * 0.5} rx={w / 2} ry={h / 2} fill={renderMode === 'wireframe' ? 'transparent' : material.light} stroke={color} strokeWidth="2" opacity={opacity} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} />
         <path d={`M${x - w / 2} ${y} L${x + depth - w / 2} ${y - depth * 0.5} M${x + w / 2} ${y} L${x + depth + w / 2} ${y - depth * 0.5}`} stroke={color} strokeWidth="2" opacity="0.75" />
-        <ellipse cx={x} cy={y} rx={w / 2} ry={h / 2} fill="rgba(56,189,248,0.12)" stroke={color} strokeWidth={selected ? 4 : 2} />
+        <ellipse cx={x} cy={y} rx={w / 2} ry={h / 2} fill={face} stroke={color} strokeWidth={selected ? 4 : 2} opacity={opacity} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} />
       </g>
     );
   }
   const top = `${x - w / 2 + depth},${y - h / 2 - depth * 0.5} ${x + w / 2 + depth},${y - h / 2 - depth * 0.5} ${x + w / 2},${y - h / 2} ${x - w / 2},${y - h / 2}`;
   const side = `${x + w / 2},${y - h / 2} ${x + w / 2 + depth},${y - h / 2 - depth * 0.5} ${x + w / 2 + depth},${y + h / 2 - depth * 0.5} ${x + w / 2},${y + h / 2}`;
   return (
-    <g>
-      <polygon points={top} fill="rgba(56,189,248,0.18)" stroke={color} strokeWidth="2" />
-      <polygon points={side} fill="rgba(14,165,233,0.12)" stroke={color} strokeWidth="2" />
-      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={shape.type === 'slot' ? h / 2 : 4} fill="rgba(148,163,184,0.12)" stroke={color} strokeWidth={selected ? 4 : 2} />
+    <g filter={renderMode === 'realistic' && shape.operation === 'add' ? 'url(#cad-shadow)' : undefined} opacity={shape.operation === 'cut' ? 0.72 : 1}>
+      {viewMode !== 'top' && <polygon points={top} fill={renderMode === 'wireframe' ? 'transparent' : material.light} stroke={color} strokeWidth="2" opacity={opacity} />}
+      {viewMode !== 'top' && <polygon points={side} fill={renderMode === 'wireframe' ? 'transparent' : material.dark} stroke={color} strokeWidth="2" opacity={renderMode === 'realistic' ? 0.42 : opacity} />}
+      <rect x={x - w / 2} y={y - h / 2} width={w} height={h} rx={shape.type === 'slot' ? h / 2 : 4} fill={face} stroke={color} strokeWidth={selected ? 4 : 2} opacity={opacity} strokeDasharray={shape.operation === 'cut' ? '6 4' : undefined} />
+    </g>
+  );
+}
+
+function CadViewCube({ viewMode }: { viewMode: CadViewMode }) {
+  return (
+    <g transform="translate(448 42)">
+      <rect x="0" y="0" width="92" height="76" rx="14" fill="rgba(255,255,255,0.78)" stroke="rgba(148,163,184,0.45)" />
+      <polygon points="22,36 46,20 70,36 46,52" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5" />
+      <polygon points="22,36 46,52 46,68 22,52" fill="#bfdbfe" stroke="#2563eb" strokeWidth="1.5" />
+      <polygon points="70,36 46,52 46,68 70,52" fill="#93c5fd" stroke="#2563eb" strokeWidth="1.5" />
+      <text x="46" y="12" textAnchor="middle" fill="#334155" fontSize="9" fontWeight="900">{viewMode.toUpperCase()}</text>
     </g>
   );
 }
