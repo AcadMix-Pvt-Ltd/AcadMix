@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Car,
   CheckCircle,
@@ -297,6 +297,9 @@ export default function MechanicalEngineeringStudio({ tool, isFullScreen, onExit
   const accent = accentClasses[meta.accent];
   const config = toolConfig[tool];
   const [values, setValues] = useState<MechValues>(config.initial);
+  useEffect(() => {
+    setValues(config.initial);
+  }, [tool, config.initial]);
   const metrics = mechMetrics(tool, values);
   const update = (key: MechInputKey, value: number) => {
     const input = config.inputs.find((item) => item.key === key);
