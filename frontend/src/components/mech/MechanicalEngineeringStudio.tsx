@@ -22,6 +22,9 @@ export type MechanicalStudioTool =
   | 'heatExchanger'
   | 'pipeFlow'
   | 'pump'
+  | 'bernoulli'
+  | 'openChannel'
+  | 'dragWindTunnel'
   | 'beamStress'
   | 'mohrsCircle'
   | 'shaftGear'
@@ -72,6 +75,9 @@ const toolMeta: Record<MechanicalStudioTool, { title: string; subtitle: string; 
   heatExchanger: { title: 'Heat Exchanger Studio', subtitle: 'LMTD, UA, effectiveness and outlet temperature sensitivity', accent: 'amber', icon: <ThermometerHot size={24} weight="duotone" /> },
   pipeFlow: { title: 'Fluid Pipe Flow Studio', subtitle: 'Reynolds number, friction loss, velocity and pumping power', accent: 'sky', icon: <Drop size={24} weight="duotone" /> },
   pump: { title: 'Pump & Turbomachinery Studio', subtitle: 'Head, discharge, specific speed, efficiency and cavitation margin', accent: 'teal', icon: <Gauge size={24} weight="duotone" /> },
+  bernoulli: { title: 'Bernoulli / Venturi Studio', subtitle: 'Pressure, velocity, head balance and throat flow visualization', accent: 'sky', icon: <Drop size={24} weight="duotone" /> },
+  openChannel: { title: 'Open Channel Flow Studio', subtitle: 'Manning discharge, hydraulic radius, Froude number and flow regime', accent: 'teal', icon: <WaveSine size={24} weight="duotone" /> },
+  dragWindTunnel: { title: 'Wind Tunnel & Drag Studio', subtitle: 'Drag force, Reynolds number, dynamic pressure and wake behavior', accent: 'indigo', icon: <Gauge size={24} weight="duotone" /> },
   beamStress: { title: 'Strength of Materials Studio', subtitle: 'Beam stress, deflection, shear and factor of safety checks', accent: 'amber', icon: <Wrench size={24} weight="duotone" /> },
   mohrsCircle: { title: "Mohr's Circle Studio", subtitle: 'Principal stress, max shear and rotated stress visualization', accent: 'indigo', icon: <WaveSine size={24} weight="duotone" /> },
   shaftGear: { title: 'Shaft & Gear Design Studio', subtitle: 'Torque, shaft diameter, gear ratio and key stress checks', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
@@ -121,6 +127,24 @@ const toolConfig: Record<MechanicalStudioTool, { caption: string; inputs: MechIn
     { key: 'c', label: 'Efficiency', unit: '%', min: 30, max: 92, step: 1 },
     { key: 'd', label: 'NPSHa', unit: 'm', min: 1, max: 20, step: 0.5 },
   ], initial: { a: 42, b: 85, c: 72, d: 7 } },
+  bernoulli: { caption: 'Drag upstream velocity and throat ratio to inspect pressure recovery.', inputs: [
+    { key: 'a', label: 'Velocity', unit: 'm/s', min: 0.5, max: 35, step: 0.5 },
+    { key: 'b', label: 'Throat ratio', min: 0.25, max: 0.95, step: 0.01 },
+    { key: 'c', label: 'Elevation diff', unit: 'm', min: -12, max: 12, step: 0.5 },
+    { key: 'd', label: 'Loss coeff.', min: 0, max: 2.5, step: 0.05 },
+  ], initial: { a: 6, b: 0.55, c: 1.5, d: 0.2 } },
+  openChannel: { caption: 'Drag slope and depth to classify open-channel flow.', inputs: [
+    { key: 'a', label: 'Channel slope', unit: 'x1000', min: 0.2, max: 30, step: 0.2 },
+    { key: 'b', label: 'Flow depth', unit: 'm', min: 0.1, max: 5, step: 0.05 },
+    { key: 'c', label: 'Width', unit: 'm', min: 0.5, max: 25, step: 0.5 },
+    { key: 'd', label: 'Manning n', min: 0.01, max: 0.08, step: 0.001 },
+  ], initial: { a: 4, b: 1.2, c: 4, d: 0.018 } },
+  dragWindTunnel: { caption: 'Drag air speed and body area to inspect drag and wake intensity.', inputs: [
+    { key: 'a', label: 'Air speed', unit: 'm/s', min: 2, max: 80, step: 1 },
+    { key: 'b', label: 'Drag coeff.', min: 0.05, max: 1.8, step: 0.05 },
+    { key: 'c', label: 'Frontal area', unit: 'm2', min: 0.02, max: 8, step: 0.02 },
+    { key: 'd', label: 'Length scale', unit: 'm', min: 0.02, max: 6, step: 0.02 },
+  ], initial: { a: 28, b: 0.42, c: 1.8, d: 1.4 } },
   beamStress: { caption: 'Drag load and span to check bending stress and deflection.', inputs: [
     { key: 'a', label: 'Span', unit: 'm', min: 1, max: 12, step: 0.25 },
     { key: 'b', label: 'Load', unit: 'kN', min: 1, max: 300, step: 1 },
@@ -380,6 +404,30 @@ function mechMetrics(tool: MechanicalStudioTool, v: MechValues): { m1: [string, 
       const power = 9.81 * (v.b / 1000) * v.a / Math.max(v.c / 100, 0.1);
       return { m1: metric('Shaft power', power, 'kW'), m2: metric('Hydraulic power', 9.81 * (v.b / 1000) * v.a, 'kW'), m3: metric('NPSH margin', v.d - 3, 'm'), m4: metric('Efficiency', v.c, '%'), ok: v.c > 55 && v.d > 3 };
     }
+    case 'bernoulli': {
+      const throatVelocity = v.a / Math.max(v.b * v.b, 0.05);
+      const pressureDrop = 0.5 * 1000 * (throatVelocity * throatVelocity - v.a * v.a) / 1000 + 9.81 * v.c;
+      const headLoss = v.d * v.a * v.a / (2 * 9.81);
+      const recovery = clamp(100 - v.d * 18 - Math.abs(1 - v.b) * 35, 0, 100);
+      return { m1: metric('Throat velocity', throatVelocity, 'm/s'), m2: metric('Pressure drop', pressureDrop, 'kPa'), m3: metric('Head loss', headLoss, 'm'), m4: metric('Recovery', recovery, '%'), ok: throatVelocity < 45 && headLoss < 12 };
+    }
+    case 'openChannel': {
+      const slope = v.a / 1000;
+      const area = v.c * v.b;
+      const perimeter = v.c + 2 * v.b;
+      const hydraulicRadius = area / Math.max(perimeter, 0.1);
+      const discharge = (1 / Math.max(v.d, 0.001)) * area * Math.pow(hydraulicRadius, 2 / 3) * Math.sqrt(slope);
+      const froude = discharge / Math.max(area * Math.sqrt(9.81 * v.b), 0.1);
+      return { m1: metric('Discharge', discharge, 'm3/s'), m2: metric('Froude', froude, ''), m3: metric('Hydraulic radius', hydraulicRadius, 'm'), m4: metric('Regime', froude < 1 ? 'Subcritical' : 'Supercritical'), ok: froude < 1.2 && discharge > 0.2 };
+    }
+    case 'dragWindTunnel': {
+      const rho = 1.225;
+      const drag = 0.5 * rho * v.a * v.a * v.b * v.c;
+      const dynamicPressure = 0.5 * rho * v.a * v.a;
+      const reynolds = v.a * v.d / 1.5e-5;
+      const power = drag * v.a / 1000;
+      return { m1: metric('Drag force', drag, 'N'), m2: metric('Dynamic pressure', dynamicPressure, 'Pa'), m3: metric('Reynolds', reynolds, '', 0), m4: metric('Fan power', power, 'kW'), ok: drag < 3500 && reynolds > 10000 };
+    }
     case 'beamStress': {
       const moment = v.b * v.a / 4;
       const stress = moment * 1e6 / Math.max(v.c * 1000, 1);
@@ -532,7 +580,7 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
   const tB = (values[secondary.key] - secondary.min) / Math.max(secondary.max - secondary.min, 1);
   const xA = 96 + clamp(tA, 0, 1) * 448;
   const yB = 232 - clamp(tB, 0, 1) * 160;
-  const objectColor = ['pipeFlow', 'pump', 'robotArm', 'pidControl', 'turbineCompressor', 'maintenanceReliability'].includes(tool) ? '#2dd4bf' : ['thermoCycle', 'icEngine', 'welding', 'boilerPlant', 'castingFoundry'].includes(tool) ? '#fb7185' : accent;
+  const objectColor = ['pipeFlow', 'pump', 'bernoulli', 'openChannel', 'dragWindTunnel', 'robotArm', 'pidControl', 'turbineCompressor', 'maintenanceReliability'].includes(tool) ? '#2dd4bf' : ['thermoCycle', 'icEngine', 'welding', 'boilerPlant', 'castingFoundry'].includes(tool) ? '#fb7185' : accent;
 
   const move = (event: React.PointerEvent<SVGSVGElement>) => {
     if (!dragKey) return;
@@ -660,11 +708,75 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
           <text x="364" y="266" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">torque speed map</text>
         </g>
       )}
-      {['pipeFlow', 'pump'].includes(tool) && (
+      {tool === 'pipeFlow' && (
         <g>
-          <path d={`M88 170 H${xA} C${xA + 48} 170 ${xA + 48} ${yB} 548 ${yB}`} fill="none" stroke={objectColor} strokeWidth={Math.max(8, values.b / 18)} strokeLinecap="round" opacity="0.76" />
-          <circle cx={xA} cy="170" r="38" fill="rgba(45,212,191,0.12)" stroke={objectColor} strokeWidth="5" />
-          {tool === 'pump' && <path d={`M${xA - 18} 150 L${xA + 22} 170 L${xA - 18} 190 Z`} fill={objectColor} />}
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">pipe friction and energy grade line</text>
+          <path d="M82 180 H552" stroke="rgba(226,232,240,0.18)" strokeWidth="30" strokeLinecap="round" />
+          <path d={`M82 180 H552`} stroke={objectColor} strokeWidth={Math.max(10, Math.min(34, values.b / 12))} strokeLinecap="round" opacity="0.74" />
+          <path d={`M108 ${104 + tB * 20} C210 ${112 + tA * 24} 330 ${126 + tA * 54} 532 ${158 + tA * 62}`} fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          {[150, 230, 310, 390, 470].map((x, index) => (
+            <path key={x} d={`M${x} 164 v${32 + index * 6}`} stroke="rgba(8,13,20,0.58)" strokeWidth="4" strokeLinecap="round" />
+          ))}
+          <path d="M100 180 l24 -16 v32z M540 180 l-24 -16 v32z" fill="#38bdf8" />
+          <text x="112" y="234" fill="rgba(56,189,248,0.82)" fontSize="12" fontWeight="900">flow</text>
+          <text x="402" y="116" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">head loss slope</text>
+        </g>
+      )}
+      {tool === 'pump' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">pump curve and operating point</text>
+          <circle cx="166" cy="168" r="54" fill="rgba(45,212,191,0.12)" stroke={objectColor} strokeWidth="6" />
+          <path d={`M138 138 L198 168 L138 198 Z`} fill={objectColor} opacity="0.9" />
+          <path d="M76 168 H112 M220 168 H298" stroke="rgba(226,232,240,0.44)" strokeWidth="13" strokeLinecap="round" />
+          <line x1="338" y1="238" x2="552" y2="238" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <line x1="338" y1="238" x2="338" y2="86" stroke="rgba(226,232,240,0.26)" strokeWidth="3" />
+          <path d={`M350 ${112 + tA * 18} C396 ${104 + tB * 38} 458 ${142 + tB * 28} 540 ${214 - tA * 20}`} fill="none" stroke={objectColor} strokeWidth="5" strokeLinecap="round" />
+          <path d={`M350 ${224 - tB * 18} C420 ${210 - tA * 72} 474 ${158 - tB * 35} 540 ${118 + tA * 22}`} fill="none" stroke="#fbbf24" strokeWidth="4" strokeLinecap="round" opacity="0.88" />
+          <circle cx={410 + tB * 96} cy={178 - tA * 54} r="9" fill="#fb7185" />
+          <text x="358" y="76" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="800">H-Q curve</text>
+          <text x="116" y="250" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">impeller</text>
+        </g>
+      )}
+      {tool === 'bernoulli' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">venturi pressure recovery</text>
+          <path d={`M76 176 H220 C264 176 260 ${156 + tB * 28} 310 ${156 + tB * 28} C360 ${156 + tB * 28} 356 176 400 176 H552`} fill="none" stroke="rgba(226,232,240,0.18)" strokeWidth="54" strokeLinecap="round" />
+          <path d={`M76 176 H220 C264 176 260 ${156 + tB * 28} 310 ${156 + tB * 28} C360 ${156 + tB * 28} 356 176 400 176 H552`} fill="none" stroke={objectColor} strokeWidth={Math.max(14, 34 * values.b)} strokeLinecap="round" opacity="0.75" />
+          <path d="M150 176 l24 -15 v30z M306 176 l30 -18 v36z M496 176 l24 -15 v30z" fill="#38bdf8" />
+          <path d={`M150 ${90 + tA * 4} v${72 - tA * 1.5} M310 ${90 + tB * 58} v${72 - tB * 42} M494 ${96 + tA * 6} v${66 - tA * 2}`} stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <circle cx="150" cy={90 + tA * 4} r="7" fill="#fbbf24" />
+          <circle cx="310" cy={90 + tB * 58} r="7" fill="#fbbf24" />
+          <circle cx="494" cy={96 + tA * 6} r="7" fill="#fbbf24" />
+          <text x="126" y="252" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="800">pressure taps</text>
+          <text x="278" y="136" fill="rgba(56,189,248,0.82)" fontSize="12" fontWeight="900">throat</text>
+        </g>
+      )}
+      {tool === 'openChannel' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">open channel profile and regime</text>
+          <path d={`M86 ${220 - tA * 24} L552 ${186 + tA * 30}`} stroke="rgba(226,232,240,0.42)" strokeWidth="8" strokeLinecap="round" />
+          <path d={`M102 ${206 - tB * 86} C176 ${194 - tB * 62} 238 ${220 - tB * 96} 308 ${202 - tB * 76} S456 ${198 - tB * 58} 538 ${176 - tB * 84}`} fill="none" stroke={objectColor} strokeWidth="7" strokeLinecap="round" />
+          <path d={`M104 ${206 - tB * 86} C176 ${194 - tB * 62} 238 ${220 - tB * 96} 308 ${202 - tB * 76} S456 ${198 - tB * 58} 538 ${176 - tB * 84} L552 238 L88 238 Z`} fill="rgba(45,212,191,0.12)" />
+          <path d="M154 238 V102 M202 238 V128 M250 238 V112 M298 238 V136 M346 238 V118 M394 238 V130 M442 238 V110" stroke="rgba(226,232,240,0.13)" strokeWidth="3" />
+          <path d="M474 132 C500 142 512 154 526 178" fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="112" y="262" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">water surface</text>
+          <text x="420" y="118" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">specific energy</text>
+        </g>
+      )}
+      {tool === 'dragWindTunnel' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">wind tunnel wake and drag balance</text>
+          <rect x="76" y="112" width="488" height="114" rx="22" fill="rgba(99,102,241,0.08)" stroke="rgba(226,232,240,0.24)" strokeWidth="4" />
+          {[132, 190, 248].map((x) => (
+            <path key={x} d={`M${x} 146 H292`} stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
+          ))}
+          <path d={`M314 130 C344 ${116 + tB * 16} 378 ${146 - tB * 18} 374 170 C370 ${206 - tB * 10} 330 216 304 194 C286 178 288 146 314 130 Z`} fill="rgba(226,232,240,0.14)" stroke={accent} strokeWidth="5" />
+          <path d={`M374 150 C420 ${122 + tB * 36} 478 ${126 + tA * 18} 542 112 M374 174 C422 ${176 + tB * 34} 478 ${196 + tA * 18} 542 220 M376 162 C442 ${160 + tB * 14} 494 ${156 + tA * 18} 550 166`} fill="none" stroke={objectColor} strokeWidth="5" strokeLinecap="round" opacity="0.72" />
+          <path d="M300 170 H228" stroke="#fb7185" strokeWidth="7" strokeLinecap="round" />
+          <path d="M228 170 l24 -16 v32z" fill="#fb7185" />
+          <text x="118" y="94" fill="rgba(56,189,248,0.82)" fontSize="12" fontWeight="900">air stream</text>
+          <text x="406" y="94" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">wake</text>
+          <text x="214" y="204" fill="rgba(251,113,133,0.82)" fontSize="12" fontWeight="900">drag</text>
         </g>
       )}
       {['beamStress', 'mohrsCircle', 'vibration', 'materialTesting', 'metrology'].includes(tool) && (

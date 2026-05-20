@@ -929,6 +929,9 @@ const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: st
   fluid_mech: [
     { id: 'mech-pipe-flow', label: 'Fluid Pipe Flow Studio', url: '', isNativeBlock: true, mechTool: 'pipeFlow' },
     { id: 'mech-pump', label: 'Pump & Turbomachinery Studio', url: '', isNativeBlock: true, mechTool: 'pump' },
+    { id: 'mech-bernoulli', label: 'Bernoulli / Venturi Studio', url: '', isNativeBlock: true, mechTool: 'bernoulli' },
+    { id: 'mech-open-channel', label: 'Open Channel Flow Studio', url: '', isNativeBlock: true, mechTool: 'openChannel' },
+    { id: 'mech-drag-wind-tunnel', label: 'Wind Tunnel & Drag Studio', url: '', isNativeBlock: true, mechTool: 'dragWindTunnel' },
     { id: 'fl-python', label: 'Python (Fluids)', url: jupyterUrl(JUPYTER_CODES['fl-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
     { id: 'fl-pipe-rlc', label: 'Pipe Flow (RLC Analogy)', url: 'https://lushprojects.com/circuitjs/circuitjs.html?startCircuit=lrc.txt', openLabel: 'Open in CircuitJS' },
   ],
