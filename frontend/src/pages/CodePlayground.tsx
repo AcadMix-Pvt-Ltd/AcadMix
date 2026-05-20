@@ -949,6 +949,11 @@ const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: st
   machine_design: [
     { id: 'mech-shaft-gear', label: 'Shaft & Gear Design Studio', url: '', isNativeBlock: true, mechTool: 'shaftGear' },
     { id: 'mech-four-bar', label: 'Four-Bar Mechanism Studio', url: '', isNativeBlock: true, mechTool: 'fourBar' },
+    { id: 'mech-cam-follower', label: 'Cam & Follower Studio', url: '', isNativeBlock: true, mechTool: 'camFollower' },
+    { id: 'mech-spring-design', label: 'Spring Design Studio', url: '', isNativeBlock: true, mechTool: 'springDesign' },
+    { id: 'mech-bearing-design', label: 'Bearing Life Studio', url: '', isNativeBlock: true, mechTool: 'bearingDesign' },
+    { id: 'mech-clutch-brake', label: 'Clutch & Brake Studio', url: '', isNativeBlock: true, mechTool: 'clutchBrake' },
+    { id: 'mech-flywheel-governor', label: 'Flywheel & Governor Studio', url: '', isNativeBlock: true, mechTool: 'flywheelGovernor' },
     { id: 'md-4bar', label: '4-Bar Linkage Sim', url: 'https://mevirtuoso.com/four-bar-linkage-simulator/', openLabel: 'Open ME Virtuoso' },
     { id: 'md-python', label: 'Python (Mechanisms)', url: jupyterUrl(JUPYTER_CODES['md-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],

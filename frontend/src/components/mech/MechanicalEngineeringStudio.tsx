@@ -32,6 +32,11 @@ export type MechanicalStudioTool =
   | 'pressureVessel'
   | 'shaftGear'
   | 'fourBar'
+  | 'camFollower'
+  | 'springDesign'
+  | 'bearingDesign'
+  | 'clutchBrake'
+  | 'flywheelGovernor'
   | 'cnc'
   | 'welding'
   | 'robotArm'
@@ -88,6 +93,11 @@ const toolMeta: Record<MechanicalStudioTool, { title: string; subtitle: string; 
   pressureVessel: { title: 'Pressure Vessel Studio', subtitle: 'Thin cylinder hoop stress, longitudinal stress and joint efficiency checks', accent: 'rose', icon: <Gauge size={24} weight="duotone" /> },
   shaftGear: { title: 'Shaft & Gear Design Studio', subtitle: 'Torque, shaft diameter, gear ratio and key stress checks', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
   fourBar: { title: 'Four-Bar Mechanism Studio', subtitle: 'Linkage geometry, transmission angle and Grashof condition', accent: 'violet', icon: <Gear size={24} weight="duotone" /> },
+  camFollower: { title: 'Cam & Follower Studio', subtitle: 'Cam profile, lift law, pressure angle and follower velocity checks', accent: 'indigo', icon: <Gear size={24} weight="duotone" /> },
+  springDesign: { title: 'Spring Design Studio', subtitle: 'Helical spring stiffness, shear stress, deflection and surge checks', accent: 'emerald', icon: <WaveSine size={24} weight="duotone" /> },
+  bearingDesign: { title: 'Bearing Life Studio', subtitle: 'Equivalent load, L10 life, dynamic capacity and speed factor checks', accent: 'sky', icon: <Gauge size={24} weight="duotone" /> },
+  clutchBrake: { title: 'Clutch & Brake Studio', subtitle: 'Torque capacity, friction force, wear pressure and stopping energy', accent: 'rose', icon: <Wrench size={24} weight="duotone" /> },
+  flywheelGovernor: { title: 'Flywheel & Governor Studio', subtitle: 'Energy fluctuation, inertia, speed regulation and stability checks', accent: 'amber', icon: <Gear size={24} weight="duotone" /> },
   cnc: { title: 'CNC Machining Studio', subtitle: 'Feed, spindle speed, MRR, cycle time and surface finish estimate', accent: 'emerald', icon: <Wrench size={24} weight="duotone" /> },
   welding: { title: 'Welding & Fabrication Studio', subtitle: 'Heat input, weld size, throat area and distortion risk checks', accent: 'rose', icon: <Wrench size={24} weight="duotone" /> },
   robotArm: { title: 'Robotics Arm Studio', subtitle: 'Reach envelope, payload, joint torque and workspace checks', accent: 'teal', icon: <Robot size={24} weight="duotone" /> },
@@ -193,6 +203,36 @@ const toolConfig: Record<MechanicalStudioTool, { caption: string; inputs: MechIn
     { key: 'c', label: 'Rocker', unit: 'mm', min: 40, max: 320, step: 5 },
     { key: 'd', label: 'Ground', unit: 'mm', min: 60, max: 400, step: 5 },
   ], initial: { a: 70, b: 180, c: 160, d: 220 } },
+  camFollower: { caption: 'Drag cam speed and lift to inspect follower motion quality.', inputs: [
+    { key: 'a', label: 'Lift', unit: 'mm', min: 5, max: 80, step: 1 },
+    { key: 'b', label: 'Cam speed', unit: 'rpm', min: 50, max: 3000, step: 50 },
+    { key: 'c', label: 'Base radius', unit: 'mm', min: 15, max: 180, step: 1 },
+    { key: 'd', label: 'Rise angle', unit: 'deg', min: 30, max: 180, step: 5 },
+  ], initial: { a: 24, b: 600, c: 45, d: 90 } },
+  springDesign: { caption: 'Drag wire diameter and load to check spring stiffness and stress.', inputs: [
+    { key: 'a', label: 'Load', unit: 'N', min: 20, max: 8000, step: 20 },
+    { key: 'b', label: 'Wire dia', unit: 'mm', min: 1, max: 24, step: 0.5 },
+    { key: 'c', label: 'Mean dia', unit: 'mm', min: 8, max: 220, step: 1 },
+    { key: 'd', label: 'Active coils', min: 3, max: 18, step: 0.5 },
+  ], initial: { a: 850, b: 7, c: 52, d: 8 } },
+  bearingDesign: { caption: 'Drag load and speed to estimate bearing L10 life.', inputs: [
+    { key: 'a', label: 'Radial load', unit: 'kN', min: 0.5, max: 120, step: 0.5 },
+    { key: 'b', label: 'Speed', unit: 'rpm', min: 50, max: 6000, step: 50 },
+    { key: 'c', label: 'Dyn. capacity', unit: 'kN', min: 2, max: 300, step: 1 },
+    { key: 'd', label: 'Service factor', min: 1, max: 3, step: 0.05 },
+  ], initial: { a: 8, b: 960, c: 52, d: 1.3 } },
+  clutchBrake: { caption: 'Drag friction radius and pressure to tune torque capacity.', inputs: [
+    { key: 'a', label: 'Axial force', unit: 'kN', min: 1, max: 180, step: 1 },
+    { key: 'b', label: 'Mean radius', unit: 'mm', min: 30, max: 450, step: 5 },
+    { key: 'c', label: 'Friction coeff.', min: 0.08, max: 0.55, step: 0.01 },
+    { key: 'd', label: 'Speed', unit: 'rpm', min: 50, max: 5000, step: 50 },
+  ], initial: { a: 18, b: 120, c: 0.32, d: 900 } },
+  flywheelGovernor: { caption: 'Drag energy fluctuation and speed to size flywheel inertia.', inputs: [
+    { key: 'a', label: 'Energy fluct.', unit: 'kJ', min: 0.5, max: 500, step: 0.5 },
+    { key: 'b', label: 'Speed', unit: 'rpm', min: 80, max: 3000, step: 20 },
+    { key: 'c', label: 'Speed fluct.', unit: '%', min: 0.5, max: 12, step: 0.1 },
+    { key: 'd', label: 'Governor lift', unit: 'mm', min: 5, max: 120, step: 1 },
+  ], initial: { a: 42, b: 480, c: 3.5, d: 32 } },
   cnc: { caption: 'Drag speed and feed to tune machining output.', inputs: [
     { key: 'a', label: 'Spindle', unit: 'rpm', min: 200, max: 8000, step: 100 },
     { key: 'b', label: 'Feed', unit: 'mm/min', min: 20, max: 2500, step: 20 },
@@ -500,6 +540,43 @@ function mechMetrics(tool: MechanicalStudioTool, v: MechValues): { m1: [string, 
       const grashof = links[0] + links[3] <= links[1] + links[2];
       const trans = Math.abs(v.b - v.c) / Math.max(v.d, 1) * 100;
       return { m1: metric('Grashof', grashof ? 'Yes' : 'No'), m2: metric('Mobility', 1, 'DOF'), m3: metric('Transmission idx', trans, '%'), m4: metric('Shortest link', links[0], 'mm'), ok: grashof && trans < 80 };
+    }
+    case 'camFollower': {
+      const omega = 2 * Math.PI * v.b / 60;
+      const riseRad = v.d * Math.PI / 180;
+      const maxVelocity = v.a * omega / Math.max(riseRad, 0.1);
+      const maxAccel = v.a * omega * omega / Math.max(riseRad, 0.1);
+      const pressureAngle = Math.atan(maxVelocity / Math.max(v.c * omega, 1)) * 180 / Math.PI;
+      return { m1: metric('Max velocity', maxVelocity, 'mm/s'), m2: metric('Max accel.', maxAccel / 1000, 'm/s2'), m3: metric('Pressure angle', pressureAngle, 'deg'), m4: metric('Pitch radius', v.c + v.a, 'mm'), ok: pressureAngle < 32 && maxAccel < 45000 };
+    }
+    case 'springDesign': {
+      const cIndex = v.c / Math.max(v.b, 0.1);
+      const k = (80_000 * Math.pow(v.b, 4)) / Math.max(8 * Math.pow(v.c, 3) * v.d, 1);
+      const deflection = v.a / Math.max(k, 0.1);
+      const wahl = ((4 * cIndex - 1) / Math.max(4 * cIndex - 4, 0.1)) + 0.615 / Math.max(cIndex, 0.1);
+      const shear = (8 * v.a * v.c * wahl) / Math.max(Math.PI * Math.pow(v.b, 3), 1);
+      return { m1: metric('Spring rate', k, 'N/mm'), m2: metric('Deflection', deflection, 'mm'), m3: metric('Shear stress', shear, 'MPa'), m4: metric('Spring index', cIndex, ''), ok: shear < 620 && cIndex >= 4 && cIndex <= 12 };
+    }
+    case 'bearingDesign': {
+      const equivalentLoad = v.a * v.d;
+      const l10Million = Math.pow(v.c / Math.max(equivalentLoad, 0.1), 3);
+      const lifeHours = l10Million * 1e6 / Math.max(60 * v.b, 1);
+      const speedFactor = v.b / 3000;
+      return { m1: metric('L10 life', lifeHours, 'h', 0), m2: metric('Eq. load', equivalentLoad, 'kN'), m3: metric('C/P ratio', v.c / Math.max(equivalentLoad, 0.1), ''), m4: metric('Speed factor', speedFactor, ''), ok: lifeHours > 8000 && v.c > equivalentLoad };
+    }
+    case 'clutchBrake': {
+      const torque = v.a * 1000 * v.c * (v.b / 1000);
+      const power = 2 * Math.PI * v.d * torque / 60000;
+      const heat = power * 0.18;
+      const wearIndex = v.a / Math.max(v.b * v.c, 1);
+      return { m1: metric('Torque cap.', torque, 'N-m'), m2: metric('Power', power, 'kW'), m3: metric('Heat rate', heat, 'kW'), m4: metric('Wear index', wearIndex, ''), ok: wearIndex < 0.7 && heat < 45 };
+    }
+    case 'flywheelGovernor': {
+      const omega = 2 * Math.PI * v.b / 60;
+      const inertia = (v.a * 1000) / Math.max(omega * omega * (v.c / 100), 0.1);
+      const rimMass = inertia / Math.max(Math.pow(0.45, 2), 0.01);
+      const regulation = v.c + 100 / Math.max(v.d, 1);
+      return { m1: metric('Inertia', inertia, 'kg-m2'), m2: metric('Rim mass', rimMass, 'kg'), m3: metric('Regulation', regulation, '%'), m4: metric('Mean speed', v.b, 'rpm'), ok: inertia < 220 && regulation < 12 };
     }
     case 'cnc': {
       const mrr = v.b * v.c * v.d;
@@ -926,12 +1003,114 @@ function MechGraphic({ tool, values, inputs, accent, onChange }: { tool: Mechani
           {tool === 'metrology' && <path d="M150 130 H492 M170 114 V146 M472 114 V146 M234 186 H430" stroke={accent} strokeWidth="6" strokeLinecap="round" />}
         </g>
       )}
-      {['shaftGear', 'fourBar', 'cnc', 'welding', 'castingFoundry', 'sheetMetal', 'industrialEngineering', 'maintenanceReliability', 'additiveManufacturing'].includes(tool) && (
+      {tool === 'shaftGear' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">shaft torque, gear ratio and key check</text>
+          <line x1="96" y1="164" x2="544" y2="164" stroke="rgba(226,232,240,0.44)" strokeWidth="16" strokeLinecap="round" />
+          <circle cx="194" cy="164" r={40 + tA * 30} fill="rgba(167,139,250,0.12)" stroke={objectColor} strokeWidth="6" />
+          <circle cx="404" cy="164" r={52 + tB * 22} fill="rgba(226,232,240,0.08)" stroke={accent} strokeWidth="6" />
+          {[0, 30, 60, 90, 120, 150].map((angle) => (
+            <path key={angle} d="M194 102 V126" stroke={objectColor} strokeWidth="4" strokeLinecap="round" transform={`rotate(${angle} 194 164)`} />
+          ))}
+          {[0, 30, 60, 90, 120, 150].map((angle) => (
+            <path key={angle} d="M404 90 V118" stroke={accent} strokeWidth="4" strokeLinecap="round" transform={`rotate(${angle} 404 164)`} />
+          ))}
+          <rect x="288" y="146" width="58" height="36" rx="8" fill="rgba(251,191,36,0.12)" stroke="#fbbf24" strokeWidth="4" />
+          <path d="M122 104 C94 134 94 194 122 224 M518 104 C548 134 548 194 518 224" fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="272" y="224" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">keyway / shaft seat</text>
+        </g>
+      )}
+      {tool === 'fourBar' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">four-bar linkage mobility</text>
+          <circle cx="150" cy="222" r="10" fill={objectColor} />
+          <circle cx="492" cy="222" r="10" fill={accent} />
+          <circle cx={214 + tA * 52} cy={156 - tB * 48} r="10" fill="#fbbf24" />
+          <circle cx={362 + tB * 54} cy={138 + tA * 36} r="10" fill="#fb7185" />
+          <polyline points={`150,222 ${214 + tA * 52},${156 - tB * 48} ${362 + tB * 54},${138 + tA * 36} 492,222`} fill="none" stroke={objectColor} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="150" y1="222" x2="492" y2="222" stroke="rgba(226,232,240,0.42)" strokeWidth="8" strokeLinecap="round" />
+          <path d={`M150 222 A86 86 0 0 1 ${214 + tA * 52} ${156 - tB * 48}`} fill="none" stroke="#fbbf24" strokeWidth="4" />
+          <path d={`M492 222 A112 112 0 0 0 ${362 + tB * 54} ${138 + tA * 36}`} fill="none" stroke="#fb7185" strokeWidth="4" />
+          <text x="96" y="262" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">ground link</text>
+          <text x="372" y="88" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">coupler path</text>
+        </g>
+      )}
+      {tool === 'camFollower' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">cam lift law and follower motion</text>
+          <path d={`M198 92 C250 ${88 - tA * 8} 286 ${136 - tB * 0.01} 274 182 C254 248 158 238 138 178 C122 130 150 100 198 92 Z`} fill="rgba(129,140,248,0.12)" stroke={objectColor} strokeWidth="6" />
+          <circle cx="204" cy="166" r="12" fill="rgba(226,232,240,0.38)" />
+          <rect x="282" y={88 - tA * 0.35} width="64" height="132" rx="18" fill="rgba(226,232,240,0.08)" stroke="#fbbf24" strokeWidth="5" />
+          <line x1="314" y1={64 - tA * 0.35} x2="314" y2="88" stroke="#fbbf24" strokeWidth="8" strokeLinecap="round" />
+          <line x1="392" y1="238" x2="548" y2="238" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <line x1="392" y1="238" x2="392" y2="92" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <path d={`M402 226 C432 ${212 - tA * 72} 458 ${132 - tA * 62} 488 ${132 - tA * 62} S526 ${212 - tA * 72} 540 226`} fill="none" stroke={accent} strokeWidth="5" strokeLinecap="round" />
+          <text x="404" y="78" fill="rgba(129,140,248,0.82)" fontSize="12" fontWeight="900">displacement curve</text>
+        </g>
+      )}
+      {tool === 'springDesign' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">helical spring deflection and stress</text>
+          <path d={`M138 92 C178 ${128 + tB * 26} 98 ${156 + tB * 20} 138 186 S98 ${240 - tB * 16} 138 260`} fill="none" stroke={objectColor} strokeWidth="8" strokeLinecap="round" />
+          <path d={`M138 92 H452 C492 92 492 ${130 + tA * 20} 452 ${130 + tA * 20} H300 C260 ${130 + tA * 20} 260 ${170 + tA * 28} 300 ${170 + tA * 28} H452 C492 ${170 + tA * 28} 492 ${210 + tA * 28} 452 ${210 + tA * 28} H138`} fill="none" stroke={objectColor} strokeWidth={7 + tB * 6} strokeLinecap="round" />
+          <path d="M96 84 H180 M96 268 H180" stroke="rgba(226,232,240,0.42)" strokeWidth="7" strokeLinecap="round" />
+          <path d="M532 92 V244 M512 112 H552 M512 224 H552" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="356" y="76" fill="rgba(45,212,191,0.82)" fontSize="12" fontWeight="900">coil index</text>
+          <text x="488" y="270" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">deflection</text>
+        </g>
+      )}
+      {tool === 'bearingDesign' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">bearing load path and L10 life</text>
+          <circle cx="214" cy="164" r="82" fill="rgba(56,189,248,0.08)" stroke={objectColor} strokeWidth="7" />
+          <circle cx="214" cy="164" r="38" fill="rgba(8,13,20,0.94)" stroke="rgba(226,232,240,0.34)" strokeWidth="6" />
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+            <circle key={angle} cx={214 + 60 * Math.cos(angle * Math.PI / 180)} cy={164 + 60 * Math.sin(angle * Math.PI / 180)} r={8 + tA * 6} fill={angle < 180 ? objectColor : accent} opacity="0.88" />
+          ))}
+          <path d="M214 54 V104" stroke="#fb7185" strokeWidth="7" strokeLinecap="round" />
+          <path d="M192 82 L214 112 L236 82" fill="none" stroke="#fb7185" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+          <line x1="348" y1="238" x2="548" y2="238" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <line x1="348" y1="238" x2="348" y2="92" stroke="rgba(226,232,240,0.24)" strokeWidth="3" />
+          <path d={`M360 216 C398 ${180 - tA * 36} 450 ${142 - tB * 0.02} 540 ${112 + tA * 24}`} fill="none" stroke="#fbbf24" strokeWidth="5" strokeLinecap="round" />
+          <text x="382" y="78" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">life curve</text>
+        </g>
+      )}
+      {tool === 'clutchBrake' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">friction clutch and brake torque</text>
+          <circle cx="226" cy="164" r={58 + tB * 32} fill="rgba(251,113,133,0.10)" stroke={objectColor} strokeWidth="7" />
+          <circle cx="226" cy="164" r={28 + tB * 12} fill="rgba(8,13,20,0.9)" stroke="rgba(226,232,240,0.34)" strokeWidth="5" />
+          {[20, 80, 140, 200, 260, 320].map((angle) => (
+            <path key={angle} d="M226 94 V124" stroke="#fbbf24" strokeWidth="6" strokeLinecap="round" transform={`rotate(${angle} 226 164)`} />
+          ))}
+          <path d="M360 106 h136 a34 34 0 0 1 0 116 h-136" fill="rgba(226,232,240,0.06)" stroke={accent} strokeWidth="6" />
+          <path d={`M360 132 H${468 + tA * 36} M360 164 H${488 + tA * 26} M360 196 H${468 + tA * 36}`} stroke="#fb7185" strokeWidth="6" strokeLinecap="round" />
+          <path d="M132 164 C132 114 178 96 226 96" fill="none" stroke="#38bdf8" strokeWidth="5" strokeLinecap="round" />
+          <text x="132" y="258" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">friction lining</text>
+          <text x="386" y="258" fill="rgba(251,113,133,0.82)" fontSize="12" fontWeight="900">brake shoe force</text>
+        </g>
+      )}
+      {tool === 'flywheelGovernor' && (
+        <g>
+          <text x="72" y="64" fill="rgba(226,232,240,0.68)" fontSize="13" fontWeight="800">flywheel inertia and governor regulation</text>
+          <circle cx="214" cy="164" r={62 + tA * 18} fill="rgba(251,191,36,0.10)" stroke={objectColor} strokeWidth="8" />
+          <circle cx="214" cy="164" r="18" fill="rgba(226,232,240,0.24)" />
+          {[0, 60, 120, 180, 240, 300].map((angle) => (
+            <line key={angle} x1="214" y1="164" x2="214" y2="102" stroke="rgba(226,232,240,0.34)" strokeWidth="5" strokeLinecap="round" transform={`rotate(${angle + tB * 50} 214 164)`} />
+          ))}
+          <path d={`M384 232 V114 M498 232 V114 M384 ${232 - tA * 70} C418 ${196 - tB * 0.02} 464 ${196 - tB * 0.02} 498 ${232 - tA * 70}`} fill="none" stroke={accent} strokeWidth="7" strokeLinecap="round" />
+          <circle cx="384" cy={232 - tA * 70} r="16" fill="#fbbf24" />
+          <circle cx="498" cy={232 - tA * 70} r="16" fill="#fbbf24" />
+          <path d="M424 106 H458 M441 106 V74" stroke="rgba(226,232,240,0.46)" strokeWidth="6" strokeLinecap="round" />
+          <text x="130" y="258" fill="rgba(251,191,36,0.82)" fontSize="12" fontWeight="900">stored energy</text>
+          <text x="388" y="258" fill="rgba(226,232,240,0.62)" fontSize="12" fontWeight="900">governor lift</text>
+        </g>
+      )}
+      {['cnc', 'welding', 'castingFoundry', 'sheetMetal', 'industrialEngineering', 'maintenanceReliability', 'additiveManufacturing'].includes(tool) && (
         <g>
           <circle cx="178" cy="164" r={Math.max(24, tA * 74)} fill="rgba(167,139,250,0.14)" stroke={objectColor} strokeWidth="5" />
           <circle cx="390" cy="164" r={Math.max(24, tB * 74)} fill="rgba(226,232,240,0.08)" stroke={accent} strokeWidth="5" />
           <line x1="178" y1="164" x2="390" y2="164" stroke="rgba(226,232,240,0.5)" strokeWidth="8" strokeLinecap="round" />
-          {tool === 'fourBar' && <polyline points={`178,164 270,${yB} 390,164 470,220`} fill="none" stroke={objectColor} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />}
           {tool === 'cnc' && <path d="M470 84 V224 M448 104 H520 M448 204 H520" stroke={objectColor} strokeWidth="7" strokeLinecap="round" />}
           {tool === 'welding' && <path d="M460 118 L532 210 M494 142 L528 112" stroke={objectColor} strokeWidth="8" strokeLinecap="round" />}
           {tool === 'castingFoundry' && <path d="M454 92 C520 126 520 198 454 232 C420 194 420 130 454 92 Z" fill="rgba(251,113,133,0.12)" stroke={objectColor} strokeWidth="5" />}
