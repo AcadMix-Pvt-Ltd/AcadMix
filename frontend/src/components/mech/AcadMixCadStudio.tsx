@@ -101,6 +101,9 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
   const [selectedFeatureId, setSelectedFeatureId] = useState(seedFeatures[1].id);
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialKey>('aluminium');
   const [viewportMode, setViewportMode] = useState<'shaded' | 'realistic' | 'section'>('realistic');
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [timelineOpen, setTimelineOpen] = useState(false);
   const [drag, setDrag] = useState<DragState | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -205,18 +208,25 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
   };
 
   const exportDefinition = JSON.stringify({ entities, features }, null, 2);
+  const workspaceGrid = leftPanelOpen && rightPanelOpen
+    ? '284px minmax(0, 1fr) 344px'
+    : leftPanelOpen
+      ? '284px minmax(0, 1fr)'
+      : rightPanelOpen
+        ? 'minmax(0, 1fr) 344px'
+        : 'minmax(0, 1fr)';
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-[#f5f7fb] text-slate-950">
-      <header className="shrink-0 border-b border-slate-200 bg-white px-5 py-3 shadow-sm">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-2.5 shadow-sm">
+        <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-300">
               <Cube size={24} weight="duotone" />
             </div>
             <div>
-              <h2 className="text-xl font-black tracking-tight text-slate-950">AcadMix CAD Engine v1</h2>
-              <p className="text-sm font-semibold text-slate-500">Serious browser CAD foundation: sketch, constrain, feature timeline, real 3D viewport, material-driven model preview.</p>
+              <h2 className="text-lg font-black tracking-tight text-slate-950">AcadMix CAD Engine v1</h2>
+              <p className="text-xs font-semibold text-slate-500 sm:text-sm">Sketch, constrain, timeline, real 3D viewport and material-driven model preview.</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -237,8 +247,23 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[284px_1fr_344px]">
-        <aside className="min-h-0 overflow-y-auto border-b border-slate-200 bg-white p-4 xl:border-b-0 xl:border-r">
+      <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-4 py-2">
+        <button type="button" onClick={() => setLeftPanelOpen((open) => !open)} className={`rounded-xl border px-3 py-2 text-xs font-black shadow-sm transition-colors ${leftPanelOpen ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-sky-300 bg-sky-50 text-sky-700'}`}>
+          {leftPanelOpen ? 'Hide Browser' : 'Show Browser'}
+        </button>
+        <button type="button" onClick={() => setRightPanelOpen((open) => !open)} className={`rounded-xl border px-3 py-2 text-xs font-black shadow-sm transition-colors ${rightPanelOpen ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-sky-300 bg-sky-50 text-sky-700'}`}>
+          {rightPanelOpen ? 'Hide Inspector' : 'Show Inspector'}
+        </button>
+        <button type="button" onClick={() => setTimelineOpen((open) => !open)} className={`rounded-xl border px-3 py-2 text-xs font-black shadow-sm transition-colors ${timelineOpen ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-sky-300 bg-sky-50 text-sky-700'}`}>
+          {timelineOpen ? 'Hide Timeline' : 'Show Timeline'}
+        </button>
+        <div className="ml-auto hidden rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-500 sm:block">
+          Collapse panels for more builder space
+        </div>
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:[grid-template-columns:var(--cad-grid)]" style={{ '--cad-grid': workspaceGrid } as React.CSSProperties}>
+        {leftPanelOpen && <aside className="min-h-0 overflow-y-auto border-b border-slate-200 bg-white p-3 xl:border-b-0 xl:border-r">
           <SectionTitle title="Sketch Tools" caption="Native AcadMix workflow" />
           <div className="grid grid-cols-2 gap-2">
             {sketchTools.map((tool) => (
@@ -294,10 +319,10 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
               ))}
             </div>
           </div>
-        </aside>
+        </aside>}
 
         <main className="flex min-h-0 flex-col overflow-hidden">
-          <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-slate-200 bg-white px-4 py-3">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-slate-200 bg-white px-3 py-2">
             <Segmented label="Viewport" value={viewportMode} options={['shaded', 'realistic', 'section']} onChange={(value) => setViewportMode(value as 'shaded' | 'realistic' | 'section')} />
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-xs font-bold text-slate-500">Command: {activeTool.toUpperCase()}</div>
             <div className="ml-auto flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-600">
@@ -306,9 +331,9 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
             </div>
           </div>
 
-          <div className="grid min-h-0 flex-1 grid-cols-1 2xl:grid-cols-[0.92fr_1.08fr]">
-            <section className="min-h-0 border-b border-slate-200 p-4 2xl:border-b-0 2xl:border-r">
-              <div className="mb-3 flex items-center justify-between">
+          <div className="grid min-h-0 flex-1 grid-cols-1 2xl:grid-cols-[0.9fr_1.1fr]">
+            <section className="min-h-0 border-b border-slate-200 p-3 2xl:border-b-0 2xl:border-r">
+              <div className="mb-2 flex items-center justify-between">
                 <SectionTitle title="2D Sketch" caption="XY plane with constraints and snap" />
                 <div className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-500">Snap {snap} mm</div>
               </div>
@@ -319,7 +344,7 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
                 onPointerMove={onSketchMove}
                 onPointerUp={stopDrag}
                 onPointerCancel={stopDrag}
-                className="h-[520px] w-full touch-none rounded-2xl border border-slate-200 bg-white shadow-sm"
+                className="h-full min-h-[360px] w-full touch-none rounded-2xl border border-slate-200 bg-white shadow-sm"
               >
                 <defs>
                   <pattern id="amx-cad-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -335,12 +360,12 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
               </svg>
             </section>
 
-            <section className="min-h-0 p-4">
-              <div className="mb-3 flex items-center justify-between">
+            <section className="min-h-0 p-3">
+              <div className="mb-2 flex items-center justify-between">
                 <SectionTitle title="3D Design Space" caption="WebGL viewport with orbit, shadows, grid and materials" />
                 <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700">Live model</div>
               </div>
-              <div className="h-[520px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <div className="h-full min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <Canvas shadows dpr={[1, 1.6]} gl={{ antialias: true }}>
                   <PerspectiveCamera makeDefault position={[4.8, 4.2, 5.4]} fov={42} />
                   <color attach="background" args={['#f8fbff']} />
@@ -357,8 +382,8 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
             </section>
           </div>
 
-          <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
+          {timelineOpen && <div className="shrink-0 border-t border-slate-200 bg-white px-3 py-2">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {features.map((feature, index) => (
                 <button
                   key={feature.id}
@@ -367,7 +392,7 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
                     setSelectedFeatureId(feature.id);
                     if (feature.entityId) setSelectedEntityId(feature.entityId);
                   }}
-                  className={`min-w-[170px] rounded-xl border px-3 py-2 text-left shadow-sm transition-colors ${feature.id === selectedFeatureId ? 'border-sky-300 bg-sky-50' : 'border-slate-200 bg-slate-50 hover:bg-white'} ${!feature.enabled ? 'opacity-50' : ''}`}
+                  className={`min-w-[150px] rounded-xl border px-3 py-2 text-left shadow-sm transition-colors ${feature.id === selectedFeatureId ? 'border-sky-300 bg-sky-50' : 'border-slate-200 bg-slate-50 hover:bg-white'} ${!feature.enabled ? 'opacity-50' : ''}`}
                 >
                   <div className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Step {index + 1}</div>
                   <div className="mt-1 truncate text-xs font-black text-slate-900">{feature.name}</div>
@@ -375,10 +400,10 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
                 </button>
               ))}
             </div>
-          </div>
+          </div>}
         </main>
 
-        <aside className="min-h-0 overflow-y-auto border-t border-slate-200 bg-white p-4 xl:border-l xl:border-t-0">
+        {rightPanelOpen && <aside className="min-h-0 overflow-y-auto border-t border-slate-200 bg-white p-3 xl:border-l xl:border-t-0">
           <div className="grid grid-cols-2 gap-3">
             <Metric label="Mass" value={formatNumber(modelStats.mass / 1000, 2)} unit="kg" tone="good" />
             <Metric label="Volume" value={formatNumber(modelStats.volume / 1000, 1)} unit="cm3" />
@@ -457,7 +482,7 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
             </div>
             <textarea readOnly value={exportDefinition} className="h-40 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-[10px] leading-relaxed text-slate-600 outline-none" />
           </Panel>
-        </aside>
+        </aside>}
       </div>
     </div>
   );
