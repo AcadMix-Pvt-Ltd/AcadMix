@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { ContactShadows, Environment, Grid, OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { ContactShadows, Grid, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import {
   Circle,
   CornersIn,
@@ -346,10 +346,11 @@ export default function AcadMixCadStudio({ isFullScreen, onExitFullScreen, onReq
                   <color attach="background" args={['#f8fbff']} />
                   <ambientLight intensity={0.62} />
                   <directionalLight position={[6, 7, 5]} intensity={1.8} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} />
+                  <hemisphereLight args={['#ffffff', '#dbeafe', 1.1]} />
+                  <pointLight position={[-3, 4, -2]} intensity={0.35} color="#dbeafe" />
                   <CadScene entities={entities} features={features} selectedFeatureId={selectedFeatureId} viewportMode={viewportMode} />
                   <Grid args={[8, 8]} position={[0, -0.04, 0]} cellSize={0.25} cellThickness={0.6} cellColor="#d6dee9" sectionSize={1} sectionThickness={1.2} sectionColor="#94a3b8" fadeDistance={8} fadeStrength={1} />
                   <ContactShadows position={[0, -0.02, 0]} opacity={0.34} scale={8} blur={2.4} far={4} />
-                  <Environment preset="city" />
                   <OrbitControls enableDamping makeDefault />
                 </Canvas>
               </div>
