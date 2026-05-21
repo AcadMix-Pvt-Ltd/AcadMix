@@ -13,6 +13,7 @@ import { Toaster, toast } from 'sonner';
 import UserPermissionsManager from '../components/admin/UserPermissionsManager';
 import CIATemplateBuilder from '../components/admin/CIATemplateBuilder';
 import AdminFinanceModule from '../components/admin/AdminFinanceModule';
+import HRPayrollModule from '../components/admin/HRPayrollModule';
 import InsightsChat from '../components/insights/InsightsChat';
 import InsightsCanvas from '../components/insights/InsightsCanvas';
 import CampusLayoutDesigner from '../components/campus/CampusLayoutDesigner';
@@ -249,6 +250,7 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
               { id: 'student-profiles', label: 'Student Profiles' },
               { id: 'results', label: 'Student Results' },
               { id: 'finance', label: 'Fee Invoicing' },
+              { id: 'hr-payroll', label: 'HR & Payroll' },
               { id: 'permissions', label: 'Permission Matrix' },
               { id: 'cia-builder', label: 'CIA Engine' },
               { id: 'experts', label: 'Expert Management' },
@@ -579,6 +581,14 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
           <motion.div data-testid="finance-content" variants={containerVariants} initial="hidden" animate="show">
             <motion.div variants={itemVariants}>
               <AdminFinanceModule collegeId={user?.college_id} />
+            </motion.div>
+          </motion.div>
+        )}
+
+        {activeTab === 'hr-payroll' && (
+          <motion.div data-testid="hr-payroll-content" variants={containerVariants} initial="hidden" animate="show">
+            <motion.div variants={itemVariants}>
+              <HRPayrollModule />
             </motion.div>
           </motion.div>
         )}

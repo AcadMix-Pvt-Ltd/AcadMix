@@ -580,6 +580,18 @@ export const feesAPI = {
   cashierSessionHistory: () => api.get('/cashier/sessions/history'),
 };
 
+export const hrPayrollAPI = {
+  summary: () => api.get('/hr-payroll/summary'),
+  searchStaff: (q = '', limit = 50) => api.get('/hr-payroll/staff/search', { params: { q, limit } }),
+  saveStaffProfile: (data) => api.post('/hr-payroll/staff', data),
+  saveSalaryStructure: (staffId, data) => api.post(`/hr-payroll/staff/${staffId}/salary`, data),
+  listRuns: (limit = 12) => api.get('/hr-payroll/runs', { params: { limit } }),
+  generateRun: (data) => api.post('/hr-payroll/runs/generate', data),
+  getRun: (runId) => api.get(`/hr-payroll/runs/${runId}`),
+  lockRun: (runId) => api.post(`/hr-payroll/runs/${runId}/lock`),
+  getPayslip: (payslipId) => api.get(`/hr-payroll/payslips/${payslipId}`),
+};
+
 // Interview War Room — AI Mock Interviews
 export const interviewAPI = {
   getQuota: () => api.get('/interview/quota'),
