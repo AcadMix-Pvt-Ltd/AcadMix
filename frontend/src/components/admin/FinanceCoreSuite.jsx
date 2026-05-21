@@ -126,16 +126,19 @@ const CashierWorkspace = () => {
   const [paymentMode, setPaymentMode] = useState('cash');
   const [receivedFrom, setReceivedFrom] = useState('');
   const [dayClose, setDayClose] = useState(null);
+  const [sessionHistory, setSessionHistory] = useState([]);
   const [receipt, setReceipt] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const loadSession = async () => {
-    const [{ data: sessionRes }, { data: closeRes }] = await Promise.all([
+    const [{ data: sessionRes }, { data: closeRes }, { data: historyRes }] = await Promise.all([
       feesAPI.currentCashierSession(),
       feesAPI.cashierDayClose(),
+      feesAPI.cashierSessionHistory(),
     ]);
     setSession(sessionRes.session);
     setDayClose(closeRes);
+    setSessionHistory(historyRes || []);
   };
 
   useEffect(() => { loadSession().catch(() => {}); }, []);
@@ -262,6 +265,22 @@ const CashierWorkspace = () => {
             ))}
           </div>
         </div>
+
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-3">Counter Sessions</h3>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {sessionHistory.map((row) => (
+              <div key={row.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-black text-slate-900 dark:text-white">{shortDate(row.opened_at)}</p>
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${row.status === 'open' ? 'text-emerald-500' : 'text-slate-400'}`}>{row.status}</span>
+                </div>
+                <p className="text-xs font-semibold text-slate-500 mt-1">{row.count} receipts - {money(row.total_collected)}</p>
+              </div>
+            ))}
+            {!sessionHistory.length && <p className="text-sm font-semibold text-slate-500">No counter sessions yet.</p>}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-5">
@@ -362,34 +381,86 @@ const CashierWorkspace = () => {
 const FinanceWorkspace = () => {
   const [summary, setSummary] = useState(null);
   const [structure, setStructure] = useState({ name: 'Tuition Fee 2026-27', academic_year: '2026-27', department: '', batch: '', category: 'General', status: 'active' });
+  const [structures, setStructures] = useState([]);
   const [createdStructure, setCreatedStructure] = useState(null);
   const [item, setItem] = useState({ fee_head: 'Tuition Fee', amount: '85000', refundable: false, sort_order: 1 });
   const [allocationStudents, setAllocationStudents] = useState('');
+  const [allocationFilters, setAllocationFilters] = useState({ department: '', batch: '', section: '', q: '' });
+  const [allocationTargets, setAllocationTargets] = useState([]);
   const [studentSearch, setStudentSearch] = useState('');
   const [financeStudents, setFinanceStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [queue, setQueue] = useState({ concessions: [], refunds: [] });
   const [concession, setConcession] = useState({ student_id: '', invoice_id: '', amount: '', reason: '' });
   const [refund, setRefund] = useState({ student_id: '', invoice_id: '', payment_id: '', amount: '', reason: '' });
   const [receiptNo, setReceiptNo] = useState('');
+  const [receiptResults, setReceiptResults] = useState([]);
   const [receipt, setReceipt] = useState(null);
 
-  const loadSummary = async () => {
-    const { data } = await feesAPI.financeSummary();
-    setSummary(data);
+  const loadFinanceData = async () => {
+    const [{ data: summaryRes }, { data: structuresRes }, { data: queueRes }] = await Promise.all([
+      feesAPI.financeSummary(),
+      feesAPI.listFeeStructures(),
+      feesAPI.financeWorkQueue(),
+    ]);
+    setSummary(summaryRes);
+    setStructures(structuresRes || []);
+    setQueue(queueRes || { concessions: [], refunds: [] });
   };
 
-  useEffect(() => { loadSummary().catch(() => {}); }, []);
+  useEffect(() => { loadFinanceData().catch(() => {}); }, []);
 
   const createStructure = async () => {
     const { data } = await feesAPI.createFeeStructure(structure);
     setCreatedStructure(data);
+    setStructures((prev) => [data, ...prev.filter((row) => row.id !== data.id)]);
     toast.success('Fee structure created');
+  };
+
+  const selectStructure = (row) => {
+    setCreatedStructure(row);
+    setStructure({
+      name: row.name,
+      academic_year: row.academic_year,
+      department: row.department || '',
+      batch: row.batch || '',
+      category: row.category || 'General',
+      status: row.status || 'active',
+      due_date: row.due_date || null,
+    });
+  };
+
+  const updateStructure = async () => {
+    if (!createdStructure?.id) return toast.error('Select a fee structure first');
+    const { data } = await feesAPI.updateFeeStructure(createdStructure.id, structure);
+    setCreatedStructure(data);
+    setStructures((prev) => prev.map((row) => (row.id === data.id ? data : row)));
+    toast.success('Fee structure updated');
+  };
+
+  const archiveStructure = async () => {
+    if (!createdStructure?.id) return toast.error('Select a fee structure first');
+    await feesAPI.deleteFeeStructure(createdStructure.id);
+    setCreatedStructure(null);
+    setStructures((prev) => prev.filter((row) => row.id !== createdStructure.id));
+    toast.success('Fee structure archived');
   };
 
   const addItem = async () => {
     if (!createdStructure?.id) return toast.error('Create a fee structure first');
     await feesAPI.addFeeStructureItem(createdStructure.id, { ...item, amount: Number(item.amount), sort_order: Number(item.sort_order || 0) });
     toast.success('Fee head added');
+    const { data } = await feesAPI.listFeeStructures();
+    setStructures(data || []);
+    const updated = (data || []).find((row) => row.id === createdStructure.id);
+    if (updated) setCreatedStructure(updated);
+  };
+
+  const previewAllocationTargets = async () => {
+    const { data } = await feesAPI.allocationTargets({ structure_id: createdStructure?.id, ...allocationFilters });
+    setAllocationTargets(data || []);
+    setAllocationStudents((data || []).map((student) => student.id).join('\n'));
+    toast.success(`Found ${(data || []).length} students`);
   };
 
   const allocate = async () => {
@@ -397,8 +468,8 @@ const FinanceWorkspace = () => {
     const student_ids = allocationStudents.split(/[\s,]+/).map((v) => v.trim()).filter(Boolean);
     if (!student_ids.length) return toast.error('Select or paste at least one student');
     const { data } = await feesAPI.generateAllocations({ structure_id: createdStructure.id, student_ids });
-    toast.success(`Generated ${data.created} invoices`);
-    loadSummary();
+    toast.success(`Generated ${data.created} invoices${data.skipped ? `, skipped ${data.skipped} duplicates` : ''}`);
+    loadFinanceData();
   };
 
   const searchFinanceStudents = async () => {
@@ -427,19 +498,45 @@ const FinanceWorkspace = () => {
     await feesAPI.createConcession({ ...concession, amount: Number(concession.amount) });
     toast.success('Concession request recorded');
     setConcession({ student_id: '', invoice_id: '', amount: '', reason: '' });
-    loadSummary();
+    loadFinanceData();
   };
 
   const submitRefund = async () => {
     await feesAPI.createRefund({ ...refund, payment_id: refund.payment_id || null, amount: Number(refund.amount) });
     toast.success('Refund request recorded');
     setRefund({ student_id: '', invoice_id: '', payment_id: '', amount: '', reason: '' });
-    loadSummary();
+    loadFinanceData();
+  };
+
+  const reviewConcession = async (id, status) => {
+    await feesAPI.reviewConcession(id, { status, notes: `Marked ${status} from finance dashboard` });
+    toast.success(`Concession ${status}`);
+    loadFinanceData();
+  };
+
+  const reviewRefund = async (id, status) => {
+    await feesAPI.reviewRefund(id, { status, notes: `Marked ${status} from finance dashboard` });
+    toast.success(`Refund ${status}`);
+    loadFinanceData();
+  };
+
+  const cancelSelectedInvoice = async (invoice) => {
+    await feesAPI.cancelInvoice(invoice.invoice_id, { reason: 'Cancelled from finance dashboard' });
+    toast.success('Invoice cancelled');
+    if (selectedStudent?.student?.id) {
+      const { data } = await feesAPI.studentLedger(selectedStudent.student.id);
+      setSelectedStudent(data);
+    }
+    loadFinanceData();
   };
 
   const lookupReceipt = async () => {
-    const { data } = await feesAPI.getReceipt(receiptNo);
-    setReceipt(data);
+    const { data } = await feesAPI.searchReceipts(receiptNo);
+    setReceiptResults(data || []);
+    if ((data || []).length === 1) {
+      const receiptData = await feesAPI.getReceipt(data[0].receipt_no);
+      setReceipt(receiptData.data);
+    }
   };
 
   return (
@@ -500,7 +597,7 @@ const FinanceWorkspace = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 dark:bg-white/5">
                     <tr>
-                      {['Invoice', 'Fee', 'Billed', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
+                      {['Invoice', 'Fee', 'Billed', 'Paid', 'Due', 'Status', 'Action'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -512,6 +609,11 @@ const FinanceWorkspace = () => {
                         <td className="px-4 py-3 text-emerald-500 font-bold">{money(inv.paid)}</td>
                         <td className="px-4 py-3 text-rose-500 font-bold">{money(inv.due)}</td>
                         <td className="px-4 py-3">{inv.status}</td>
+                        <td className="px-4 py-3">
+                          {Number(inv.paid || 0) <= 0 && inv.status !== 'cancelled' && (
+                            <button onClick={() => cancelSelectedInvoice(inv)} className="text-xs font-black text-rose-500">Cancel</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -531,13 +633,25 @@ const FinanceWorkspace = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Fee Structure Builder</h3>
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            {structures.slice(0, 6).map((row) => (
+              <button key={row.id} onClick={() => selectStructure(row)} className={`text-left p-3 rounded-xl border transition-colors ${createdStructure?.id === row.id ? 'border-indigo-300 bg-indigo-50 dark:bg-indigo-500/10' : 'border-slate-100 dark:border-white/10 bg-slate-50 dark:bg-white/5'}`}>
+                <p className="font-black text-sm text-slate-900 dark:text-white">{row.name}</p>
+                <p className="text-xs font-semibold text-slate-500">{row.academic_year} - {money(row.total_amount)} - {row.item_count} heads</p>
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input className="soft-input" value={structure.name} onChange={(e) => setStructure({ ...structure, name: e.target.value })} placeholder="Structure name" />
             <input className="soft-input" value={structure.academic_year} onChange={(e) => setStructure({ ...structure, academic_year: e.target.value })} placeholder="Academic year" />
             <input className="soft-input" value={structure.department} onChange={(e) => setStructure({ ...structure, department: e.target.value })} placeholder="Department filter" />
             <input className="soft-input" value={structure.batch} onChange={(e) => setStructure({ ...structure, batch: e.target.value })} placeholder="Batch filter" />
           </div>
-          <button onClick={createStructure} className="btn-primary mt-4">Create Structure</button>
+          <div className="flex flex-wrap gap-2 mt-4">
+            <button onClick={createStructure} className="btn-primary">Create Structure</button>
+            <button onClick={updateStructure} className="px-4 py-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black">Update</button>
+            <button onClick={archiveStructure} className="px-4 py-3 rounded-xl bg-rose-50 text-rose-600 font-black">Archive</button>
+          </div>
           {createdStructure && <p className="text-xs font-bold text-emerald-500 mt-3">Active draft: {createdStructure.name}</p>}
 
           <div className="mt-6 pt-5 border-t border-slate-100 dark:border-white/10">
@@ -552,6 +666,14 @@ const FinanceWorkspace = () => {
 
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Allocation Generator</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+            <input className="soft-input" value={allocationFilters.department} onChange={(e) => setAllocationFilters({ ...allocationFilters, department: e.target.value })} placeholder="Department" />
+            <input className="soft-input" value={allocationFilters.batch} onChange={(e) => setAllocationFilters({ ...allocationFilters, batch: e.target.value })} placeholder="Batch" />
+            <input className="soft-input" value={allocationFilters.section} onChange={(e) => setAllocationFilters({ ...allocationFilters, section: e.target.value })} placeholder="Section" />
+            <input className="soft-input" value={allocationFilters.q} onChange={(e) => setAllocationFilters({ ...allocationFilters, q: e.target.value })} placeholder="Search" />
+          </div>
+          <button onClick={previewAllocationTargets} className="px-4 py-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black mb-3">Preview Targets</button>
+          {!!allocationTargets.length && <p className="text-xs font-bold text-slate-500 mb-2">{allocationTargets.length} students selected for allocation.</p>}
           <textarea className="soft-input w-full min-h-32" value={allocationStudents} onChange={(e) => setAllocationStudents(e.target.value)} placeholder="Student IDs selected from lookup appear here. You can also paste UUIDs separated by comma or newline." />
           <button onClick={allocate} className="btn-primary mt-4 flex items-center gap-2"><UploadSimple size={16} /> Generate Invoices</button>
         </div>
@@ -609,6 +731,55 @@ const FinanceWorkspace = () => {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Concession Approval Queue</h3>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {(queue.concessions || []).map((row) => (
+              <div key={row.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{row.student_name}</p>
+                    <p className="text-xs font-semibold text-slate-500">{row.invoice_no} - {row.fee_type}</p>
+                    <p className="text-xs text-slate-500 mt-1">{row.reason}</p>
+                  </div>
+                  <p className="font-black text-amber-500">{money(row.amount)}</p>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => reviewConcession(row.id, 'approved')} className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-black">Approve</button>
+                  <button onClick={() => reviewConcession(row.id, 'rejected')} className="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 text-xs font-black">Reject</button>
+                </div>
+              </div>
+            ))}
+            {!queue.concessions?.length && <p className="text-sm font-semibold text-slate-500">No pending concessions.</p>}
+          </div>
+        </div>
+
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Refund Approval Queue</h3>
+          <div className="space-y-3 max-h-80 overflow-y-auto">
+            {(queue.refunds || []).map((row) => (
+              <div key={row.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{row.student_name}</p>
+                    <p className="text-xs font-semibold text-slate-500">{row.receipt_no || row.invoice_no} - {row.fee_type}</p>
+                    <p className="text-xs text-slate-500 mt-1">{row.reason}</p>
+                  </div>
+                  <p className="font-black text-amber-500">{money(row.amount)}</p>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button onClick={() => reviewRefund(row.id, 'approved')} className="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-600 text-xs font-black">Approve</button>
+                  <button onClick={() => reviewRefund(row.id, 'rejected')} className="px-3 py-2 rounded-lg bg-rose-50 text-rose-600 text-xs font-black">Reject</button>
+                  <button onClick={() => reviewRefund(row.id, 'processed')} className="px-3 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-black">Processed</button>
+                </div>
+              </div>
+            ))}
+            {!queue.refunds?.length && <p className="text-sm font-semibold text-slate-500">No pending refunds.</p>}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Concession Request</h3>
@@ -656,8 +827,24 @@ const FinanceWorkspace = () => {
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Receipt Search</h3>
           <div className="flex gap-2">
-            <input className="soft-input flex-1" value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} placeholder="RCPT-26-000001" />
+            <input className="soft-input flex-1" value={receiptNo} onChange={(e) => setReceiptNo(e.target.value)} placeholder="Receipt, student, invoice, fee" />
             <button onClick={lookupReceipt} className="px-4 rounded-xl bg-indigo-500 text-white"><MagnifyingGlass weight="bold" /></button>
+          </div>
+          <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+            {receiptResults.map((row) => (
+              <button key={row.payment_id} onClick={async () => {
+                const { data } = await feesAPI.getReceipt(row.receipt_no);
+                setReceipt(data);
+              }} className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{row.receipt_no}</p>
+                    <p className="text-xs font-semibold text-slate-500">{row.student_name} - {row.fee_type}</p>
+                  </div>
+                  <p className="font-black text-emerald-500">{money(row.amount)}</p>
+                </div>
+              </button>
+            ))}
           </div>
           <div className="mt-4">
             <ReceiptPanel receipt={receipt} />

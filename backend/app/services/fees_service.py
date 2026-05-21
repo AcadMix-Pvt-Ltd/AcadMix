@@ -108,6 +108,43 @@ class FeesService:
             "verified": payment.status == "success",
         }
 
+    async def _structure_payload(self, structure: FeeStructure, include_items: bool = True):
+        items = []
+        if include_items:
+            item_rows = (await self.db.execute(
+                select(FeeStructureItem)
+                .where(
+                    FeeStructureItem.structure_id == structure.id,
+                    FeeStructureItem.is_deleted == False,
+                )
+                .order_by(FeeStructureItem.sort_order.asc(), FeeStructureItem.fee_head.asc())
+            )).scalars().all()
+            items = [
+                {
+                    "id": item.id,
+                    "fee_head": item.fee_head,
+                    "amount": item.amount,
+                    "refundable": item.refundable,
+                    "sort_order": item.sort_order,
+                }
+                for item in item_rows
+            ]
+        return {
+            "id": structure.id,
+            "name": structure.name,
+            "academic_year": structure.academic_year,
+            "program_id": structure.program_id,
+            "department": structure.department or "",
+            "batch": structure.batch or "",
+            "category": structure.category or "",
+            "due_date": structure.due_date.isoformat() if structure.due_date else None,
+            "status": structure.status,
+            "created_at": structure.created_at.isoformat() if structure.created_at else None,
+            "item_count": len(items),
+            "total_amount": sum(float(item["amount"] or 0) for item in items),
+            "items": items,
+        }
+
     async def get_student_due_fees(self, student_id: str, college_id: str) -> List[Dict[str, Any]]:
         invoices_query = await self.db.execute(
             select(StudentFeeInvoice).where(
@@ -266,6 +303,20 @@ class FeesService:
         )
         await self.db.commit()
         return created
+
+    async def cancel_invoice(self, college_id: str, user_id: str, invoice_id: str, reason: str = ""):
+        invoice = await self.db.get(StudentFeeInvoice, invoice_id)
+        if not invoice or invoice.college_id != college_id or invoice.is_deleted:
+            raise HTTPException(status_code=404, detail="Invoice not found")
+        paid = await self._invoice_paid_amount(invoice.id)
+        if paid > 0:
+            raise HTTPException(status_code=400, detail="Cannot cancel an invoice with successful payments")
+        invoice.status = "cancelled"
+        invoice.cancelled_by = user_id
+        invoice.cancelled_at = datetime.now(timezone.utc)
+        invoice.description = f"{invoice.description or ''}\nCancelled: {reason}".strip()
+        await self.db.commit()
+        return {"id": invoice.id, "status": invoice.status}
 
     async def get_payment_history(self, student_id: str, college_id: str) -> List[Dict[str, Any]]:
         payments_query = await self.db.execute(
@@ -565,7 +616,35 @@ class FeesService:
         self.db.add(structure)
         await self.db.commit()
         await self.db.refresh(structure)
-        return {"id": structure.id, "name": structure.name, "status": structure.status}
+        return await self._structure_payload(structure)
+
+    async def list_fee_structures(self, college_id: str, status: Optional[str] = None):
+        stmt = select(FeeStructure).where(FeeStructure.college_id == college_id, FeeStructure.is_deleted == False)
+        if status:
+            stmt = stmt.where(FeeStructure.status == status)
+        stmt = stmt.order_by(FeeStructure.created_at.desc().nulls_last(), FeeStructure.name.asc())
+        rows = (await self.db.execute(stmt)).scalars().all()
+        return [await self._structure_payload(row) for row in rows]
+
+    async def update_fee_structure(self, college_id: str, structure_id: str, data: dict):
+        structure = await self.db.get(FeeStructure, structure_id)
+        if not structure or structure.college_id != college_id or structure.is_deleted:
+            raise HTTPException(status_code=404, detail="Fee structure not found")
+        for field in ("name", "academic_year", "program_id", "department", "batch", "category", "due_date", "status"):
+            if field in data:
+                setattr(structure, field, data[field])
+        await self.db.commit()
+        await self.db.refresh(structure)
+        return await self._structure_payload(structure)
+
+    async def delete_fee_structure(self, college_id: str, structure_id: str):
+        structure = await self.db.get(FeeStructure, structure_id)
+        if not structure or structure.college_id != college_id or structure.is_deleted:
+            raise HTTPException(status_code=404, detail="Fee structure not found")
+        structure.is_deleted = True
+        structure.status = "archived"
+        await self.db.commit()
+        return {"id": structure.id, "status": "archived"}
 
     async def add_fee_structure_item(self, college_id: str, structure_id: str, data: dict):
         structure = await self.db.get(FeeStructure, structure_id)
@@ -577,6 +656,50 @@ class FeesService:
         await self.db.refresh(item)
         return {"id": item.id, "fee_head": item.fee_head, "amount": item.amount}
 
+    async def allocation_targets(
+        self,
+        college_id: str,
+        structure_id: Optional[str] = None,
+        department: str = "",
+        batch: str = "",
+        section: str = "",
+        q: str = "",
+        limit: int = 200,
+    ):
+        if structure_id:
+            structure = await self.db.get(FeeStructure, structure_id)
+            if not structure or structure.college_id != college_id or structure.is_deleted:
+                raise HTTPException(status_code=404, detail="Fee structure not found")
+            department = department or structure.department or ""
+            batch = batch or structure.batch or ""
+        stmt = (
+            select(User, UserProfile)
+            .join(UserProfile, UserProfile.user_id == User.id, isouter=True)
+            .where(User.college_id == college_id, User.role == "student", User.is_deleted == False)
+        )
+        if department.strip():
+            stmt = stmt.where(UserProfile.department.ilike(department.strip()))
+        if batch.strip():
+            stmt = stmt.where(UserProfile.batch.ilike(batch.strip()))
+        if section.strip():
+            stmt = stmt.where(UserProfile.section.ilike(section.strip()))
+        if q.strip():
+            pattern = f"%{q.strip()}%"
+            stmt = stmt.where(or_(User.name.ilike(pattern), User.email.ilike(pattern), UserProfile.roll_number.ilike(pattern)))
+        rows = (await self.db.execute(stmt.order_by(UserProfile.department.asc(), UserProfile.batch.asc(), User.name.asc()).limit(limit))).all()
+        return [
+            {
+                "id": user.id,
+                "name": user.name,
+                "college_id": user.email,
+                "roll_number": profile.roll_number if profile else "",
+                "department": profile.department if profile else "",
+                "section": profile.section if profile else "",
+                "batch": profile.batch if profile else "",
+            }
+            for user, profile in rows
+        ]
+
     async def generate_allocations(self, college_id: str, user_id: str, structure_id: str, student_ids: List[str]):
         structure = await self.db.get(FeeStructure, structure_id)
         if not structure or structure.college_id != college_id:
@@ -585,7 +708,21 @@ class FeesService:
         if not items:
             raise HTTPException(status_code=400, detail="Add fee heads before allocation")
         invoices = []
+        skipped = 0
         for sid in student_ids:
+            existing = (await self.db.execute(
+                select(StudentFeeInvoice.id).where(
+                    StudentFeeInvoice.college_id == college_id,
+                    StudentFeeInvoice.student_id == sid,
+                    StudentFeeInvoice.fee_type == structure.name,
+                    StudentFeeInvoice.academic_year == structure.academic_year,
+                    StudentFeeInvoice.status != "cancelled",
+                    StudentFeeInvoice.is_deleted == False,
+                ).limit(1)
+            )).scalar()
+            if existing:
+                skipped += 1
+                continue
             total = sum(float(item.amount) for item in items)
             heads = ", ".join(item.fee_head for item in items)
             invoices.append({
@@ -597,7 +734,7 @@ class FeesService:
                 "description": heads,
             })
         created = await self.create_invoice_bulk(college_id, invoices, created_by=user_id)
-        return {"created": created}
+        return {"created": created, "skipped": skipped}
 
     async def create_concession(self, college_id: str, user_id: str, data: dict):
         row = FeeConcession(college_id=college_id, requested_by=user_id, **data)
@@ -605,6 +742,54 @@ class FeesService:
         await self.db.commit()
         await self.db.refresh(row)
         return {"id": row.id, "status": row.status}
+
+    async def finance_work_queue(self, college_id: str):
+        concession_rows = (await self.db.execute(
+            select(FeeConcession, User, StudentFeeInvoice)
+            .join(User, User.id == FeeConcession.student_id)
+            .join(StudentFeeInvoice, StudentFeeInvoice.id == FeeConcession.invoice_id)
+            .where(FeeConcession.college_id == college_id, FeeConcession.is_deleted == False, FeeConcession.status == "pending")
+            .order_by(FeeConcession.created_at.asc().nulls_first())
+            .limit(50)
+        )).all()
+        refund_rows = (await self.db.execute(
+            select(FeeRefund, User, StudentFeeInvoice, FeePayment)
+            .join(User, User.id == FeeRefund.student_id)
+            .join(StudentFeeInvoice, StudentFeeInvoice.id == FeeRefund.invoice_id)
+            .outerjoin(FeePayment, FeePayment.id == FeeRefund.payment_id)
+            .where(FeeRefund.college_id == college_id, FeeRefund.is_deleted == False, FeeRefund.status == "pending")
+            .order_by(FeeRefund.created_at.asc().nulls_first())
+            .limit(50)
+        )).all()
+        return {
+            "concessions": [
+                {
+                    "id": row.id,
+                    "student_name": student.name,
+                    "student_college_id": student.email,
+                    "invoice_no": invoice.invoice_no or invoice.id[:8].upper(),
+                    "fee_type": invoice.fee_type,
+                    "amount": row.amount,
+                    "reason": row.reason,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+                for row, student, invoice in concession_rows
+            ],
+            "refunds": [
+                {
+                    "id": row.id,
+                    "student_name": student.name,
+                    "student_college_id": student.email,
+                    "invoice_no": invoice.invoice_no or invoice.id[:8].upper(),
+                    "receipt_no": payment.receipt_no if payment else "",
+                    "fee_type": invoice.fee_type,
+                    "amount": row.amount,
+                    "reason": row.reason,
+                    "created_at": row.created_at.isoformat() if row.created_at else None,
+                }
+                for row, student, invoice, payment in refund_rows
+            ],
+        }
 
     async def review_concession(self, college_id: str, user_id: str, concession_id: str, status: str, notes: str = ""):
         row = await self.db.get(FeeConcession, concession_id)
@@ -730,6 +915,35 @@ class FeesService:
             "count": len(payments),
         }
 
+    async def cashier_session_history(self, college_id: str, cashier_id: Optional[str] = None, limit: int = 20):
+        stmt = select(CashierSession, User).join(User, User.id == CashierSession.cashier_id).where(
+            CashierSession.college_id == college_id,
+            CashierSession.is_deleted == False,
+        )
+        if cashier_id:
+            stmt = stmt.where(CashierSession.cashier_id == cashier_id)
+        rows = (await self.db.execute(stmt.order_by(CashierSession.opened_at.desc()).limit(limit))).all()
+        sessions = []
+        for session, cashier in rows:
+            payments = (await self.db.execute(select(FeePayment).where(FeePayment.cashier_session_id == session.id, FeePayment.status == "success", FeePayment.is_deleted == False))).scalars().all()
+            by_mode: Dict[str, float] = {}
+            for payment in payments:
+                by_mode[payment.payment_mode] = by_mode.get(payment.payment_mode, 0) + float(payment.amount_paid)
+            sessions.append({
+                "id": session.id,
+                "cashier_name": cashier.name,
+                "status": session.status,
+                "opened_at": session.opened_at.isoformat() if session.opened_at else None,
+                "closed_at": session.closed_at.isoformat() if session.closed_at else None,
+                "opening_cash": session.opening_cash,
+                "expected_cash": session.expected_cash,
+                "actual_cash": session.actual_cash,
+                "total_collected": sum(by_mode.values()),
+                "by_mode": by_mode,
+                "count": len(payments),
+            })
+        return sessions
+
     async def get_receipt(self, college_id: str, receipt_no: str):
         payment = (await self.db.execute(select(FeePayment).where(FeePayment.college_id == college_id, FeePayment.receipt_no == receipt_no, FeePayment.is_deleted == False))).scalars().first()
         if not payment:
@@ -738,6 +952,40 @@ class FeesService:
         student = await self.db.get(User, payment.student_id)
         college = await self.db.get(College, college_id)
         return await self._receipt_payload(payment, invoice, student, college)
+
+    async def search_receipts(self, college_id: str, q: str = "", limit: int = 20):
+        stmt = (
+            select(FeePayment, StudentFeeInvoice, User)
+            .join(StudentFeeInvoice, StudentFeeInvoice.id == FeePayment.invoice_id)
+            .join(User, User.id == FeePayment.student_id)
+            .where(FeePayment.college_id == college_id, FeePayment.status == "success", FeePayment.is_deleted == False)
+        )
+        if q.strip():
+            pattern = f"%{q.strip()}%"
+            stmt = stmt.where(or_(
+                FeePayment.receipt_no.ilike(pattern),
+                FeePayment.transaction_reference.ilike(pattern),
+                User.name.ilike(pattern),
+                User.email.ilike(pattern),
+                StudentFeeInvoice.fee_type.ilike(pattern),
+                StudentFeeInvoice.invoice_no.ilike(pattern),
+            ))
+        rows = (await self.db.execute(stmt.order_by(FeePayment.transaction_date.desc().nulls_last()).limit(limit))).all()
+        return [
+            {
+                "payment_id": payment.id,
+                "receipt_no": payment.receipt_no,
+                "invoice_no": invoice.invoice_no or invoice.id[:8].upper(),
+                "student_name": student.name,
+                "student_college_id": student.email,
+                "fee_type": invoice.fee_type,
+                "amount": payment.amount_paid,
+                "payment_mode": payment.payment_mode,
+                "paid_at": payment.transaction_date.isoformat() if payment.transaction_date else None,
+                "verification_token": payment.verification_token,
+            }
+            for payment, invoice, student in rows
+        ]
 
     async def verify_receipt(self, token: str):
         payment = (await self.db.execute(select(FeePayment).where(FeePayment.verification_token == token, FeePayment.status == "success", FeePayment.is_deleted == False))).scalars().first()

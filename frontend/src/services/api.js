@@ -557,9 +557,16 @@ export const feesAPI = {
   financeSummary: () => api.get('/finance/summary'),
   searchStudents: (q) => api.get('/finance/students/search', { params: { q } }),
   studentLedger: (studentId) => api.get(`/finance/students/${studentId}/ledger`),
+  cancelInvoice: (id, data) => api.post(`/finance/invoices/${id}/cancel`, data),
+  listFeeStructures: (params = {}) => api.get('/finance/fee-structures', { params }),
   createFeeStructure: (data) => api.post('/finance/fee-structures', data),
+  updateFeeStructure: (id, data) => api.put(`/finance/fee-structures/${id}`, data),
+  deleteFeeStructure: (id) => api.delete(`/finance/fee-structures/${id}`),
   addFeeStructureItem: (id, data) => api.post(`/finance/fee-structures/${id}/items`, data),
+  allocationTargets: (data) => api.post('/finance/allocations/targets', data),
   generateAllocations: (data) => api.post('/finance/allocations/generate', data),
+  financeWorkQueue: () => api.get('/finance/work-queue'),
+  searchReceipts: (q) => api.get('/finance/receipts/search', { params: { q } }),
   createConcession: (data) => api.post('/finance/concessions', data),
   reviewConcession: (id, data) => api.put(`/finance/concessions/${id}/review`, data),
   createRefund: (data) => api.post('/finance/refunds', data),
@@ -569,6 +576,7 @@ export const feesAPI = {
   closeCashierSession: (data) => api.post('/cashier/sessions/close', data),
   collectCashierFee: (data) => api.post('/cashier/collections', data),
   cashierDayClose: () => api.get('/cashier/day-close'),
+  cashierSessionHistory: () => api.get('/cashier/sessions/history'),
 };
 
 // Interview War Room — AI Mock Interviews

@@ -79,6 +79,14 @@ class AllocationPayload(BaseModel):
     student_ids: List[str]
 
 
+class AllocationFilterPayload(BaseModel):
+    structure_id: Optional[str] = None
+    department: str = ""
+    batch: str = ""
+    section: str = ""
+    q: str = ""
+
+
 class ConcessionPayload(BaseModel):
     student_id: str
     invoice_id: str
@@ -115,6 +123,10 @@ class CollectionPayload(BaseModel):
     transaction_reference: Optional[str] = None
     received_from: Optional[str] = None
     remarks: Optional[str] = None
+
+
+class CancelInvoicePayload(BaseModel):
+    reason: str = ""
 
 
 @router.get("/fees/due")
@@ -228,6 +240,25 @@ async def finance_student_ledger(
     return await svc.student_ledger(user["college_id"], student_id)
 
 
+@router.post("/finance/invoices/{invoice_id}/cancel")
+async def cancel_invoice(
+    invoice_id: str,
+    payload: CancelInvoicePayload,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.cancel_invoice(user["college_id"], user["id"], invoice_id, payload.reason)
+
+
+@router.get("/finance/fee-structures")
+async def list_fee_structures(
+    status: Optional[str] = None,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.list_fee_structures(user["college_id"], status)
+
+
 @router.post("/finance/fee-structures")
 async def create_fee_structure(
     payload: FeeStructurePayload,
@@ -235,6 +266,25 @@ async def create_fee_structure(
     svc: FeesService = Depends(get_fees_service),
 ):
     return await svc.create_fee_structure(user["college_id"], user["id"], payload.model_dump())
+
+
+@router.put("/finance/fee-structures/{structure_id}")
+async def update_fee_structure(
+    structure_id: str,
+    payload: FeeStructurePayload,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.update_fee_structure(user["college_id"], structure_id, payload.model_dump())
+
+
+@router.delete("/finance/fee-structures/{structure_id}")
+async def delete_fee_structure(
+    structure_id: str,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.delete_fee_structure(user["college_id"], structure_id)
 
 
 @router.post("/finance/fee-structures/{structure_id}/items")
@@ -247,6 +297,15 @@ async def add_fee_structure_item(
     return await svc.add_fee_structure_item(user["college_id"], structure_id, payload.model_dump())
 
 
+@router.post("/finance/allocations/targets")
+async def allocation_targets(
+    payload: AllocationFilterPayload,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.allocation_targets(user["college_id"], payload.structure_id, payload.department, payload.batch, payload.section, payload.q)
+
+
 @router.post("/finance/allocations/generate")
 async def generate_fee_allocations(
     payload: AllocationPayload,
@@ -254,6 +313,21 @@ async def generate_fee_allocations(
     svc: FeesService = Depends(get_fees_service),
 ):
     return await svc.generate_allocations(user["college_id"], user["id"], payload.structure_id, payload.student_ids)
+
+
+@router.get("/finance/work-queue")
+async def finance_work_queue(user: dict = Depends(require_role(*FINANCE_FULL_ROLES)), svc: FeesService = Depends(get_fees_service)):
+    return await svc.finance_work_queue(user["college_id"])
+
+
+@router.get("/finance/receipts/search")
+async def finance_receipt_search(
+    q: str = "",
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.search_receipts(user["college_id"], q, limit)
 
 
 @router.post("/finance/concessions")
@@ -324,3 +398,13 @@ async def collect_cashier_fee(payload: CollectionPayload, user: dict = Depends(r
 @router.get("/cashier/day-close")
 async def cashier_day_close(user: dict = Depends(require_role(*CASHIER_ROLES)), svc: FeesService = Depends(get_fees_service)):
     return await svc.day_close(user["college_id"], user["id"])
+
+
+@router.get("/cashier/sessions/history")
+async def cashier_session_history(
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(require_role(*CASHIER_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    cashier_id = user["id"] if user["role"] == "cashier" else None
+    return await svc.cashier_session_history(user["college_id"], cashier_id, limit)
