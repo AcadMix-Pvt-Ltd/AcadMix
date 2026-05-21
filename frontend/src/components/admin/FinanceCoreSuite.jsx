@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { feesAPI } from '../../services/api';
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-IN')}`;
+const shortDate = (value) => (value ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-');
 
 const modeLabels = {
   cash: 'Cash',
@@ -247,8 +248,16 @@ const CashierWorkspace = () => {
           <div className="mt-3 space-y-2 max-h-72 overflow-y-auto">
             {students.map((s) => (
               <button key={s.id} onClick={() => loadLedger(s)} className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
-                <p className="font-black text-sm text-slate-900 dark:text-white">{s.name}</p>
-                <p className="text-xs font-semibold text-slate-500">{s.college_id} {s.department ? `- ${s.department}` : ''}</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{s.name}</p>
+                    <p className="text-xs font-semibold text-slate-500">{s.roll_number || s.college_id} {s.department ? `- ${s.department}` : ''}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-xs font-black ${Number(s.total_due || 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{money(s.total_due)}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{s.due_invoice_count || 0} due</p>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
@@ -260,6 +269,7 @@ const CashierWorkspace = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatCard label="Student" value={ledger.student.name} icon={ShieldCheck} tone="indigo" />
+              <StatCard label="Total Billed" value={money(ledger.summary.total_billed)} icon={Calculator} tone="amber" />
               <StatCard label="Total Paid" value={money(ledger.summary.total_paid)} icon={CheckCircle} tone="emerald" />
               <StatCard label="Total Due" value={money(ledger.summary.total_due)} icon={WarningCircle} tone="rose" />
             </div>
@@ -272,14 +282,18 @@ const CashierWorkspace = () => {
                 <table className="w-full text-sm">
                   <thead className="bg-slate-50 dark:bg-white/5">
                     <tr>
-                      {['Invoice', 'Fee', 'Amount', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
+                      {['Invoice', 'Fee', 'Due Date', 'Amount', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                     {ledger.invoices.map((inv) => (
                       <tr key={inv.invoice_id}>
                         <td className="px-4 py-3 font-bold">{inv.invoice_no || '-'}</td>
-                        <td className="px-4 py-3">{inv.fee_type}</td>
+                        <td className="px-4 py-3">
+                          <p className="font-bold">{inv.fee_type}</p>
+                          {inv.description && <p className="text-xs text-slate-400 mt-0.5">{inv.description}</p>}
+                        </td>
+                        <td className="px-4 py-3">{shortDate(inv.due_date)}</td>
                         <td className="px-4 py-3">{money(inv.total_amount)}</td>
                         <td className="px-4 py-3 text-emerald-500 font-bold">{money(inv.paid)}</td>
                         <td className="px-4 py-3 text-rose-500 font-bold">{money(inv.due)}</td>
@@ -288,6 +302,28 @@ const CashierWorkspace = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            <div className="soft-card overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10">
+                <h3 className="font-black text-slate-900 dark:text-white">Payment History</h3>
+              </div>
+              <div className="divide-y divide-slate-100 dark:divide-white/5">
+                {(ledger.payments || []).length ? ledger.payments.map((payment) => (
+                  <div key={payment.payment_id} className="px-5 py-3 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-black text-sm text-slate-900 dark:text-white">{payment.receipt_no || 'Pending receipt'}</p>
+                      <p className="text-xs font-semibold text-slate-500">{modeLabels[payment.payment_mode] || payment.payment_mode} - {shortDate(payment.paid_at)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-emerald-500">{money(payment.amount)}</p>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-slate-400">{payment.status}</p>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="px-5 py-6 text-sm font-semibold text-slate-500">No payment records yet.</div>
+                )}
               </div>
             </div>
 
@@ -329,6 +365,9 @@ const FinanceWorkspace = () => {
   const [createdStructure, setCreatedStructure] = useState(null);
   const [item, setItem] = useState({ fee_head: 'Tuition Fee', amount: '85000', refundable: false, sort_order: 1 });
   const [allocationStudents, setAllocationStudents] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [financeStudents, setFinanceStudents] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [concession, setConcession] = useState({ student_id: '', invoice_id: '', amount: '', reason: '' });
   const [refund, setRefund] = useState({ student_id: '', invoice_id: '', payment_id: '', amount: '', reason: '' });
   const [receiptNo, setReceiptNo] = useState('');
@@ -356,9 +395,32 @@ const FinanceWorkspace = () => {
   const allocate = async () => {
     if (!createdStructure?.id) return toast.error('Create a fee structure first');
     const student_ids = allocationStudents.split(/[\s,]+/).map((v) => v.trim()).filter(Boolean);
+    if (!student_ids.length) return toast.error('Select or paste at least one student');
     const { data } = await feesAPI.generateAllocations({ structure_id: createdStructure.id, student_ids });
     toast.success(`Generated ${data.created} invoices`);
     loadSummary();
+  };
+
+  const searchFinanceStudents = async () => {
+    const { data } = await feesAPI.searchStudents(studentSearch);
+    setFinanceStudents(data || []);
+  };
+
+  const addAllocationStudent = (student) => {
+    const existing = allocationStudents.split(/[\s,]+/).map((v) => v.trim()).filter(Boolean);
+    if (!existing.includes(student.id)) {
+      setAllocationStudents([...existing, student.id].join('\n'));
+    }
+  };
+
+  const openStudentLedger = async (student) => {
+    const { data } = await feesAPI.studentLedger(student.id);
+    setSelectedStudent(data);
+    const firstDue = (data.invoices || []).find((inv) => inv.due > 0) || data.invoices?.[0];
+    if (firstDue) {
+      setConcession((prev) => ({ ...prev, student_id: data.student.id, invoice_id: firstDue.invoice_id }));
+      setRefund((prev) => ({ ...prev, student_id: data.student.id, invoice_id: firstDue.invoice_id }));
+    }
   };
 
   const submitConcession = async () => {
@@ -388,6 +450,83 @@ const FinanceWorkspace = () => {
         <StatCard label="Pending Due" value={money(summary?.total_due)} icon={WarningCircle} tone="rose" />
         <StatCard label="Collection Rate" value={`${summary?.collection_rate || 0}%`} icon={Bank} tone="amber" />
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatCard label="Invoices" value={summary?.invoice_count || 0} icon={Receipt} tone="slate" />
+        <StatCard label="Students With Dues" value={summary?.students_with_dues || 0} icon={ShieldCheck} tone="indigo" />
+        <StatCard label="Overdue Invoices" value={summary?.overdue_invoices || 0} icon={WarningCircle} tone="rose" />
+        <StatCard label="Concessions" value={money(summary?.approved_concessions)} icon={CheckCircle} tone="emerald" />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Student Fee Lookup</h3>
+          <div className="flex gap-2">
+            <input className="soft-input flex-1" value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} placeholder="Name, roll no, college ID" />
+            <button onClick={searchFinanceStudents} className="px-4 rounded-xl bg-indigo-500 text-white"><MagnifyingGlass weight="bold" /></button>
+          </div>
+          <div className="mt-3 space-y-2 max-h-96 overflow-y-auto">
+            {financeStudents.map((student) => (
+              <div key={student.id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-start justify-between gap-3">
+                  <button onClick={() => openStudentLedger(student)} className="text-left min-w-0">
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{student.name}</p>
+                    <p className="text-xs font-semibold text-slate-500 truncate">{student.roll_number || student.college_id} {student.department ? `- ${student.department}` : ''}</p>
+                  </button>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-black ${Number(student.total_due || 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{money(student.total_due)}</p>
+                    <button onClick={() => addAllocationStudent(student)} className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Add</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {!financeStudents.length && <p className="text-sm font-semibold text-slate-500 py-4">Search students to view existing fee records.</p>}
+          </div>
+        </div>
+
+        <div className="soft-card overflow-hidden">
+          {selectedStudent ? (
+            <>
+              <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between">
+                <div>
+                  <h3 className="font-black text-slate-900 dark:text-white">{selectedStudent.student.name}</h3>
+                  <p className="text-xs font-bold text-slate-500">{selectedStudent.student.roll_number || selectedStudent.student.college_id} - {selectedStudent.student.department || 'Department not set'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Outstanding</p>
+                  <p className="text-xl font-black text-rose-500">{money(selectedStudent.summary.total_due)}</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 dark:bg-white/5">
+                    <tr>
+                      {['Invoice', 'Fee', 'Billed', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                    {(selectedStudent.invoices || []).map((inv) => (
+                      <tr key={inv.invoice_id}>
+                        <td className="px-4 py-3 font-bold">{inv.invoice_no || '-'}</td>
+                        <td className="px-4 py-3">{inv.fee_type}</td>
+                        <td className="px-4 py-3">{money(inv.total_amount)}</td>
+                        <td className="px-4 py-3 text-emerald-500 font-bold">{money(inv.paid)}</td>
+                        <td className="px-4 py-3 text-rose-500 font-bold">{money(inv.due)}</td>
+                        <td className="px-4 py-3">{inv.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="p-10 text-center">
+              <Receipt size={42} weight="duotone" className="mx-auto text-slate-300 mb-3" />
+              <h3 className="font-black text-xl text-slate-900 dark:text-white">Select a student ledger</h3>
+              <p className="text-sm font-semibold text-slate-500 mt-1">Existing invoices, paid amounts, dues, and receipts will appear here.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="soft-card p-5">
@@ -413,8 +552,60 @@ const FinanceWorkspace = () => {
 
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Allocation Generator</h3>
-          <textarea className="soft-input w-full min-h-32" value={allocationStudents} onChange={(e) => setAllocationStudents(e.target.value)} placeholder="Paste student UUIDs separated by comma or newline" />
+          <textarea className="soft-input w-full min-h-32" value={allocationStudents} onChange={(e) => setAllocationStudents(e.target.value)} placeholder="Student IDs selected from lookup appear here. You can also paste UUIDs separated by comma or newline." />
           <button onClick={allocate} className="btn-primary mt-4 flex items-center gap-2"><UploadSimple size={16} /> Generate Invoices</button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Dues By Department</h3>
+          <div className="space-y-3">
+            {(summary?.by_department || []).map((row) => (
+              <div key={row.department} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-black text-sm text-slate-900 dark:text-white">{row.department}</p>
+                  <p className="font-black text-sm">{money(row.billed)}</p>
+                </div>
+                <p className="text-xs font-semibold text-slate-500 mt-1">{row.invoice_count} invoices</p>
+              </div>
+            ))}
+            {!summary?.by_department?.length && <p className="text-sm font-semibold text-slate-500">No department fee data yet.</p>}
+          </div>
+        </div>
+
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Fee Head Mix</h3>
+          <div className="space-y-3">
+            {(summary?.by_fee_type || []).map((row) => (
+              <div key={row.fee_type} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="font-black text-sm text-slate-900 dark:text-white">{row.fee_type}</p>
+                  <p className="font-black text-sm">{money(row.billed)}</p>
+                </div>
+                <p className="text-xs font-semibold text-slate-500 mt-1">{row.invoice_count} invoices</p>
+              </div>
+            ))}
+            {!summary?.by_fee_type?.length && <p className="text-sm font-semibold text-slate-500">No fee heads found.</p>}
+          </div>
+        </div>
+
+        <div className="soft-card p-5">
+          <h3 className="font-black text-slate-900 dark:text-white mb-4">Recent Collections</h3>
+          <div className="space-y-3">
+            {(summary?.recent_payments || []).map((payment) => (
+              <div key={payment.payment_id} className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black text-sm text-slate-900 dark:text-white">{payment.student_name}</p>
+                    <p className="text-xs font-semibold text-slate-500">{payment.receipt_no || payment.fee_type} - {shortDate(payment.paid_at)}</p>
+                  </div>
+                  <p className="font-black text-emerald-500">{money(payment.amount)}</p>
+                </div>
+              </div>
+            ))}
+            {!summary?.recent_payments?.length && <p className="text-sm font-semibold text-slate-500">No successful collections yet.</p>}
+          </div>
         </div>
       </div>
 
@@ -422,6 +613,14 @@ const FinanceWorkspace = () => {
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Concession Request</h3>
           <div className="space-y-3">
+            {selectedStudent && (
+              <select className="soft-input w-full" value={concession.invoice_id} onChange={(e) => {
+                const inv = selectedStudent.invoices.find((x) => x.invoice_id === e.target.value);
+                setConcession({ ...concession, student_id: selectedStudent.student.id, invoice_id: e.target.value, amount: concession.amount || String(Math.min(inv?.due || 0, inv?.total_amount || 0)) });
+              }}>
+                {(selectedStudent.invoices || []).map((inv) => <option key={inv.invoice_id} value={inv.invoice_id}>{inv.fee_type} - due {money(inv.due)}</option>)}
+              </select>
+            )}
             {['student_id', 'invoice_id', 'amount', 'reason'].map((key) => (
               <input key={key} className="soft-input w-full" value={concession[key]} onChange={(e) => setConcession({ ...concession, [key]: e.target.value })} placeholder={key.replace('_', ' ')} />
             ))}
@@ -432,6 +631,21 @@ const FinanceWorkspace = () => {
         <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-4">Refund Request</h3>
           <div className="space-y-3">
+            {selectedStudent && (
+              <select className="soft-input w-full" value={refund.payment_id} onChange={(e) => {
+                const payment = (selectedStudent.payments || []).find((x) => x.payment_id === e.target.value);
+                setRefund({
+                  ...refund,
+                  student_id: selectedStudent.student.id,
+                  invoice_id: payment?.invoice_id || refund.invoice_id,
+                  payment_id: e.target.value,
+                  amount: refund.amount || String(payment?.amount || ''),
+                });
+              }}>
+                <option value="">Select paid receipt</option>
+                {(selectedStudent.payments || []).filter((p) => p.status === 'success').map((p) => <option key={p.payment_id} value={p.payment_id}>{p.receipt_no || p.payment_id} - {money(p.amount)}</option>)}
+              </select>
+            )}
             {['student_id', 'invoice_id', 'payment_id', 'amount', 'reason'].map((key) => (
               <input key={key} className="soft-input w-full" value={refund[key]} onChange={(e) => setRefund({ ...refund, [key]: e.target.value })} placeholder={key.replace('_', ' ')} />
             ))}

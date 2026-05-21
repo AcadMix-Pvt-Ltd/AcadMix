@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, case
 from typing import List, Dict, Any, Optional
 
 from app.models import (
@@ -52,6 +52,25 @@ class FeesService:
             )
         )
         return float(paid_q.scalar() or 0)
+
+    async def _invoice_amounts(self, invoice: StudentFeeInvoice) -> Dict[str, float]:
+        paid = await self._invoice_paid_amount(invoice.id)
+        concession_q = await self.db.execute(
+            select(func.coalesce(func.sum(FeeConcession.amount), 0)).where(
+                FeeConcession.invoice_id == invoice.id,
+                FeeConcession.status == "approved",
+                FeeConcession.is_deleted == False,
+            )
+        )
+        concession = float(concession_q.scalar() or 0)
+        net_total = max(float(invoice.total_amount or 0) - concession, 0)
+        return {
+            "billed": float(invoice.total_amount or 0),
+            "concession": concession,
+            "net_total": net_total,
+            "paid": paid,
+            "due": max(net_total - paid, 0),
+        }
 
     async def _refresh_invoice_status(self, invoice: StudentFeeInvoice) -> None:
         paid = await self._invoice_paid_amount(invoice.id)
@@ -145,8 +164,8 @@ class FeesService:
         invoice = await self.db.get(StudentFeeInvoice, invoice_id)
         if not invoice or invoice.college_id != college_id or invoice.student_id != student_id:
             raise ValueError("Invoice not found")
-        paid = await self._invoice_paid_amount(invoice.id)
-        if amount_to_pay <= 0 or amount_to_pay > (float(invoice.total_amount) - paid + 0.01):
+        amounts = await self._invoice_amounts(invoice)
+        if amount_to_pay <= 0 or amount_to_pay > (amounts["due"] + 0.01):
             raise ValueError("Invalid payment amount")
 
         order_data = {
@@ -279,19 +298,109 @@ class FeesService:
         } for p in payments]
 
     async def finance_summary(self, college_id: str) -> Dict[str, Any]:
-        invoice_total = await self.db.execute(select(func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0)).where(StudentFeeInvoice.college_id == college_id, StudentFeeInvoice.is_deleted == False, StudentFeeInvoice.status != "cancelled"))
+        active_invoice_filter = (
+            StudentFeeInvoice.college_id == college_id,
+            StudentFeeInvoice.is_deleted == False,
+            StudentFeeInvoice.status != "cancelled",
+        )
+        invoice_total = await self.db.execute(select(func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0)).where(*active_invoice_filter))
         collected = await self.db.execute(select(func.coalesce(func.sum(FeePayment.amount_paid), 0)).where(FeePayment.college_id == college_id, FeePayment.status == "success", FeePayment.is_deleted == False))
+        concession_total = await self.db.execute(select(func.coalesce(func.sum(FeeConcession.amount), 0)).where(FeeConcession.college_id == college_id, FeeConcession.status == "approved", FeeConcession.is_deleted == False))
+        invoice_count = await self.db.execute(select(func.count()).select_from(StudentFeeInvoice).where(*active_invoice_filter))
+        status_rows = await self.db.execute(
+            select(StudentFeeInvoice.status, func.count())
+            .where(*active_invoice_filter)
+            .group_by(StudentFeeInvoice.status)
+        )
+        overdue_count = await self.db.execute(
+            select(func.count()).select_from(StudentFeeInvoice).where(
+                *active_invoice_filter,
+                StudentFeeInvoice.due_date.is_not(None),
+                StudentFeeInvoice.due_date < datetime.now(timezone.utc),
+                StudentFeeInvoice.status.in_(["unpaid", "partial", "overdue"]),
+            )
+        )
+        students_with_dues = await self.db.execute(
+            select(func.count(func.distinct(StudentFeeInvoice.student_id))).where(
+                *active_invoice_filter,
+                StudentFeeInvoice.status.in_(["unpaid", "partial", "overdue"]),
+            )
+        )
         pending_concessions = await self.db.execute(select(func.count()).select_from(FeeConcession).where(FeeConcession.college_id == college_id, FeeConcession.status == "pending", FeeConcession.is_deleted == False))
         pending_refunds = await self.db.execute(select(func.count()).select_from(FeeRefund).where(FeeRefund.college_id == college_id, FeeRefund.status == "pending", FeeRefund.is_deleted == False))
         total = float(invoice_total.scalar() or 0)
         paid = float(collected.scalar() or 0)
+        concessions = float(concession_total.scalar() or 0)
+        net_billed = max(total - concessions, 0)
+
+        dept_expr = func.coalesce(UserProfile.department, "Unassigned")
+        dept_rows = await self.db.execute(
+            select(
+                dept_expr.label("department"),
+                func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0).label("billed"),
+                func.coalesce(func.sum(case((StudentFeeInvoice.status == "paid", StudentFeeInvoice.total_amount), else_=0)), 0).label("closed"),
+                func.count(StudentFeeInvoice.id).label("invoice_count"),
+            )
+            .join(User, User.id == StudentFeeInvoice.student_id)
+            .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            .where(*active_invoice_filter)
+            .group_by(dept_expr)
+            .order_by(func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0).desc())
+            .limit(8)
+        )
+        fee_rows = await self.db.execute(
+            select(
+                StudentFeeInvoice.fee_type,
+                func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0).label("billed"),
+                func.count(StudentFeeInvoice.id).label("invoice_count"),
+            )
+            .where(*active_invoice_filter)
+            .group_by(StudentFeeInvoice.fee_type)
+            .order_by(func.coalesce(func.sum(StudentFeeInvoice.total_amount), 0).desc())
+            .limit(8)
+        )
+        recent_rows = await self.db.execute(
+            select(FeePayment, User, StudentFeeInvoice)
+            .join(User, User.id == FeePayment.student_id)
+            .join(StudentFeeInvoice, StudentFeeInvoice.id == FeePayment.invoice_id)
+            .where(FeePayment.college_id == college_id, FeePayment.status == "success", FeePayment.is_deleted == False)
+            .order_by(FeePayment.transaction_date.desc().nulls_last())
+            .limit(8)
+        )
         return {
             "total_billed": total,
+            "approved_concessions": concessions,
+            "net_billed": net_billed,
             "total_collected": paid,
-            "total_due": max(total - paid, 0),
-            "collection_rate": round((paid / total) * 100, 2) if total else 0,
+            "total_due": max(net_billed - paid, 0),
+            "collection_rate": round((paid / net_billed) * 100, 2) if net_billed else 0,
+            "invoice_count": int(invoice_count.scalar() or 0),
+            "students_with_dues": int(students_with_dues.scalar() or 0),
+            "overdue_invoices": int(overdue_count.scalar() or 0),
+            "status_counts": {status or "unpaid": int(count or 0) for status, count in status_rows.all()},
             "pending_concessions": int(pending_concessions.scalar() or 0),
             "pending_refunds": int(pending_refunds.scalar() or 0),
+            "by_department": [
+                {"department": dept, "billed": float(billed or 0), "closed_amount": float(closed or 0), "invoice_count": int(count or 0)}
+                for dept, billed, closed, count in dept_rows.all()
+            ],
+            "by_fee_type": [
+                {"fee_type": fee_type, "billed": float(billed or 0), "invoice_count": int(count or 0)}
+                for fee_type, billed, count in fee_rows.all()
+            ],
+            "recent_payments": [
+                {
+                    "payment_id": payment.id,
+                    "receipt_no": payment.receipt_no,
+                    "student_name": student.name,
+                    "student_college_id": student.email,
+                    "fee_type": invoice.fee_type,
+                    "amount": payment.amount_paid,
+                    "payment_mode": payment.payment_mode,
+                    "paid_at": payment.transaction_date.isoformat() if payment.transaction_date else None,
+                }
+                for payment, student, invoice in recent_rows.all()
+            ],
         }
 
     async def search_students(self, college_id: str, q: str = "", limit: int = 15):
@@ -305,26 +414,70 @@ class FeesService:
             stmt = stmt.where(or_(User.name.ilike(pattern), User.email.ilike(pattern), UserProfile.roll_number.ilike(pattern)))
         res = await self.db.execute(stmt.limit(limit))
         rows = res.all()
-        return [{
-            "id": user.id,
-            "college_id": user.email,
-            "name": user.name,
-            "roll_number": profile.roll_number if profile else "",
-            "department": profile.department if profile else "",
-            "section": profile.section if profile else "",
-            "batch": profile.batch if profile else "",
-        } for user, profile in rows]
+        student_ids = [user.id for user, _ in rows]
+        paid_by_student: Dict[str, float] = {}
+        if student_ids:
+            payment_rows = await self.db.execute(
+                select(FeePayment.student_id, func.coalesce(func.sum(FeePayment.amount_paid), 0))
+                .where(
+                    FeePayment.college_id == college_id,
+                    FeePayment.student_id.in_(student_ids),
+                    FeePayment.status == "success",
+                    FeePayment.is_deleted == False,
+                )
+                .group_by(FeePayment.student_id)
+            )
+            paid_by_student = {sid: float(total or 0) for sid, total in payment_rows.all()}
+        invoice_rows = []
+        if student_ids:
+            invoice_rows = (await self.db.execute(
+                select(StudentFeeInvoice)
+                .where(
+                    StudentFeeInvoice.college_id == college_id,
+                    StudentFeeInvoice.student_id.in_(student_ids),
+                    StudentFeeInvoice.is_deleted == False,
+                    StudentFeeInvoice.status != "cancelled",
+                )
+            )).scalars().all()
+        billed_by_student: Dict[str, float] = {}
+        invoice_count_by_student: Dict[str, int] = {}
+        due_invoice_count_by_student: Dict[str, int] = {}
+        for inv in invoice_rows:
+            billed_by_student[inv.student_id] = billed_by_student.get(inv.student_id, 0) + float(inv.total_amount or 0)
+            invoice_count_by_student[inv.student_id] = invoice_count_by_student.get(inv.student_id, 0) + 1
+            if (inv.status or "unpaid") in {"unpaid", "partial", "overdue"}:
+                due_invoice_count_by_student[inv.student_id] = due_invoice_count_by_student.get(inv.student_id, 0) + 1
+        return [
+            {
+                "id": user.id,
+                "college_id": user.email,
+                "name": user.name,
+                "roll_number": profile.roll_number if profile else "",
+                "department": profile.department if profile else "",
+                "section": profile.section if profile else "",
+                "batch": profile.batch if profile else "",
+                "invoice_count": invoice_count_by_student.get(user.id, 0),
+                "due_invoice_count": due_invoice_count_by_student.get(user.id, 0),
+                "total_billed": billed_by_student.get(user.id, 0),
+                "total_paid": paid_by_student.get(user.id, 0),
+                "total_due": max(billed_by_student.get(user.id, 0) - paid_by_student.get(user.id, 0), 0),
+            }
+            for user, profile in rows
+        ]
 
     async def student_ledger(self, college_id: str, student_id: str):
         user = await self.db.get(User, student_id)
         if not user or user.college_id != college_id:
             raise HTTPException(status_code=404, detail="Student not found")
-        invoices = (await self.db.execute(select(StudentFeeInvoice).where(StudentFeeInvoice.college_id == college_id, StudentFeeInvoice.student_id == student_id, StudentFeeInvoice.is_deleted == False))).scalars().all()
-        payments = (await self.db.execute(select(FeePayment).where(FeePayment.college_id == college_id, FeePayment.student_id == student_id, FeePayment.is_deleted == False))).scalars().all()
-        concessions = (await self.db.execute(select(FeeConcession).where(FeeConcession.college_id == college_id, FeeConcession.student_id == student_id, FeeConcession.is_deleted == False))).scalars().all()
+        profile = (await self.db.execute(select(UserProfile).where(UserProfile.user_id == student_id))).scalars().first()
+        invoices = (await self.db.execute(select(StudentFeeInvoice).where(StudentFeeInvoice.college_id == college_id, StudentFeeInvoice.student_id == student_id, StudentFeeInvoice.is_deleted == False).order_by(StudentFeeInvoice.due_date.asc().nulls_last(), StudentFeeInvoice.fee_type.asc()))).scalars().all()
+        payments = (await self.db.execute(select(FeePayment).where(FeePayment.college_id == college_id, FeePayment.student_id == student_id, FeePayment.is_deleted == False).order_by(FeePayment.transaction_date.desc().nulls_last()))).scalars().all()
+        concessions = (await self.db.execute(select(FeeConcession).where(FeeConcession.college_id == college_id, FeeConcession.student_id == student_id, FeeConcession.is_deleted == False).order_by(FeeConcession.created_at.desc()))).scalars().all()
         items = []
         total_due = 0.0
         total_paid = 0.0
+        total_billed = 0.0
+        total_concession = 0.0
         for inv in invoices:
             paid = sum(float(p.amount_paid) for p in payments if p.invoice_id == inv.id and p.status == "success")
             concession = sum(float(c.amount) for c in concessions if c.invoice_id == inv.id and c.status == "approved")
@@ -332,19 +485,80 @@ class FeesService:
             due = max(net_total - paid, 0)
             total_due += due
             total_paid += paid
+            total_billed += float(inv.total_amount or 0)
+            total_concession += concession
+            if due <= 0 and (inv.status or "unpaid") != "paid":
+                await self._refresh_invoice_status(inv)
             items.append({
                 "invoice_id": inv.id,
-                "invoice_no": inv.invoice_no,
+                "invoice_no": inv.invoice_no or inv.id[:8].upper(),
                 "fee_type": inv.fee_type,
                 "academic_year": inv.academic_year,
                 "total_amount": inv.total_amount,
                 "concession": concession,
                 "paid": paid,
+                "net_total": net_total,
                 "due": due,
                 "status": inv.status,
                 "due_date": inv.due_date.isoformat() if inv.due_date else None,
+                "description": inv.description or "",
+                "payments": [
+                    {
+                        "payment_id": p.id,
+                        "receipt_no": p.receipt_no,
+                        "amount": p.amount_paid,
+                        "status": p.status,
+                        "payment_mode": p.payment_mode,
+                        "paid_at": p.transaction_date.isoformat() if p.transaction_date else None,
+                        "transaction_ref": p.transaction_reference or "",
+                    }
+                    for p in payments if p.invoice_id == inv.id
+                ],
+                "concessions": [
+                    {
+                        "id": c.id,
+                        "amount": c.amount,
+                        "status": c.status,
+                        "reason": c.reason,
+                        "created_at": c.created_at.isoformat() if c.created_at else None,
+                    }
+                    for c in concessions if c.invoice_id == inv.id
+                ],
             })
-        return {"student": {"id": user.id, "college_id": user.email, "name": user.name}, "summary": {"total_paid": total_paid, "total_due": total_due}, "invoices": items}
+        await self.db.commit()
+        return {
+            "student": {
+                "id": user.id,
+                "college_id": user.email,
+                "name": user.name,
+                "roll_number": profile.roll_number if profile else "",
+                "department": profile.department if profile else "",
+                "section": profile.section if profile else "",
+                "batch": profile.batch if profile else "",
+            },
+            "summary": {
+                "total_billed": total_billed,
+                "total_concession": total_concession,
+                "total_paid": total_paid,
+                "total_due": total_due,
+                "invoice_count": len(items),
+                "due_invoice_count": len([x for x in items if x["due"] > 0]),
+            },
+            "invoices": items,
+            "payments": [
+                {
+                    "payment_id": p.id,
+                    "invoice_id": p.invoice_id,
+                    "receipt_no": p.receipt_no,
+                    "amount": p.amount_paid,
+                    "status": p.status,
+                    "payment_mode": p.payment_mode,
+                    "paid_at": p.transaction_date.isoformat() if p.transaction_date else None,
+                    "transaction_ref": p.transaction_reference or "",
+                }
+                for p in payments
+            ],
+        }
 
     async def create_fee_structure(self, college_id: str, user_id: str, data: dict):
         structure = FeeStructure(college_id=college_id, created_by=user_id, **data)
@@ -463,9 +677,9 @@ class FeesService:
         invoice = await self.db.get(StudentFeeInvoice, data["invoice_id"])
         if not invoice or invoice.college_id != college_id:
             raise HTTPException(status_code=404, detail="Invoice not found")
-        paid = await self._invoice_paid_amount(invoice.id)
+        amounts = await self._invoice_amounts(invoice)
         amount = float(data["amount"])
-        if amount <= 0 or amount > (float(invoice.total_amount) - paid + 0.01):
+        if amount <= 0 or amount > (amounts["due"] + 0.01):
             raise HTTPException(status_code=400, detail="Invalid collection amount")
         payment = FeePayment(
             college_id=college_id,
