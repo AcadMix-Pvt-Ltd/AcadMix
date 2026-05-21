@@ -330,6 +330,16 @@ async def finance_receipt_search(
     return await svc.search_receipts(user["college_id"], q, limit)
 
 
+@router.get("/finance/reports")
+async def finance_reports(
+    from_date: Optional[datetime] = None,
+    to_date: Optional[datetime] = None,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.finance_reports(user["college_id"], from_date, to_date)
+
+
 @router.post("/finance/concessions")
 async def create_concession(
     payload: ConcessionPayload,

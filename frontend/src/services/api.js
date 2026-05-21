@@ -567,6 +567,7 @@ export const feesAPI = {
   generateAllocations: (data) => api.post('/finance/allocations/generate', data),
   financeWorkQueue: () => api.get('/finance/work-queue'),
   searchReceipts: (q) => api.get('/finance/receipts/search', { params: { q } }),
+  financeReports: (params = {}) => api.get('/finance/reports', { params }),
   createConcession: (data) => api.post('/finance/concessions', data),
   reviewConcession: (id, data) => api.put(`/finance/concessions/${id}/review`, data),
   createRefund: (data) => api.post('/finance/refunds', data),

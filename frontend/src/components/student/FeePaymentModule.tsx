@@ -43,6 +43,60 @@ const downloadReceipt = (txn) => {
   URL.revokeObjectURL(url);
 };
 
+const printReceipt = (txn) => {
+  const verifyUrl = txn.verification_token ? `${window.location.origin}/fees/verify/${txn.verification_token}` : 'N/A';
+  const popup = window.open('', '_blank', 'width=760,height=820');
+  if (!popup) return;
+  popup.document.write(`
+    <html>
+      <head>
+        <title>${txn.receipt_no || 'Fee Receipt'}</title>
+        <style>
+          body { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; background: #f8fafc; color: #0f172a; }
+          .receipt { width: 680px; margin: 32px auto; background: white; border: 1px solid #e2e8f0; border-radius: 22px; padding: 32px; }
+          .header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px; }
+          .brand { font-size: 24px; font-weight: 900; }
+          .status { color: #059669; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; font-size: 12px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+          .item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; }
+          .label { color: #64748b; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 6px; }
+          .value { font-size: 15px; font-weight: 800; word-break: break-word; }
+          .amount { font-size: 30px; color: #0f766e; }
+          .verify { margin-top: 22px; padding: 16px; border-radius: 16px; background: #ecfeff; color: #155e75; font-size: 13px; font-weight: 700; word-break: break-all; }
+          .footer { margin-top: 22px; color: #64748b; font-size: 12px; }
+          @media print { body { background: white; } .receipt { margin: 0; width: auto; border-radius: 0; border: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="header">
+            <div>
+              <div class="brand">AcadMix Fee Receipt</div>
+              <div class="status">${txn.status === 'success' ? 'Verified payment' : txn.status}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="label">Receipt No</div>
+              <div class="value">${txn.receipt_no || 'N/A'}</div>
+            </div>
+          </div>
+          <div class="grid">
+            <div class="item"><div class="label">Invoice</div><div class="value">${txn.invoice_no || 'N/A'}</div></div>
+            <div class="item"><div class="label">Fee Type</div><div class="value">${txn.fee_type}</div></div>
+            <div class="item"><div class="label">Academic Year</div><div class="value">${txn.academic_year}</div></div>
+            <div class="item"><div class="label">Paid Date</div><div class="value">${formatDate(txn.paid_at)}</div></div>
+            <div class="item"><div class="label">Transaction</div><div class="value">${txn.transaction_ref || 'N/A'}</div></div>
+            <div class="item"><div class="label">Amount Paid</div><div class="value amount">Rs. ${Number(txn.amount || 0).toLocaleString('en-IN')}</div></div>
+          </div>
+          <div class="verify">Verify online: ${verifyUrl}</div>
+          <div class="footer">This is a computer-generated receipt from AcadMix.</div>
+        </div>
+      </body>
+    </html>
+  `);
+  popup.document.close();
+  popup.print();
+};
+
 const FeePaymentModule = ({ user }) => {
   const [fees, setFees] = useState([]);
   const [history, setHistory] = useState([]);
@@ -334,7 +388,7 @@ const FeePaymentModule = ({ user }) => {
                         <td className="py-3.5 px-4 text-center">
                           {txn.status === 'success' && (
                             <button
-                              onClick={() => downloadReceipt(txn)}
+                              onClick={() => printReceipt(txn)}
                               className="p-2 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-500 transition-colors"
                               title="Download receipt"
                             >
@@ -374,7 +428,7 @@ const FeePaymentModule = ({ user }) => {
                     </div>
                     {txn.status === 'success' && (
                       <button
-                        onClick={() => downloadReceipt(txn)}
+                        onClick={() => printReceipt(txn)}
                         className="p-2 rounded-lg bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-500 transition-colors flex-shrink-0"
                         title="Download receipt"
                       >

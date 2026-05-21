@@ -396,16 +396,19 @@ const FinanceWorkspace = () => {
   const [receiptNo, setReceiptNo] = useState('');
   const [receiptResults, setReceiptResults] = useState([]);
   const [receipt, setReceipt] = useState(null);
+  const [reports, setReports] = useState(null);
 
   const loadFinanceData = async () => {
-    const [{ data: summaryRes }, { data: structuresRes }, { data: queueRes }] = await Promise.all([
+    const [{ data: summaryRes }, { data: structuresRes }, { data: queueRes }, { data: reportsRes }] = await Promise.all([
       feesAPI.financeSummary(),
       feesAPI.listFeeStructures(),
       feesAPI.financeWorkQueue(),
+      feesAPI.financeReports(),
     ]);
     setSummary(summaryRes);
     setStructures(structuresRes || []);
     setQueue(queueRes || { concessions: [], refunds: [] });
+    setReports(reportsRes);
   };
 
   useEffect(() => { loadFinanceData().catch(() => {}); }, []);
@@ -539,6 +542,26 @@ const FinanceWorkspace = () => {
     }
   };
 
+  const exportReportCsv = () => {
+    const rows = [
+      ['Report', 'Name', 'Amount', 'Count'],
+      ...Object.entries(reports?.collection?.by_mode || {}).map(([mode, amount]) => ['Collection by mode', modeLabels[mode] || mode, amount, '']),
+      ...Object.entries(reports?.collection?.by_fee_head || {}).map(([head, amount]) => ['Collection by fee head', head, amount, '']),
+      ...Object.entries(reports?.collection?.by_cashier || {}).map(([cashier, amount]) => ['Collection by cashier', cashier, amount, '']),
+      ...Object.entries(reports?.adjustments?.concessions || {}).map(([status, item]) => ['Concessions', status, item.amount, item.count]),
+      ...Object.entries(reports?.adjustments?.refunds || {}).map(([status, item]) => ['Refunds', status, item.amount, item.count]),
+      ...(reports?.dues?.defaulters || []).map((row) => ['Defaulter', `${row.student_name} / ${row.invoice_no}`, row.due, row.overdue ? 'overdue' : 'due']),
+    ];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'acadmix-finance-report.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -552,6 +575,70 @@ const FinanceWorkspace = () => {
         <StatCard label="Students With Dues" value={summary?.students_with_dues || 0} icon={ShieldCheck} tone="indigo" />
         <StatCard label="Overdue Invoices" value={summary?.overdue_invoices || 0} icon={WarningCircle} tone="rose" />
         <StatCard label="Concessions" value={money(summary?.approved_concessions)} icon={CheckCircle} tone="emerald" />
+      </div>
+
+      <div className="soft-card p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Finance Reports</p>
+            <h3 className="text-xl font-black text-slate-900 dark:text-white">Collections, dues and audit view</h3>
+          </div>
+          <button onClick={exportReportCsv} className="px-4 py-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black">Export CSV</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-300">Report Collection</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">{money(reports?.collection?.total)}</p>
+            <p className="text-xs font-bold text-slate-500">{reports?.collection?.count || 0} receipts</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-300">Total Due</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">{money(reports?.dues?.total_due)}</p>
+            <p className="text-xs font-bold text-slate-500">{reports?.dues?.invoice_count || 0} invoices</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-300">Overdue</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">{money(reports?.dues?.overdue_due)}</p>
+            <p className="text-xs font-bold text-slate-500">{reports?.dues?.overdue_count || 0} overdue invoices</p>
+          </div>
+          <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300">Cash Collection</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white">{money(reports?.collection?.by_mode?.cash)}</p>
+            <p className="text-xs font-bold text-slate-500">For cashier audit</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mt-5">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5">
+            <h4 className="font-black text-slate-900 dark:text-white mb-3">Mode Split</h4>
+            {Object.entries(reports?.collection?.by_mode || {}).map(([mode, amount]) => (
+              <div key={mode} className="flex items-center justify-between py-2 border-b border-slate-200/60 dark:border-white/10 last:border-0">
+                <span className="text-sm font-bold text-slate-500">{modeLabels[mode] || mode}</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white">{money(amount)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5">
+            <h4 className="font-black text-slate-900 dark:text-white mb-3">Fee Head Split</h4>
+            {Object.entries(reports?.collection?.by_fee_head || {}).slice(0, 6).map(([head, amount]) => (
+              <div key={head} className="flex items-center justify-between gap-4 py-2 border-b border-slate-200/60 dark:border-white/10 last:border-0">
+                <span className="text-sm font-bold text-slate-500 truncate">{head}</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white shrink-0">{money(amount)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5">
+            <h4 className="font-black text-slate-900 dark:text-white mb-3">Top Defaulters</h4>
+            {(reports?.dues?.defaulters || []).slice(0, 6).map((row) => (
+              <div key={`${row.student_college_id}-${row.invoice_no}`} className="flex items-center justify-between gap-4 py-2 border-b border-slate-200/60 dark:border-white/10 last:border-0">
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-slate-900 dark:text-white truncate">{row.student_name}</p>
+                  <p className="text-xs font-bold text-slate-500 truncate">{row.invoice_no} {row.overdue ? '- overdue' : ''}</p>
+                </div>
+                <span className="text-sm font-black text-rose-500 shrink-0">{money(row.due)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6">
