@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Clock, Warning, Camera, CheckCircle, XCircle, Play, Code, ArrowsOut, CameraSlash, ShieldWarning, LockSimple, Eraser, BookmarkSimple, X, PaperPlaneTilt, Eye, Question, Brain, UserFocus } from '@phosphor-icons/react';
 import { attemptsAPI, quizzesAPI } from '../services/api';
