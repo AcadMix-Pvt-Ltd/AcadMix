@@ -778,7 +778,9 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
       try {
         const activeId = interviewIdRef.current;
+        console.log('[TTS] speakText called, activeId:', activeId, 'text length:', text?.length);
         if (!activeId) {
+          console.warn('[TTS] No activeId — skipping speak. interviewIdRef is null.');
           resolve();
           return;
         }
@@ -786,6 +788,19 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         // Call our premium ElevenLabs audio streaming endpoint
         const response = await interviewAPI.speak(activeId, text);
         const audioBlob = response.data; // Response type: blob
+        console.log('[TTS] Response received:', {
+          type: audioBlob?.constructor?.name,
+          size: audioBlob?.size,
+          blobType: audioBlob?.type,
+        });
+
+        if (!audioBlob || audioBlob.size === 0) {
+          console.error('[TTS] Empty or invalid audio blob');
+          setIsSpeaking(false);
+          resolve();
+          return;
+        }
+
         const audioUrl = URL.createObjectURL(audioBlob);
         
         const audio = new Audio(audioUrl);
@@ -806,19 +821,21 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         const timeoutId = setTimeout(safeResolve, fallbackMs);
 
         audio.onended = () => {
+          console.log('[TTS] Audio playback ended naturally');
           clearTimeout(timeoutId);
           safeResolve();
         };
 
         audio.onerror = (e) => {
-          console.error("ElevenLabs audio streaming error:", e);
+          console.error('[TTS] Audio playback error:', e);
           clearTimeout(timeoutId);
           safeResolve();
         };
 
         await audio.play();
+        console.log('[TTS] audio.play() started successfully');
       } catch (err) {
-        console.error("ElevenLabs Speak fallback due to error:", err);
+        console.error('[TTS] speakText error:', err);
         setIsSpeaking(false);
         resolve();
       }
@@ -1096,6 +1113,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       });
 
       setInterviewId(data.interview_id);
+      interviewIdRef.current = data.interview_id; // Sync ref immediately — useEffect is async
       setQuestionNumber(1);
       setCurrentQuestion(data.first_question);
       setConversation([{ role: 'assistant', content: data.first_question }]);
