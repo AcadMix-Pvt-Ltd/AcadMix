@@ -73,7 +73,7 @@ const Footer = () => {
               lineHeight: 1.7,
               maxWidth: 260,
             }}>
-              The complete college management platform. AI-powered, multi-tenant, and built for scale.
+              AI-powered placement and smart-campus ERP for colleges, powered by Ami, the AcadMix Intelligence layer.
             </p>
 
             {/* Socials */}

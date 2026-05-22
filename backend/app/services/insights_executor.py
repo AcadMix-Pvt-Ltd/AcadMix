@@ -911,12 +911,8 @@ async def execute_insights_query(session: AsyncSession, sql_query: str, college_
     if role_upper in ["HOD", "FACULTY"]:
         _validate_department_scope(clean_sql, session, user_id)
     
-    # Wrap as subquery to ensure it executes cleanly, but NO limits.
-    # CTEs (WITH ... AS) must be executed directly without subquery wrapping.
-    if clean_sql.strip().upper().startswith("WITH"):
-        limited_sql = clean_sql
-    else:
-        limited_sql = f"SELECT * FROM ({clean_sql}) AS _llm_q"
+    # Wrap as subquery to ensure it executes cleanly, capped at 500 rows for performance and safety.
+    limited_sql = f"SELECT * FROM ({clean_sql}) AS _llm_q LIMIT 500"
 
     from database import AsyncSessionLocal
     
@@ -928,8 +924,8 @@ async def execute_insights_query(session: AsyncSession, sql_query: str, college_
                 # 1. Setup GUC variables and create scoped temp views
                 await _setup_temporary_views(isolated_session, college_id, role, user_id)
                 
-                # 2. Safety: timeout guard for LLM-generated queries (45s max)
-                await isolated_session.execute(text("SET LOCAL statement_timeout = '45s'"))
+                # 2. Safety: timeout guard for LLM-generated queries (5s max)
+                await isolated_session.execute(text("SET LOCAL statement_timeout = '5s'"))
                 
                 # 3. Execute the LLM query (safety enforced by validate_sql_safety + temp view scope)
                 logger.info(f"Executing LLM Query for user {user_id}: {limited_sql}")

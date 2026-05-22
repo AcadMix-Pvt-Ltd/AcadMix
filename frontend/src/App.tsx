@@ -65,6 +65,9 @@ const LibrarianDashboard = React.lazy(() => import('./pages/LibrarianDashboard')
 const SecurityDashboard = React.lazy(() => import('./pages/SecurityDashboard'));
 const VisitorManagement = React.lazy(() => import('./pages/VisitorManagement'));
 const DirectorDashboard = React.lazy(() => import('./pages/DirectorDashboard'));
+const CashierDashboard = React.lazy(() => import('./pages/CashierDashboard'));
+const FinanceOfficerDashboard = React.lazy(() => import('./pages/FinanceOfficerDashboard'));
+const ReceiptVerificationPage = React.lazy(() => import('./pages/ReceiptVerificationPage'));
 
 
 
@@ -96,6 +99,8 @@ const PAGE_TO_PATH = {
   'transport-admin-dashboard': '/transport-admin',
   'librarian-dashboard': '/librarian',
   'security-dashboard': '/security',
+  'cashier-dashboard': '/cashier',
+  'finance-officer-dashboard': '/finance',
   'quiz-attempt': '/quiz/attempt',
   'quiz-results': '/quiz/results',
   'semester-results': '/results/semester',
@@ -146,6 +151,8 @@ const ROLE_DASHBOARD = {
   transport_admin: '/transport-admin',
   librarian: '/librarian',
   security: '/security',
+  cashier: '/cashier',
+  finance_officer: '/finance',
   director: '/director',
 };
 
@@ -233,6 +240,7 @@ function AppRoutes({ user, onLogin, onLogout }) {
 
       {/* ── Pre-Enrollment ────────────────────────────────────────── */}
       <Route path="/pre-enroll/hostel" element={<PreEnrollBooking navigate={navigate} />} />
+      <Route path="/fees/verify/:token" element={<ReceiptVerificationPage />} />
 
       {/* ── Role Dashboards ──────────────────────────────────────── */}
       <Route path="/student" element={
@@ -318,6 +326,16 @@ function AppRoutes({ user, onLogin, onLogout }) {
       <Route path="/security" element={
         <ProtectedRoute user={user} allowedRoles={['security']}>
           <VisitorManagement navigate={navigate} user={user} onLogout={onLogout} />
+        </ProtectedRoute>
+      } />
+      <Route path="/cashier" element={
+        <ProtectedRoute user={user} allowedRoles={['cashier']}>
+          <CashierDashboard navigate={navigate} user={user} onLogout={onLogout} />
+        </ProtectedRoute>
+      } />
+      <Route path="/finance" element={
+        <ProtectedRoute user={user} allowedRoles={['finance_officer']}>
+          <FinanceOfficerDashboard navigate={navigate} user={user} onLogout={onLogout} />
         </ProtectedRoute>
       } />
       <Route path="/director" element={

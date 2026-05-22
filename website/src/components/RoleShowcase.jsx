@@ -12,16 +12,16 @@ const roles = [
     icon: Student,
     name: 'Student',
     color: 'var(--teal)',
-    desc: 'Take proctored quizzes, view results, track performance analytics, access AI career tools, book hostel rooms, and prepare for placements.',
-    features: ['Proctored Quiz Taking', 'Performance Analytics', 'AI Mock Interviews', 'Resume ATS Scorer', 'Hostel Booking', 'Semester Results'],
+    desc: 'Learn through a gamified campus experience, track progress, prepare for placements with Ami, and access 5 free AI mock interviews every month.',
+    features: ['5 Free AI Mock Interviews', 'Gamified Progress', 'Resume ATS Scorer', 'Career Tools', 'Placement Readiness', 'Semester Results'],
   },
   {
     id: 'teacher',
     icon: Chalkboard,
     name: 'Faculty',
     color: 'var(--indigo)',
-    desc: 'Create quizzes with 4 question types, enter CIA marks, view class-wise results, manage attendance, and track teaching records.',
-    features: ['Quiz Builder', 'Marks Entry & Approval', 'Class Results', 'Attendance Marking', 'Code Playground', 'Teaching Records'],
+    desc: 'Create quizzes, assignments, assessments, teaching records, and class analytics faster with Ami-assisted academic workflows.',
+    features: ['Quiz Builder', 'Assignments', 'Marks Entry & Approval', 'Class Results', 'Attendance Marking', 'Teaching Records'],
   },
   {
     id: 'hod',
@@ -36,24 +36,24 @@ const roles = [
     icon: ShieldStar,
     name: 'Principal',
     color: 'var(--purple)',
-    desc: 'College-wide oversight with institution-level analytics, department comparisons, faculty performance, and strategic dashboards.',
-    features: ['Institution Analytics', 'Department Comparison', 'Faculty Performance', 'Enrollment Trends', 'Result Overview', 'Policy Management'],
+    desc: 'College-wide oversight for placements, academics, compliance, faculty performance, and smart-campus modernization.',
+    features: ['Placement Outcomes', 'Institution Analytics', 'Department Comparison', 'Compliance Reports', 'Result Overview', 'Policy Management'],
   },
   {
     id: 'tpo',
     icon: Briefcase,
     name: 'T&P Officer',
     color: 'var(--emerald)',
-    desc: 'Manage campus drives, coordinate with industry partners, track placement stats, and monitor student placement readiness.',
-    features: ['Campus Drive Management', 'Industry Coordination', 'Placement Statistics', 'Student Readiness', 'Company Database', 'Offer Tracking'],
+    desc: 'Track, train, shortlist, and prepare students with AI mock interviews, resume scoring, recruiter analytics, and campus-drive workflows.',
+    features: ['Campus Drive Management', 'Ami Readiness Scores', 'Student Shortlisting', 'Company Database', 'Offer Tracking', 'Recruiter Analytics'],
   },
   {
     id: 'admin',
     icon: UserCircleGear,
     name: 'Admin',
     color: 'var(--rose)',
-    desc: 'System-wide configuration, user management, college metrics, multi-tenant setup, and platform-level analytics.',
-    features: ['User Management', 'College Metrics', 'System Configuration', 'Multi-Tenant Setup', 'Platform Analytics', 'Access Control'],
+    desc: 'Configure the smart-campus operating layer, manage users, control modules, and generate institutional reports with less manual effort.',
+    features: ['User Management', 'NIRF/NBA/NAAC Support', 'System Configuration', 'Multi-Tenant Setup', 'Platform Analytics', 'Access Control'],
   },
   {
     id: 'parent',
@@ -122,14 +122,14 @@ const RoleShowcase = () => {
           style={{ textAlign: 'center', marginBottom: '3rem' }}
         >
           <span className="badge badge-purple" style={{ marginBottom: '1rem', display: 'inline-flex' }}>
-            Role-Based Access
+            Smart Campus Roles
           </span>
           <h2 className="section-title">
-            One platform,{' '}
+            Ami-powered workflows for{' '}
             <span className="text-gradient">every stakeholder</span>
           </h2>
           <p className="section-subtitle" style={{ margin: '0 auto' }}>
-            Each role gets a tailored dashboard designed for their specific workflow. No clutter, no confusion.
+            AcadMix gives leadership, placement teams, students, faculty, and admins the exact tools they need to improve outcomes without clutter.
           </p>
         </motion.div>
 

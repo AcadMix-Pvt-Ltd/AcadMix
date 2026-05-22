@@ -515,6 +515,17 @@ Return ONLY valid JSON."""
 # Static Data
 # ═══════════════════════════════════════════════════════════════════════════════
 
+RESUME_TEMPLATES = [
+    {"id": "classic", "label": "Classic ATS", "category": "ats", "ats_safety": 98, "description": "Traditional single-column academic resume for broad campus drives.", "supported_sections": ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "modern", "label": "Modern Professional", "category": "premium", "ats_safety": 92, "description": "Polished fresher profile with a strong summary and project-first visual hierarchy.", "supported_sections": ["summary", "skills", "projects", "experience", "education", "certifications", "achievements"]},
+    {"id": "compact", "label": "Compact One Page", "category": "ats", "ats_safety": 96, "description": "Dense one-page layout for students with several projects and certifications.", "supported_sections": ["education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "campus", "label": "Campus Placement", "category": "campus", "ats_safety": 94, "description": "Optimized for mass recruiters, eligibility checks, and quick TPO screening.", "supported_sections": ["summary", "education", "skills", "projects", "certifications", "achievements"]},
+    {"id": "developer", "label": "Developer", "category": "technical", "ats_safety": 93, "description": "Project and tech-stack heavy template for software roles.", "supported_sections": ["summary", "skills", "projects", "experience", "education", "certifications", "achievements"]},
+    {"id": "core-engineering", "label": "Core Engineering", "category": "technical", "ats_safety": 93, "description": "Lab, design, simulation, and domain-project oriented template for core branches.", "supported_sections": ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "management", "label": "Management", "category": "business", "ats_safety": 90, "description": "Leadership, operations, internship, and communication-focused template.", "supported_sections": ["summary", "experience", "projects", "education", "skills", "achievements", "certifications"]},
+    {"id": "ats-strict", "label": "ATS Strict", "category": "ats", "ats_safety": 100, "description": "Maximum parser compatibility: single column, standard headings, no visual decoration.", "supported_sections": ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"]},
+]
+
 COMPANY_INTEL = [
     {
         "name": "TCS",
@@ -750,6 +761,93 @@ COMPANY_INTEL = [
 ]
 
 
-def get_company_intel() -> dict:
-    """Get company intel cards for common campus recruiters."""
-    return {"companies": COMPANY_INTEL}
+def get_resume_templates() -> dict:
+    """Return resume template metadata used by the Resume Studio UI."""
+    return {"templates": RESUME_TEMPLATES}
+
+
+def get_company_intel(
+    branch: Optional[str] = None,
+    role: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    package_band: Optional[str] = None,
+) -> dict:
+    """Get upgraded company intel cards for common campus recruiters."""
+    companies = [_upgrade_company_intel(c) for c in COMPANY_INTEL]
+
+    if difficulty:
+        d = difficulty.lower()
+        companies = [c for c in companies if d in str(c.get("difficulty", "")).lower()]
+    if role:
+        r = role.lower()
+        companies = [
+            c for c in companies
+            if any(r in item.lower() for item in c.get("roles", []))
+            or any(r in topic.lower() for topic in c.get("key_topics", []))
+        ]
+    if branch:
+        b = branch.upper()
+        companies = [c for c in companies if b in c.get("branch_playbooks", {}) or "ALL" in c.get("branch_playbooks", {})]
+    if package_band:
+        band = package_band.lower()
+        if band == "dream":
+            companies = [c for c in companies if c.get("dream_package_lpa")]
+        elif band == "mass":
+            companies = [c for c in companies if c.get("category") in ("IT Services", "IT Consulting")]
+
+    return {
+        "companies": companies,
+        "filters": {
+            "branches": ["CSE", "ECE", "EEE", "CIVIL", "MECH", "ALL"],
+            "roles": sorted({r for c in companies for r in c.get("roles", [])}),
+            "difficulties": sorted({c.get("difficulty") for c in companies if c.get("difficulty")}),
+            "package_bands": ["mass", "dream"],
+        },
+    }
+
+
+def _upgrade_company_intel(company: dict) -> dict:
+    roles = company.get("roles") or ["Graduate Engineer Trainee", "Software Engineer", "Analyst"]
+    key_topics = company.get("key_topics", [])
+    return {
+        **company,
+        "roles": roles,
+        "eligibility": company.get("eligibility") or {
+            "cgpa": "6.0+ preferred",
+            "backlogs": "No active backlogs preferred",
+            "branches": ["CSE", "ECE", "EEE", "MECH", "CIVIL"],
+        },
+        "round_strategy": [
+            {"round": r, "what_to_prepare": _round_tip(r, key_topics)}
+            for r in company.get("interview_rounds", [])
+        ],
+        "branch_playbooks": company.get("branch_playbooks") or {
+            "CSE": ["DSA basics", "OOP", "DBMS", "project deep dive"],
+            "ECE": ["core electronics basics", "C/Python fundamentals", "communication systems project explanation"],
+            "EEE": ["electrical machines basics", "power systems fundamentals", "PLC/automation awareness"],
+            "MECH": ["manufacturing basics", "thermodynamics fundamentals", "CAD/project explanation"],
+            "CIVIL": ["surveying/materials basics", "structural fundamentals", "estimation/project explanation"],
+            "ALL": key_topics[:4],
+        },
+        "common_rejection_reasons": company.get("common_rejection_reasons") or [
+            "Weak explanation of resume projects",
+            "Slow aptitude or coding accuracy under time pressure",
+            "Generic HR answers without concrete examples",
+        ],
+        "preparation_plan": company.get("preparation_plan") or [
+            {"week": 1, "focus": "Aptitude speed, resume cleanup, company overview"},
+            {"week": 2, "focus": "Core technical topics and two mock interviews"},
+            {"week": 3, "focus": "Past questions, HR stories, communication polish"},
+        ],
+    }
+
+
+def _round_tip(round_name: str, key_topics: List[str]) -> str:
+    name = round_name.lower()
+    if "aptitude" in name or "assessment" in name:
+        return "Practice timed aptitude, reasoning, English, and the company's known test pattern."
+    if "technical" in name or "coding" in name:
+        return "Revise core subjects, projects, coding basics, and be ready to explain tradeoffs."
+    if "hr" in name or "managerial" in name:
+        return "Prepare STAR stories, salary/location flexibility, and why-this-company answers."
+    return ", ".join(key_topics[:3]) if key_topics else "Prepare role-specific fundamentals and resume discussion."

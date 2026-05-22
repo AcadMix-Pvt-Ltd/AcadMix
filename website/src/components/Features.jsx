@@ -7,51 +7,51 @@ import {
 
 const features = [
   {
+    icon: Briefcase,
+    title: 'Placement Uplift Engine',
+    description: 'Track student readiness, campus drives, recruiter pipelines, resume scores, mock interviews, and offer outcomes from one T&P command center.',
+    color: 'var(--purple)',
+    tag: 'ROI Wedge',
+  },
+  {
+    icon: Robot,
+    title: 'Ami Intelligence Layer',
+    description: 'Ami acts as student career coach, faculty assistant, admin analyst, compliance helper, and placement intelligence system across the campus.',
+    color: 'var(--rose)',
+    tag: 'Vertex AI',
+  },
+  {
     icon: Exam,
-    title: 'Quiz & Exam Engine',
-    description: 'AI-proctored exams with MCQ, coding, and short-answer questions. Real-time monitoring, auto-grading, and anti-cheat telemetry.',
+    title: 'Quiz, Assignment & Exam Engine',
+    description: 'Faculty can create quizzes, assignments, coding questions, and proctored exams with real-time monitoring, auto-grading, and anti-cheat telemetry.',
     color: 'var(--indigo)',
     tag: 'AI-Proctored',
   },
   {
     icon: ChartLineUp,
-    title: 'Results & Analytics',
-    description: 'Department-wise, section-wise, and student-level analytics with interactive charts. Track performance trends over semesters.',
+    title: 'Career & Academic Analytics',
+    description: 'Connect classroom performance, skills, attendance, interview readiness, and placement outcomes so leaders can see where students need support.',
     color: 'var(--emerald)',
     tag: 'Real-time',
   },
   {
-    icon: Briefcase,
-    title: 'Placement Management',
-    description: 'ATS resume scoring, mock AI interviews, campus drive tracking, and industry partner portal. Complete T&P automation.',
-    color: 'var(--purple)',
-    tag: 'AI-Powered',
-  },
-  {
     icon: Buildings,
-    title: 'Hostel Management',
-    description: 'Room booking, hostel allocation, warden dashboards, complaint tracking, and mess management — all in one module.',
+    title: 'Smart Campus Modules',
+    description: 'Hostel, transport, library, visitors, IoT hooks, payments, notifications, and student life modules make the campus feel modern and connected.',
     color: 'var(--teal)',
     tag: 'Integrated',
   },
   {
     icon: ClipboardText,
-    title: 'Attendance & Marks',
-    description: 'CIA marks entry with approval workflows, mid-term/end-term management, and automated grade calculation with revision tracking.',
+    title: 'Accreditation & Compliance',
+    description: 'Generate NIRF, NBA, NAAC, NEP, and internal evidence reports with less manual work and cleaner institutional data trails.',
     color: 'var(--amber)',
-    tag: 'Workflow',
-  },
-  {
-    icon: Robot,
-    title: 'AI Career Toolkit',
-    description: 'Ami — your AI assistant for resume building, interview prep, career path guidance, skill gap analysis, and job matching.',
-    color: 'var(--rose)',
-    tag: 'Ami AI',
+    tag: 'Reports',
   },
   {
     icon: UsersThree,
     title: 'Role-Based Access',
-    description: 'Student, Faculty, HOD, Principal, TPO, Admin, Parent, Alumni, Industry, Warden, Exam Cell, and more — each with tailored dashboards.',
+    description: 'Student, faculty, HOD, principal, TPO, admin, parent, alumni, industry, warden, exam cell, and more each get a tailored workflow.',
     color: 'var(--indigo)',
     tag: '14 Roles',
   },
@@ -77,7 +77,6 @@ const FeatureCard = ({ feature, index }) => {
       className="glass-card"
       style={{ padding: '2rem', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Glow accent */}
       <div style={{
         position: 'absolute',
         top: 0, right: 0,
@@ -88,7 +87,6 @@ const FeatureCard = ({ feature, index }) => {
       }} />
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Icon + Tag row */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <div style={{
             width: 52, height: 52,
@@ -145,7 +143,6 @@ const Features = () => {
       <div className="gradient-bg" style={{ opacity: .5 }} />
 
       <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-        {/* Section header */}
         <motion.div
           ref={titleRef}
           initial={{ opacity: 0, y: 30 }}
@@ -157,15 +154,14 @@ const Features = () => {
             Platform Features
           </span>
           <h2 className="section-title">
-            Everything your college needs,{' '}
-            <span className="text-gradient">in one platform</span>
+            Start with placements,{' '}
+            <span className="text-gradient">expand into a smart campus</span>
           </h2>
           <p className="section-subtitle" style={{ margin: '0 auto' }}>
-            From AI-proctored exams to placement automation — AcadMix replaces 8+ separate tools with one unified, intelligent platform.
+            AcadMix leads with measurable student career readiness, then unifies academic ERP, compliance, operations, and campus life around Ami.
           </p>
         </motion.div>
 
-        {/* Feature grid */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',

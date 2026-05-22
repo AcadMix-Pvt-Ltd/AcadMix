@@ -6,7 +6,7 @@ import {
   LinkedinLogo, GithubLogo, Envelope, Phone, MapPin, User,
   CaretDown, Check, Warning, ArrowRight, Notebook
 } from '@phosphor-icons/react';
-import { resumeProfileAPI } from '../../services/api';
+import { careerAPI, resumeProfileAPI } from '../../services/api';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
 
@@ -15,8 +15,14 @@ const fadeIn = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transi
 
 /* ── Template Configs ────────────────────────────────────── */
 const TEMPLATES = [
-  { id: 'classic', label: 'Classic', desc: 'Clean, ATS-friendly single column' },
-  { id: 'modern', label: 'Modern', desc: 'Coming soon', disabled: true },
+  { id: 'classic', label: 'Classic ATS', desc: 'Clean, ATS-friendly single column', ats_safety: 98 },
+  { id: 'modern', label: 'Modern', desc: 'Premium project-first profile', ats_safety: 92 },
+  { id: 'compact', label: 'Compact', desc: 'Dense one-page campus resume', ats_safety: 96 },
+  { id: 'campus', label: 'Campus', desc: 'Mass recruiter screening layout', ats_safety: 94 },
+  { id: 'developer', label: 'Developer', desc: 'Tech stack and projects first', ats_safety: 93 },
+  { id: 'core-engineering', label: 'Core Engg', desc: 'Core branch lab/project profile', ats_safety: 93 },
+  { id: 'management', label: 'Management', desc: 'Leadership and operations focus', ats_safety: 90 },
+  { id: 'ats-strict', label: 'ATS Strict', desc: 'Maximum parser compatibility', ats_safety: 100 },
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -33,9 +39,13 @@ const ResumePreview = ({ data, template }: { data: any; template: string }) => {
   const summary = data?.summary || '';
   const currentEdu = personal.current_education;
 
+  const isModern = ['modern', 'developer', 'management'].includes(template);
+  const isCompact = ['compact', 'ats-strict'].includes(template);
+  const accent = template === 'developer' ? '#2563eb' : template === 'core-engineering' ? '#0f766e' : template === 'management' ? '#7c3aed' : '#000000';
+
   const SectionTitle = ({ children }: any) => (
     <div className="mt-[8px] mb-[3px] first:mt-0">
-      <h3 className="text-[11px] font-[700] text-black border-b border-black pb-[1px]">{children}</h3>
+      <h3 className="text-[11px] font-[700] border-b pb-[1px]" style={{ color: accent, borderColor: isModern ? accent : '#000' }}>{children}</h3>
     </div>
   );
   const Bullet = ({ children }: any) => (
@@ -50,11 +60,11 @@ const ResumePreview = ({ data, template }: { data: any; template: string }) => {
   const hasSkills = skills.languages?.length || skills.frameworks?.length || skills.tools?.length || skills.databases?.length;
 
   return (
-    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily: "'Times New Roman', 'Georgia', serif" }}>
-      <div className="p-5 h-full overflow-hidden">
+    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily: isModern ? "'Inter', 'Arial', sans-serif" : "'Times New Roman', 'Georgia', serif" }}>
+      <div className={`${isCompact ? 'p-4' : 'p-5'} h-full overflow-hidden`}>
 
         {/* Name */}
-        <h1 className="text-center text-[16px] font-[700] text-black leading-tight">
+        <h1 className={`text-center font-[700] leading-tight ${isCompact ? 'text-[14px]' : 'text-[16px]'}`} style={{ color: accent }}>
           {personal.name || <span className="text-slate-300 italic">Your Full Name</span>}
         </h1>
 
@@ -268,6 +278,7 @@ const ResumeStudioTab = ({ navigate }: any) => {
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
   const [template, setTemplate] = useState('classic');
+  const [templates, setTemplates] = useState<any[]>(TEMPLATES);
   const [downloading, setDownloading] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -310,12 +321,17 @@ const ResumeStudioTab = ({ navigate }: any) => {
     setLoading(false);
   }, [buildPreviewData]);
 
-  useEffect(() => { loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    loadProfile();
+    careerAPI.resumeTemplates().then((r) => {
+      if (r.data?.templates?.length) setTemplates(r.data.templates);
+    }).catch(() => {});
+  }, [loadProfile]);
 
   const handleDownloadDocx = async () => {
     setDownloading('docx');
     try {
-      const response = await resumeProfileAPI.generateDocx(template);
+      const response = await resumeProfileAPI.generate({ template, format: 'docx' });
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -463,17 +479,16 @@ const ResumeStudioTab = ({ navigate }: any) => {
           <div className="soft-card p-5">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Template</h3>
             <div className="flex gap-2">
-              {TEMPLATES.map(t => (
-                <button key={t.id} onClick={() => !t.disabled && setTemplate(t.id)} disabled={t.disabled}
-                  className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all border ${
+              {templates.map(t => (
+                <button key={t.id} onClick={() => setTemplate(t.id)}
+                  className={`min-w-[150px] flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
                     template === t.id
                       ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-500/25 shadow-sm'
-                      : t.disabled
-                        ? 'bg-slate-50 dark:bg-white/[0.02] text-slate-300 dark:text-slate-600 border-transparent cursor-not-allowed'
-                        : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'
+                      : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'
                   }`}>
-                  {t.label}
-                  {t.disabled && <span className="text-[9px] block text-slate-300 dark:text-slate-600 mt-0.5">Soon</span>}
+                  <span>{t.label}</span>
+                  <span className="block text-[10px] font-semibold text-slate-400 mt-1 leading-snug">{t.desc || t.description}</span>
+                  <span className="block text-[9px] font-black text-emerald-500 mt-1">ATS {t.ats_safety || 90}%</span>
                 </button>
               ))}
             </div>

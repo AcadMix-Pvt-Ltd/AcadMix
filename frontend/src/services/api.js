@@ -563,6 +563,14 @@ export const interviewAPI = {
   history: () => api.get('/interview/history'),
   get: (id) => api.get(`/interview/${id}`),
   readiness: () => api.get('/interview/readiness'),
+  speak: (id, text, voiceId) => api.post(`/interview/${id}/speak`, { text, voice_id: voiceId }, { responseType: 'blob' }),
+  transcribe: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/interview/${id}/transcribe`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
 };
 
 // Interview War Room — Resume ATS Scoring
@@ -571,6 +579,18 @@ export const resumeAPI = {
   score: (id, data) => api.post(`/resume/${id}/score`, data),
   history: () => api.get('/resume/history'),
   latest: () => api.get('/resume/latest'),
+};
+
+// HR Payroll API
+export const hrPayrollAPI = {
+  summary: () => api.get('/hr-payroll/summary'),
+  searchStaff: (q) => api.get('/hr-payroll/staff/search', { params: { q } }),
+  saveStaffProfile: (data) => api.post('/hr-payroll/staff', data),
+  saveSalaryStructure: (staffId, data) => api.post(`/hr-payroll/staff/${staffId}/salary`, data),
+  listRuns: () => api.get('/hr-payroll/runs'),
+  generateRun: (data) => api.post('/hr-payroll/runs/generate', data),
+  getRun: (id) => api.get(`/hr-payroll/runs/${id}`),
+  lockRun: (id) => api.post(`/hr-payroll/runs/${id}/lock`),
 };
 
 // Resume Vault — Persistent resume file storage (R2)
@@ -731,59 +751,11 @@ export const visitorAPI = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INSIGHTS ENGINE v2 — Edge Function primary, Python backend fallback
+// INSIGHTS ENGINE v2 — Unified Python Backend
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://axjhruxfwzymagaztney.supabase.co';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4amhydXhmd3p5bWFnYXp0bmV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUyOTk5MjIsImV4cCI6MjA5MDg3NTkyMn0.Vdd3tJDizUMTu66UfJmJtJYOT0d36cjbt3TAXAbE1O4';
-
-async function queryEdgeFunction(data) {
-  const token = authToken; // Use the in-memory token from api.js
-  const resp = await fetch(`${SUPABASE_URL}/functions/v1/insights-query`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      'apikey': SUPABASE_ANON_KEY,
-    },
-    body: JSON.stringify({
-      message: data.message,
-      college_id: data.active_college_id,
-    }),
-    signal: AbortSignal.timeout(150000),
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({ error: resp.statusText }));
-    throw new Error(err.error || `Edge Function error ${resp.status}`);
-  }
-  const result = await resp.json();
-  return {
-    data: {
-      columns: result.columns,
-      data: result.data,
-      row_count: result.row_count,
-      summary: result.summary,
-      chart_suggestion: result.chart_suggestion,
-      source: result.source,
-      timing: result.timing,
-    }
-  };
-}
-
 export const insightsAPI = {
-  query: async (data) => {
-    // Try Edge Function first, fall back to Python backend
-    try {
-      return await queryEdgeFunction(data);
-    } catch (edgeErr) {
-      console.warn('[InsightsAPI] Edge Function failed, falling back to Python:', edgeErr.message);
-      return api.post('/insights/query', data, { timeout: 150000 });
-    }
-  },
-  // Direct Edge Function call (no fallback)
-  queryEdge: (data) => queryEdgeFunction(data),
-  // Direct Python backend call (for testing)
-  queryPython: (data) => api.post('/insights/query', data, { timeout: 150000 }),
+  query: (data) => api.post('/insights/query', data, { timeout: 150000 }),
   getPins: () => api.get('/insights/pins'),
   createPin: (data) => api.post('/insights/pins', data),
   deletePin: (id) => api.delete(`/insights/pins/${id}`),

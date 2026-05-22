@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     INTERVIEW_LLM_MODEL: str = "gemini/gemini-2.5-flash"     # Legacy fallback — kept for hot standby
     RESUME_LLM_MODEL: str = "gemini/gemini-2.5-flash"        # Legacy fallback — kept for hot standby
     GROQ_API_KEY: str = ""                                   # Legacy fallback — kept for hot standby
+    ELEVENLABS_API_KEY: str = ""
 
     # ── Vertex AI (Production Single Provider) ───────────────────────
     # Google Cloud DPA available, data never used for training, SLA-backed

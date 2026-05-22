@@ -13,6 +13,7 @@ import { Toaster, toast } from 'sonner';
 import UserPermissionsManager from '../components/admin/UserPermissionsManager';
 import CIATemplateBuilder from '../components/admin/CIATemplateBuilder';
 import AdminFinanceModule from '../components/admin/AdminFinanceModule';
+import HRPayrollModule from '../components/admin/HRPayrollModule';
 import InsightsChat from '../components/insights/InsightsChat';
 import InsightsCanvas from '../components/insights/InsightsCanvas';
 import CampusLayoutDesigner from '../components/campus/CampusLayoutDesigner';
@@ -46,8 +47,148 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const COMMAND_MODULES = [
+  { id: 'admissions', name: 'Admissions CRM', status: 'beta', accent: 'bg-cyan-50 text-cyan-600', route: null, work: 'Enquiries, applications, document checks' },
+  { id: 'student_lifecycle', name: 'Student Lifecycle', status: 'production', accent: 'bg-indigo-50 text-indigo-600', route: 'user-management', work: 'Profiles, batches, sections, certificates' },
+  { id: 'academics', name: 'Academics', status: 'production', accent: 'bg-emerald-50 text-emerald-600', route: null, work: 'Timetable, attendance, syllabus, outcomes' },
+  { id: 'exams', name: 'Exams', status: 'production', accent: 'bg-violet-50 text-violet-600', route: null, work: 'CIA, hall tickets, marks, transcripts' },
+  { id: 'finance', name: 'Finance', status: 'production', accent: 'bg-amber-50 text-amber-600', route: 'finance', work: 'Fees, invoices, concessions, refunds' },
+  { id: 'hr-payroll', name: 'HRMS & Payroll', status: 'beta', accent: 'bg-rose-50 text-rose-600', route: 'hr-payroll', work: 'Staff, salaries, payroll, payslips' },
+  { id: 'hostel', name: 'Hostel', status: 'production', accent: 'bg-pink-50 text-pink-600', route: 'hostel-booking', work: 'Rooms, beds, gatepass, mess billing' },
+  { id: 'transport', name: 'Transport', status: 'production', accent: 'bg-sky-50 text-sky-600', route: 'transport-admin', work: 'Routes, passes, live trips, devices' },
+  { id: 'library', name: 'Library', status: 'production', accent: 'bg-teal-50 text-teal-600', route: 'library', work: 'Catalog, issue, return, fines' },
+  { id: 'inventory', name: 'Inventory & Procurement', status: 'planned', accent: 'bg-slate-100 text-slate-600', route: null, work: 'Vendors, POs, stock, assets' },
+  { id: 'communication', name: 'Communication', status: 'beta', accent: 'bg-blue-50 text-blue-600', route: null, work: 'Announcements, notifications, parent messages' },
+  { id: 'placement-career', name: 'Placement & Career', status: 'production', accent: 'bg-purple-50 text-purple-600', route: 'placements', work: 'Drives, ATS, interviews, company prep' },
+  { id: 'alumni-industry', name: 'Alumni & Industry', status: 'beta', accent: 'bg-lime-50 text-lime-700', route: null, work: 'Mentorship, referrals, MOUs, feedback' },
+  { id: 'accreditation', name: 'Accreditation', status: 'beta', accent: 'bg-orange-50 text-orange-600', route: null, work: 'NAAC, NBA, OBE, evidence' },
+  { id: 'governance', name: 'Governance', status: 'beta', accent: 'bg-stone-100 text-stone-700', route: null, work: 'Approvals, audit, tasks, compliance' },
+  { id: 'ami', name: 'Ami AI Layer', status: 'beta', accent: 'bg-fuchsia-50 text-fuchsia-600', route: 'insights', work: 'Read-only answers, action previews, dashboards' },
+];
+
+const AdminCommandCenter = ({ navigate, setActiveTab }) => {
+  const [context, setContext] = useState<any>(null);
+  const [question, setQuestion] = useState('Show ERP module coverage and pending gaps');
+  const [answer, setAnswer] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    adminAmiAPI.contextMap().then(r => setContext(r.data)).catch(() => {});
+  }, []);
+
+  const askAmi = async () => {
+    setLoading(true);
+    try {
+      const { data } = await insightsAPI.query({
+        message: question,
+        session_history: []
+      });
+      setAnswer(data);
+      toast.success('Ami prepared a secure admin insight');
+    } catch (err: any) {
+      toast.error('Ami could not answer this query yet');
+    }
+    setLoading(false);
+  };
+
+  const openModule = (mod) => {
+    if (mod.route === 'finance' || mod.route === 'hr-payroll' || mod.route === 'insights') setActiveTab(mod.route);
+    else if (mod.route) navigate(mod.route);
+  };
+
+  const health = context?.health || { module_coverage: { production: 5, beta: 9, planned: 2 } };
+
+  return (
+    <motion.div data-testid="command-center-content" variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Production Modules', value: health.module_coverage?.production || 0, sub: 'ready for daily workflows' },
+          { label: 'Beta Modules', value: health.module_coverage?.beta || 0, sub: 'usable, needs depth' },
+          { label: 'Planned Modules', value: health.module_coverage?.planned || 0, sub: 'next build targets' },
+          { label: 'Safe Ami Actions', value: context?.safe_actions?.length || 4, sub: 'preview only, no writes' },
+        ].map((s) => (
+          <div key={s.label} className="soft-card p-5">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{s.label}</p>
+            <p className="text-3xl font-black text-slate-900 dark:text-white mt-2">{s.value}</p>
+            <p className="text-xs font-semibold text-slate-400 mt-1">{s.sub}</p>
+          </div>
+        ))}
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="soft-card p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white">Admin Command Center</h3>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">One account, every college operation, with module status and safe Ami previews.</p>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={() => setActiveTab('finance')} className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold">Finance</button>
+            <button onClick={() => setActiveTab('hr-payroll')} className="px-4 py-2 rounded-xl bg-rose-500 text-white text-sm font-bold">HRMS</button>
+            <button onClick={() => setActiveTab('insights')} className="px-4 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold">Ami</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          {COMMAND_MODULES.map((mod) => (
+            <button key={mod.id} onClick={() => openModule(mod)} className="text-left rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4 hover:-translate-y-0.5 hover:shadow-lg transition-all">
+              <div className="flex items-start justify-between gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${mod.accent}`}><Database size={18} weight="duotone" /></div>
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${mod.status === 'production' ? 'bg-emerald-50 text-emerald-600' : mod.status === 'planned' ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600'}`}>{mod.status}</span>
+              </div>
+              <p className="font-black text-slate-900 dark:text-white mt-3">{mod.name}</p>
+              <p className="text-xs font-semibold text-slate-400 mt-1 leading-relaxed">{mod.work}</p>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-2 soft-card p-6">
+          <h4 className="font-black text-slate-900 dark:text-white flex items-center gap-2"><Sparkle weight="fill" className="text-indigo-500" /> Ask Admin Ami</h4>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Read-only, tenant-scoped answers with action previews.</p>
+          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} className="soft-input w-full min-h-28 text-sm" />
+          <button onClick={askAmi} disabled={loading || !question.trim()} className="mt-3 w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-black disabled:opacity-50">
+            {loading ? 'Ami is checking...' : 'Ask Ami'}
+          </button>
+        </div>
+        <div className="lg:col-span-3 soft-card p-6">
+          <h4 className="font-black text-slate-900 dark:text-white mb-3">Ami Response</h4>
+          {!answer ? (
+            <div className="h-52 rounded-2xl bg-slate-50 dark:bg-white/[0.03] border border-dashed border-slate-200 dark:border-white/10 flex items-center justify-center text-sm font-bold text-slate-400">Ask a question to see read-only admin intelligence.</div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 leading-relaxed">{answer.summary}</p>
+              {answer.data?.length > 0 && (
+                <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-white/10 max-h-80">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/10">
+                        {answer.columns?.map((col) => (
+                          <th key={col} className="px-4 py-3 text-left font-bold text-slate-500 dark:text-slate-400 capitalize">{col.replace(/_/g, ' ')}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {answer.data.map((row, i) => (
+                        <tr key={i} className="border-b border-slate-50 dark:border-white/5 last:border-0 hover:bg-slate-50/50 dark:hover:bg-white/[0.02]">
+                          {answer.columns?.map((col) => (
+                            <td key={col} className="px-4 py-3 font-semibold text-slate-500 dark:text-slate-300">{String(row[col] ?? '')}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const AdminDashboard = ({ navigate, user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'command-center');
   const [showProfile, setShowProfile] = useState(false);
   useEffect(() => { sessionStorage.setItem('admin_tab', activeTab); }, [activeTab]);
   const [dashboardData, setDashboardData] = useState(null);
@@ -244,11 +385,13 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
         {/* Tabs */}
         <div className="flex overflow-x-auto gap-2 p-1.5 bg-slate-100 dark:bg-white/5 rounded-xl mb-8 hide-scrollbar">
             {[
+              { id: 'command-center', label: 'Command Center' },
               { id: 'overview', label: 'Overview' }, 
               { id: 'metrics', label: 'Metrics' },
               { id: 'student-profiles', label: 'Student Profiles' },
               { id: 'results', label: 'Student Results' },
               { id: 'finance', label: 'Fee Invoicing' },
+              { id: 'hr-payroll', label: 'HR & Payroll' },
               { id: 'permissions', label: 'Permission Matrix' },
               { id: 'cia-builder', label: 'CIA Engine' },
               { id: 'experts', label: 'Expert Management' },
@@ -579,6 +722,18 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
           <motion.div data-testid="finance-content" variants={containerVariants} initial="hidden" animate="show">
             <motion.div variants={itemVariants}>
               <AdminFinanceModule collegeId={user?.college_id} />
+            </motion.div>
+          </motion.div>
+        )}
+
+        {activeTab === 'command-center' && (
+          <AdminCommandCenter navigate={navigate} setActiveTab={setActiveTab} />
+        )}
+
+        {activeTab === 'hr-payroll' && (
+          <motion.div data-testid="hr-payroll-content" variants={containerVariants} initial="hidden" animate="show">
+            <motion.div variants={itemVariants}>
+              <HRPayrollModule />
             </motion.div>
           </motion.div>
         )}

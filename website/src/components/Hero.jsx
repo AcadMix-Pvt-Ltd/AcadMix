@@ -41,7 +41,7 @@ const Hero = () => {
           >
             <span className="badge badge-indigo font-mono" style={{ marginBottom: '1.5rem', display: 'inline-flex' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgb(var(--emerald))', display: 'inline-block' }} />
-              Now Live — v2.0 Multi-Tenant Architecture
+              Placement-first AI Smart Campus ERP
             </span>
           </motion.div>
 
@@ -58,9 +58,8 @@ const Hero = () => {
               marginBottom: '1.5rem',
             }}
           >
-            The Complete{' '}
-            <span className="text-gradient">College Management</span>{' '}
-            Platform
+            Turn your college into an{' '}
+            <span className="text-gradient">AI-native smart campus</span>
           </motion.h1>
 
           {/* Subtitle */}
@@ -76,7 +75,7 @@ const Hero = () => {
               margin: '0 auto 2.5rem',
             }}
           >
-            Quizzes, exams, results, placements, hostel management, AI-powered career tools — all unified under one platform with role-based access for every stakeholder.
+            AcadMix helps colleges improve placements, automate academic and compliance workflows, and give students a gamified, career-focused campus experience through Ami, the AcadMix Intelligence layer.
           </motion.p>
 
           {/* CTAs */}
@@ -87,7 +86,7 @@ const Hero = () => {
             style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}
           >
             <a href="#contact" className="btn btn-primary btn-lg">
-              Get Started <ArrowRight size={20} weight="bold" />
+              Book a Placement Demo <ArrowRight size={20} weight="bold" />
             </a>
             <a href="https://demo.acadmix.org" className="btn btn-secondary btn-lg" target="_blank" rel="noopener noreferrer">
               <Play size={18} weight="fill" /> Live Demo
@@ -113,22 +112,22 @@ const Hero = () => {
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgb(var(--emerald))' }} />
-              AI-Powered
+              Ami Intelligence
             </span>
             <span style={{ width: 1, height: 16, background: 'rgba(var(--border), .5)' }} />
             <span style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgb(var(--indigo))' }} />
-              Multi-Tenant
+              Placement Uplift
             </span>
             <span style={{ width: 1, height: 16, background: 'rgba(var(--border), .5)' }} />
             <span style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgb(var(--purple))' }} />
-              Role-Based Access
+              Smart Campus ERP
             </span>
             <span style={{ width: 1, height: 16, background: 'rgba(var(--border), .5)' }} />
             <span style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgb(var(--teal))' }} />
-              Proctored Exams
+              NAAC / NBA / NIRF Ready
             </span>
           </motion.div>
         </div>
@@ -169,10 +168,10 @@ const Hero = () => {
             {/* Mock dashboard content */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
               {[
-                { label: 'Active Students', value: '2,847', color: 'var(--indigo)', growth: '+12%' },
-                { label: 'Quizzes Today', value: '24', color: 'var(--teal)', growth: '+5' },
-                { label: 'Pass Rate', value: '87.3%', color: 'var(--emerald)', growth: '+2.1%' },
-                { label: 'Placements', value: '156', color: 'var(--purple)', growth: '+23' },
+                { label: 'Placement Ready', value: '1,248', color: 'var(--indigo)', growth: '+18%' },
+                { label: 'AI Interviews', value: '5/mo', color: 'var(--teal)', growth: 'free per student' },
+                { label: 'Ami Readiness', value: '87.3%', color: 'var(--emerald)', growth: '+2.1%' },
+                { label: 'Campus Drives', value: '156', color: 'var(--purple)', growth: '+23' },
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -193,7 +192,7 @@ const Hero = () => {
                     {stat.value}
                   </div>
                   <div style={{ fontSize: '.7rem', fontWeight: 600, color: 'rgb(var(--emerald))', marginTop: '.375rem' }}>
-                    {stat.growth} this month
+                    {stat.growth}
                   </div>
                 </motion.div>
               ))}

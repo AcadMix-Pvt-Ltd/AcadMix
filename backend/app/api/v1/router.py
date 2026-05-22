@@ -8,7 +8,7 @@ from app.routers import (
     leaderboard, dashboards, marks_extra, timetable_extra, announcements, challenges, industry, tpo, fees, webhooks,
     interview, resume, hostel, career_tools, iot_webhooks, transport, transport_admin, library,
     visitors, websocket, notifications, audit, insights, pre_enroll, modules, resume_vault, outcomes, assessments, placement_prep, accreditation,
-    campus, flashcards, ai_study, validation
+    campus, flashcards, ai_study, validation, hr_payroll
 )
 from app.api.v1.endpoints import syllabus as syllabus_endpoints
 from app.api.v1.endpoints import simulation as simulation_endpoints
@@ -34,6 +34,7 @@ api_router.include_router(results.router, tags=["results"])
 api_router.include_router(attempts.router, tags=["attempts"])
 api_router.include_router(tpo.router, tags=["tpo"])
 api_router.include_router(fees.router, tags=["fees"])
+api_router.include_router(hr_payroll.router, tags=["hr_payroll"])
 api_router.include_router(interview.router, tags=["interview_warroom"])
 api_router.include_router(resume.router, tags=["interview_warroom"])
 api_router.include_router(placement_prep.router, tags=["placement_prep"])

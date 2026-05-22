@@ -686,21 +686,24 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const dragConstraintsRef = useRef(null);
 
   // Refs
-  const recognitionRef = useRef(null);
-  const synthRef = useRef(window.speechSynthesis);
-  const silenceTimerRef = useRef(null);
-  const timerRef = useRef(null);
+  const recognitionRef = useRef<any>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const silenceTimerRef = useRef<any>(null);
+  const timerRef = useRef<any>(null);
   const transcriptRef = useRef('');
   const prevDisplayedRef = useRef(''); // Tracks last full displayed text (final+interim) to detect real changes
   const isSpeakingRef = useRef(false);
   const phaseRef = useRef('setup');
-  const interviewIdRef = useRef(null); // Avoids stale closure in submitAnswer
+  const interviewIdRef = useRef<any>(null); // Avoids stale closure in submitAnswer
+  const stopListeningAndTranscribeRef = useRef<(() => void) | null>(null);
   
   // Audio Web API Refs
-  const audioContextRef = useRef(null);
-  const analyserRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const sourceNodeRef = useRef(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const { isDark } = useTheme();
 
@@ -750,7 +753,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { interviewIdRef.current = interviewId; }, [interviewId]);
 
-  // ── Stop Listening (defined first — no deps) ──
+  // ── Stop Listening ──
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
@@ -759,43 +762,70 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
   }, []);
 
-  // ── Speech Synthesis (AI speaks) ──
+  // ── Speech Synthesis (AI speaks via ElevenLabs backend) ──
   const speakText = useCallback((text) => {
-    return new Promise((resolve) => {
-      if (!synthRef.current) { resolve(); return; }
-      synthRef.current.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
-      const voices = synthRef.current.getVoices();
-      const preferred = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) || voices.find(v => v.lang.startsWith('en'));
-      if (preferred) utterance.voice = preferred;
+    return new Promise<void>(async (resolve) => {
+      // 1. Interrupt any active playback
+      if (currentAudioRef.current) {
+        try { currentAudioRef.current.pause(); } catch {}
+        currentAudioRef.current = null;
+      }
 
-      let resolved = false;
-      const safeResolve = () => {
-        if (!resolved) {
-          resolved = true;
-          setIsSpeaking(false);
+      setIsSpeaking(true);
+      setOrbState('speaking');
+      setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
+      stopListening();
+
+      try {
+        const activeId = interviewIdRef.current;
+        if (!activeId) {
           resolve();
+          return;
         }
-      };
 
-      const fallbackMs = Math.max(3000, text.length * 80 + 2000);
-      const tt = setTimeout(safeResolve, fallbackMs);
+        // Call our premium ElevenLabs audio streaming endpoint
+        const response = await interviewAPI.speak(activeId, text);
+        const audioBlob = response.data; // Response type: blob
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const audio = new Audio(audioUrl);
+        currentAudioRef.current = audio;
 
-      utterance.onstart = () => {
-        setIsSpeaking(true);
-        setOrbState('speaking');
-        setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
-        stopListening();
-      };
-      utterance.onend = () => { clearTimeout(tt); safeResolve(); };
-      utterance.onerror = () => { clearTimeout(tt); safeResolve(); };
-      synthRef.current.speak(utterance);
+        let resolved = false;
+        const safeResolve = () => {
+          if (!resolved) {
+            resolved = true;
+            setIsSpeaking(false);
+            URL.revokeObjectURL(audioUrl);
+            currentAudioRef.current = null;
+            resolve();
+          }
+        };
+
+        const fallbackMs = Math.max(3000, text.length * 80 + 2000);
+        const timeoutId = setTimeout(safeResolve, fallbackMs);
+
+        audio.onended = () => {
+          clearTimeout(timeoutId);
+          safeResolve();
+        };
+
+        audio.onerror = (e) => {
+          console.error("ElevenLabs audio streaming error:", e);
+          clearTimeout(timeoutId);
+          safeResolve();
+        };
+
+        await audio.play();
+      } catch (err) {
+        console.error("ElevenLabs Speak fallback due to error:", err);
+        setIsSpeaking(false);
+        resolve();
+      }
     });
   }, [stopListening]);
 
-  // ── Speech Recognition (Student speaks) — uses refs to avoid stale closures ──
+  // ── Speech Recognition & MediaRecorder (Student speaks) ──
   const startListening = useCallback(async () => {
     // 1. Initialize Web Audio API for visualizer & restart camera
     if (!audioContextRef.current) {
@@ -807,8 +837,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         mediaStreamRef.current = stream;
         
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContextRef.current = new AudioContext();
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new AudioContextClass();
         analyserRef.current = audioContextRef.current.createAnalyser();
         analyserRef.current.fftSize = 256; // 128 bins — better frequency resolution for speech
         
@@ -822,9 +852,33 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       audioContextRef.current.resume();
     }
 
-    // 2. Setup Speech Recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { toast.error('Speech recognition not supported in this browser. Please use Chrome.'); return; }
+    // 2. Prepare MediaRecorder for High-Fidelity Audio capture
+    if (mediaStreamRef.current) {
+      try {
+        audioChunksRef.current = [];
+        const recorder = new MediaRecorder(mediaStreamRef.current, { mimeType: 'audio/webm' });
+        mediaRecorderRef.current = recorder;
+        
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
+        };
+        
+        recorder.start();
+      } catch (err) {
+        console.error("Failed to start MediaRecorder capture:", err);
+      }
+    }
+
+    // 3. Setup browser Speech Recognition ONLY for real-time visual student transcript text feedback
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) { 
+      // If SpeechRecognition isn't supported, we still permit recording (will transcribe purely via Scribe)
+      setIsListening(true);
+      setOrbState('listening');
+      return; 
+    }
 
     if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
 
@@ -832,14 +886,17 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 3; // Chrome picks best hypothesis from multiple candidates
+    recognition.maxAlternatives = 3;
 
     recognition.onstart = () => { setIsListening(true); setOrbState('listening'); };
 
-    recognition.onresult = (event) => {
-      // If AI is speaking and student starts talking, interrupt
-      if (isSpeakingRef.current || synthRef.current?.speaking) {
-        synthRef.current.cancel();
+    recognition.onresult = (event: any) => {
+      // If AI starts speaking, interrupt it
+      if (isSpeakingRef.current || currentAudioRef.current) {
+        if (currentAudioRef.current) {
+          try { currentAudioRef.current.pause(); } catch {}
+          currentAudioRef.current = null;
+        }
         setIsSpeaking(false);
         setOrbState('interrupted');
         setTimeout(() => setOrbState('listening'), 300);
@@ -860,19 +917,18 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       setTranscript(displayed);
 
       // Only reset silence timer when the DISPLAYED text actually changed
-      // This prevents ambient noise / repeated interim events from infinitely resetting the countdown
       if (displayed !== prevDisplayedRef.current) {
         prevDisplayedRef.current = displayed;
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = setTimeout(() => {
           if (transcriptRef.current.trim()) {
-            submitAnswer(transcriptRef.current.trim());
+            stopListeningAndTranscribeRef.current?.();
           }
         }, 4000);
       }
     };
 
-    recognition.onerror = (e) => {
+    recognition.onerror = (e: any) => {
       if (e.error !== 'no-speech' && e.error !== 'aborted') {
         console.error('Speech recognition error:', e.error);
       }
@@ -880,7 +936,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
     recognition.onend = () => {
       setIsListening(false);
-      // Auto-restart if still in active phase and AI is not speaking
+      // Auto-restart if still active phase and AI is not speaking
       if (phaseRef.current === 'active' && !isSpeakingRef.current) {
         try { recognition.start(); } catch {}
       }
@@ -894,7 +950,10 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   // ── End Interview (defined before submitAnswer) ──
   const handleEndInterview = useCallback(async () => {
     stopListening();
-    synthRef.current?.cancel();
+    if (currentAudioRef.current) {
+      try { currentAudioRef.current.pause(); } catch {}
+      currentAudioRef.current = null;
+    }
     cleanupAudio(); // Securely close audio hardware streams
     setPhase('ending');
     setOrbState('evaluating');
@@ -955,6 +1014,63 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     }
   }, [stopListening, speakText, startListening, maxQuestions, handleEndInterview]);
 
+  // ── Stop Listening and Transcribe (High-Fidelity STT) ──
+  const stopListeningAndTranscribe = useCallback(async () => {
+    stopListening();
+    setOrbState('thinking');
+
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      const text = transcriptRef.current.trim();
+      if (text) {
+        submitAnswer(text);
+      }
+      return;
+    }
+
+    const audioBlobPromise = new Promise<Blob>((resolve) => {
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        resolve(blob);
+      };
+    });
+
+    try {
+      recorder.stop();
+      const blob = await audioBlobPromise;
+      
+      const currentInterviewId = interviewIdRef.current;
+      if (!currentInterviewId) return;
+
+      setOrbState('thinking');
+      // Transcribe via ElevenLabs Scribe STT
+      const response = await interviewAPI.transcribe(currentInterviewId, blob);
+      const text = response.data?.text || '';
+      
+      const finalAnswer = text.trim() || transcriptRef.current.trim();
+      if (finalAnswer) {
+        submitAnswer(finalAnswer);
+      } else {
+        setOrbState('listening');
+        startListening();
+      }
+    } catch (err) {
+      console.error("Transcription failed:", err);
+      const finalAnswer = transcriptRef.current.trim();
+      if (finalAnswer) {
+        submitAnswer(finalAnswer);
+      } else {
+        setOrbState('listening');
+        startListening();
+      }
+    }
+  }, [stopListening, submitAnswer, startListening]);
+
+  // Sync ref to break circular dependency
+  useEffect(() => {
+    stopListeningAndTranscribeRef.current = stopListeningAndTranscribe;
+  }, [stopListeningAndTranscribe]);
+
   // ── Start Interview ──
   const handleStart = async (hardwareIds) => {
     if (!sessionConfig?.interview_type) { navigate('interview-warroom'); return; }
@@ -1002,7 +1118,10 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     return () => {
       stopListening();
       cleanupAudio();
-      synthRef.current?.cancel();
+      if (currentAudioRef.current) {
+        try { currentAudioRef.current.pause(); } catch {}
+        currentAudioRef.current = null;
+      }
       clearInterval(timerRef.current);
     };
   }, [stopListening, cleanupAudio]);

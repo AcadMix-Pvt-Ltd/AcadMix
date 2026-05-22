@@ -121,11 +121,16 @@ class StudentFeeInvoice(Base, SoftDeleteMixin):
     id = Column(String, primary_key=True, index=True, default=generate_uuid)
     college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
     student_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    invoice_no = Column(String, nullable=True, index=True)
     fee_type = Column(String, nullable=False) # e.g. 'Tuition Fee 2026'
     total_amount = Column(Float, nullable=False)
     academic_year = Column(String, nullable=False)
     due_date = Column(DateTime(timezone=True), nullable=True)
     description = Column(String, nullable=True)
+    status = Column(String, nullable=False, server_default=text("'unpaid'"))
+    created_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    cancelled_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class FeePayment(Base, SoftDeleteMixin):
@@ -139,6 +144,163 @@ class FeePayment(Base, SoftDeleteMixin):
     transaction_date = Column(DateTime(timezone=True), nullable=True)
     transaction_reference = Column(String, nullable=True) # Razorpay order_id / payment_id
     receipt_url = Column(String, nullable=True)
+    receipt_no = Column(String, nullable=True, index=True)
+    payment_mode = Column(String, nullable=False, server_default=text("'razorpay'"))
+    collected_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    cashier_session_id = Column(String, ForeignKey("cashier_sessions.id", ondelete="SET NULL"), nullable=True)
+    verification_token = Column(String, nullable=True, index=True)
+    remarks = Column(Text, nullable=True)
+    received_from = Column(String, nullable=True)
+
+
+class FeeStructure(Base, SoftDeleteMixin):
+    __tablename__ = "fee_structures"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String, nullable=False)
+    academic_year = Column(String, nullable=False, index=True)
+    program_id = Column(String, ForeignKey("programs.id", ondelete="SET NULL"), nullable=True)
+    department = Column(String, nullable=True)
+    batch = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    due_date = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String, nullable=False, server_default=text("'draft'"))
+    created_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class FeeStructureItem(Base, SoftDeleteMixin):
+    __tablename__ = "fee_structure_items"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    structure_id = Column(String, ForeignKey("fee_structures.id", ondelete="CASCADE"), nullable=False, index=True)
+    fee_head = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    refundable = Column(Boolean, nullable=False, server_default=text("false"))
+    sort_order = Column(Integer, nullable=False, server_default=text("0"))
+
+
+class FeeConcession(Base, SoftDeleteMixin):
+    __tablename__ = "fee_concessions"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    invoice_id = Column(String, ForeignKey("student_fee_invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    amount = Column(Float, nullable=False)
+    reason = Column(Text, nullable=False)
+    status = Column(String, nullable=False, server_default=text("'pending'"))
+    requested_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class FeeRefund(Base, SoftDeleteMixin):
+    __tablename__ = "fee_refunds"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    invoice_id = Column(String, ForeignKey("student_fee_invoices.id", ondelete="CASCADE"), nullable=False, index=True)
+    payment_id = Column(String, ForeignKey("fee_payments.id", ondelete="SET NULL"), nullable=True)
+    amount = Column(Float, nullable=False)
+    reason = Column(Text, nullable=False)
+    status = Column(String, nullable=False, server_default=text("'pending'"))
+    requested_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    processed_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    processed_at = Column(DateTime(timezone=True), nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class CashierSession(Base, SoftDeleteMixin):
+    __tablename__ = "cashier_sessions"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    cashier_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    opened_at = Column(DateTime(timezone=True), server_default=func.now())
+    closed_at = Column(DateTime(timezone=True), nullable=True)
+    opening_cash = Column(Float, nullable=False, server_default=text("0"))
+    expected_cash = Column(Float, nullable=False, server_default=text("0"))
+    actual_cash = Column(Float, nullable=True)
+    status = Column(String, nullable=False, server_default=text("'open'"))
+    notes = Column(Text, nullable=True)
+
+
+class StaffProfile(Base, SoftDeleteMixin):
+    __tablename__ = "staff_profiles"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    employee_code = Column(String, nullable=False, index=True)
+    department = Column(String, nullable=True)
+    designation = Column(String, nullable=True)
+    employment_type = Column(String, nullable=False, server_default=text("'full_time'"))
+    joining_date = Column(Date, nullable=True)
+    bank_account = Column(String, nullable=True)
+    ifsc = Column(String, nullable=True)
+    pan = Column(String, nullable=True)
+    pf_number = Column(String, nullable=True)
+    esi_number = Column(String, nullable=True)
+    status = Column(String, nullable=False, server_default=text("'active'"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("college_id", "user_id", name="uq_staff_profile_user"),
+        UniqueConstraint("college_id", "employee_code", name="uq_staff_profile_employee_code"),
+    )
+
+
+class SalaryStructure(Base, SoftDeleteMixin):
+    __tablename__ = "salary_structures"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    staff_id = Column(String, ForeignKey("staff_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    basic = Column(Float, nullable=False, server_default=text("0"))
+    hra = Column(Float, nullable=False, server_default=text("0"))
+    da = Column(Float, nullable=False, server_default=text("0"))
+    allowances = Column(Float, nullable=False, server_default=text("0"))
+    pf = Column(Float, nullable=False, server_default=text("0"))
+    esi = Column(Float, nullable=False, server_default=text("0"))
+    tds = Column(Float, nullable=False, server_default=text("0"))
+    other_deductions = Column(Float, nullable=False, server_default=text("0"))
+    effective_from = Column(Date, nullable=True)
+    status = Column(String, nullable=False, server_default=text("'active'"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PayrollRun(Base, SoftDeleteMixin):
+    __tablename__ = "payroll_runs"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    month = Column(String, nullable=False, index=True)
+    status = Column(String, nullable=False, server_default=text("'draft'"))
+    generated_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    generated_at = Column(DateTime(timezone=True), server_default=func.now())
+    locked_by = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    locked_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("college_id", "month", name="uq_payroll_run_month"),
+    )
+
+
+class Payslip(Base, SoftDeleteMixin):
+    __tablename__ = "payslips"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_id = Column(String, ForeignKey("payroll_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    staff_id = Column(String, ForeignKey("staff_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    gross_pay = Column(Float, nullable=False, server_default=text("0"))
+    deductions = Column(Float, nullable=False, server_default=text("0"))
+    net_pay = Column(Float, nullable=False, server_default=text("0"))
+    components = Column(JSONB, nullable=False, server_default='{}')
+    status = Column(String, nullable=False, server_default=text("'draft'"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("run_id", "staff_id", name="uq_payslip_run_staff"),
+    )
 
 
 class ActivityPermission(Base, SoftDeleteMixin):

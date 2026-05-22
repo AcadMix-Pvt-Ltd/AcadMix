@@ -399,6 +399,86 @@ async def generate_resume_docx(
     )
 
 
+@router.post("/student/resume/generate")
+async def generate_resume(
+    body: dict = Body(default={}),
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Generate a resume in the requested format. DOCX uses the full builder; PDF is a lightweight ATS preview export."""
+    template = body.get("template", "classic")
+    fmt = (body.get("format") or "docx").lower()
+    if fmt == "docx":
+        try:
+            buffer, filename = await resume_builder_service.generate_docx(user, session, template)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    if fmt != "pdf":
+        raise HTTPException(status_code=400, detail="Supported formats: docx, pdf")
+
+    profile = await resume_profile_service.get_resume_profile(user, session)
+    pdf_bytes = _minimal_resume_pdf(profile)
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="AcadMix_Resume.pdf"'},
+    )
+
+
+def _minimal_resume_pdf(profile: dict) -> bytes:
+    auto = profile.get("auto_filled", {}) if profile else {}
+    editable = profile.get("editable", {}) if profile else {}
+    lines = [
+        auto.get("name") or "AcadMix Resume",
+        " | ".join([v for v in [editable.get("email") or auto.get("email"), editable.get("phone") or auto.get("phone"), editable.get("location")] if v]),
+        "",
+        "Summary",
+        editable.get("summary") or "",
+        "",
+        "Education",
+        " ".join([auto.get("department") or "", auto.get("institution") or "", auto.get("batch") or ""]).strip(),
+        "",
+        "Skills",
+        ", ".join(sum((editable.get("skills", {}).get(k, []) for k in ["languages", "frameworks", "tools", "databases"]), [])),
+    ]
+    y = 760
+    stream = ["BT", "/F1 11 Tf", "72 780 Td"]
+    first = True
+    for line in lines[:40]:
+        safe = str(line).replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")[:110]
+        if first:
+            stream.append(f"({safe}) Tj")
+            first = False
+        else:
+            y -= 16
+            stream.append(f"0 -16 Td ({safe}) Tj")
+    stream.append("ET")
+    content = "\n".join(stream).encode("latin-1", "ignore")
+    objects = [
+        b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+        b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj",
+        b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >> endobj",
+        b"4 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj",
+        b"5 0 obj << /Length " + str(len(content)).encode() + b" >> stream\n" + content + b"\nendstream endobj",
+    ]
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for obj in objects:
+        offsets.append(len(pdf))
+        pdf.extend(obj + b"\n")
+    xref = len(pdf)
+    pdf.extend(f"xref\n0 {len(objects)+1}\n0000000000 65535 f \n".encode())
+    for off in offsets[1:]:
+        pdf.extend(f"{off:010d} 00000 n \n".encode())
+    pdf.extend(f"trailer << /Size {len(objects)+1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode())
+    return bytes(pdf)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Gamified Progress Analytics
 # ═══════════════════════════════════════════════════════════════════════════════

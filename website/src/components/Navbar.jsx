@@ -85,7 +85,7 @@ const Navbar = ({ isDark, toggleTheme }) => {
 
             {/* CTA */}
             <a href="https://demo.acadmix.org" className="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
-              Try Demo
+              See Ami
             </a>
           </div>
 
@@ -170,7 +170,7 @@ const Navbar = ({ isDark, toggleTheme }) => {
               target="_blank"
               rel="noopener noreferrer"
             >
-              Try Demo
+              See Ami
             </a>
           </motion.div>
         )}

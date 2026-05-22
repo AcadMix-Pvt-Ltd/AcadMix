@@ -52,7 +52,7 @@ const CTA = () => {
             {/* Left: Info */}
             <div>
               <span className="badge badge-indigo" style={{ marginBottom: '1.5rem', display: 'inline-flex' }}>
-                Get Started Today
+                Start with Placement Uplift
               </span>
               <h2 style={{
                 fontSize: '2.25rem',
@@ -61,8 +61,8 @@ const CTA = () => {
                 lineHeight: 1.15,
                 marginBottom: '1rem',
               }}>
-                Ready to transform your{' '}
-                <span className="text-gradient">college management?</span>
+                Ready to turn your college into a{' '}
+                <span className="text-gradient">smart campus?</span>
               </h2>
               <p style={{
                 fontSize: '1rem',
@@ -70,15 +70,15 @@ const CTA = () => {
                 lineHeight: 1.7,
                 marginBottom: '2rem',
               }}>
-                Get your own <span className="font-mono" style={{ color: 'rgb(var(--indigo))', fontWeight: 600 }}>yourCollege.acadmix.org</span> subdomain in minutes. Full setup, data migration support, and dedicated onboarding included.
+                Start with a leadership demo focused on placement readiness, Ami-powered student experiences, and the path to a full AI-native campus ERP.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '.75rem' }}>
                 {[
-                  'Free 30-day trial with full features',
-                  'Dedicated onboarding specialist',
-                  'Data migration from existing systems',
-                  'No credit card required to start',
+                  'Placement-readiness walkthrough for your leadership team',
+                  'Ami career tools and 5 free AI mock interviews per student',
+                  'NIRF, NBA, NAAC, and NEP reporting workflows',
+                  'Smart campus expansion plan across modules',
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.625rem' }}>
                     <CheckCircle size={20} weight="fill" style={{ color: 'rgb(var(--emerald))', flexShrink: 0 }} />
@@ -212,7 +212,7 @@ const CTA = () => {
                     <textarea
                       value={formData.message}
                       onChange={e => setFormData(p => ({ ...p, message: e.target.value }))}
-                      placeholder="Tell us about your requirements..."
+                      placeholder="Tell us about your placement goals, ERP needs, or smart campus plans..."
                       rows={3}
                       style={{
                         width: '100%',
@@ -240,7 +240,7 @@ const CTA = () => {
                     className="btn btn-primary"
                     style={{ width: '100%', marginTop: '.5rem' }}
                   >
-                    Book a Demo <PaperPlaneTilt size={18} weight="fill" />
+                    Book a Placement Demo <PaperPlaneTilt size={18} weight="fill" />
                   </motion.button>
                 </form>
               )}

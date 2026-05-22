@@ -2,6 +2,7 @@ import asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.models.core import College, User, UserProfile
@@ -13,15 +14,33 @@ async def seed_quick_logins():
 
     async with async_session() as db:
         print("Looking for base College...")
-        college_r = await db.execute(select(College).where(College.name == settings.COLLEGE_NAME))
-        college = college_r.scalars().first()
-        
+        college = None
+        for name in [settings.COLLEGE_NAME, "AcadMix Institute of Technology & Sciences"]:
+            college_r = await db.execute(select(College).where(College.name == name))
+            college = college_r.scalars().first()
+            if college:
+                break
+                
         if not college:
-            print(f"Error: College '{settings.COLLEGE_NAME}' not found. Start Uvicorn first so it can seed it.")
+            college_r = await db.execute(select(College).where(College.id == "aits-hyd-001"))
+            college = college_r.scalars().first()
+            
+        if not college:
+            college_r = await db.execute(select(College).where(College.id != "acadmix-platform").limit(1))
+            college = college_r.scalars().first()
+            
+        if not college:
+            college_r = await db.execute(select(College).limit(1))
+            college = college_r.scalars().first()
+            
+        if not college:
+            print("Error: No college found in the database. Please run the main tenant seeder first.")
             return
 
+        print(f"Targeting College: {college.name} (id={college.id})")
+
         roles_to_seed = [
-            {"role": "student", "roll_number": "22WJ8A6745", "password": "22WJ8A6745", "email": "student@gni.edu", "name": "Aarav Sharma", "department": "DS", "batch": "2026", "section": "A"},
+            {"role": "student", "roll_number": "22WJ8A6745", "password": "student123", "email": "student@gni.edu", "name": "Aarav Sharma", "department": "DS", "batch": "2026", "section": "A"},
             {"role": "teacher", "roll_number": "T001", "password": "teacher123", "email": "t001@gni.edu", "name": "Dr. Rekha Verma", "department": "DS"},
             {"role": "hod", "roll_number": "HOD001", "password": "hod123", "email": "hod001@gni.edu", "name": "Dr. Suresh Nair", "department": "DS"},
             {"role": "exam_cell", "roll_number": "EC001", "password": "examcell123", "email": "ec001@gni.edu", "name": "Priya Reddy", "department": "Admin"},
@@ -38,6 +57,18 @@ async def seed_quick_logins():
             {"role": "librarian", "roll_number": "LIBRARIAN001", "password": "librarian123", "email": "librarian001@gni.edu", "name": "Geeta Library", "department": "Library"},
             {"role": "security", "roll_number": "SECURITY001", "password": "security123", "email": "security001@gni.edu", "name": "Ram Guard", "department": "Security"}
         ]
+
+        # Cleanup existing users matching the seed emails first to allow safe re-runs
+        seed_emails = [d["email"] for d in roles_to_seed]
+        existing_users_q = await db.execute(select(User).where(User.email.in_(seed_emails)))
+        existing_users = existing_users_q.scalars().all()
+        if existing_users:
+            print(f"Cleaning up {len(existing_users)} existing user records matching quick login emails...")
+            for eu in existing_users:
+                # Profile is cascading deleted if ForeignKey constraint is set or delete manually
+                await db.execute(text("DELETE FROM user_profiles WHERE user_id = :uid"), {"uid": eu.id})
+                await db.delete(eu)
+            await db.flush()
 
         count = 0
         for data in roles_to_seed:

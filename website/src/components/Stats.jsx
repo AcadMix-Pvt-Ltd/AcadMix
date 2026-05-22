@@ -18,9 +18,9 @@ function useCounter(end, duration = 2000, startCounting = false) {
 }
 
 const stats = [
-  { value: 14, suffix: '+', label: 'User Roles', desc: 'Tailored dashboards for every stakeholder' },
-  { value: 50, suffix: '+', label: 'API Endpoints', desc: 'Complete RESTful backend coverage' },
-  { value: 8, suffix: '+', label: 'Modules', desc: 'Quizzes, placements, hostel & more' },
+  { value: 5, suffix: '/mo', label: 'Free AI Interviews', desc: 'Monthly Ami mock interviews per student' },
+  { value: 14, suffix: '+', label: 'Campus Roles', desc: 'Tailored workflows for every stakeholder' },
+  { value: 8, suffix: '+', label: 'Smart Modules', desc: 'Placements, academics, hostel, transport & more' },
   { value: 99.9, suffix: '%', label: 'Uptime SLA', desc: 'Enterprise-grade reliability' },
 ];
 

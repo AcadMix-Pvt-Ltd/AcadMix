@@ -14,18 +14,14 @@ logger = logging.getLogger("acadmix.voice_service")
 # Curated set of clear, authoritative, professional ElevenLabs voices
 # suitable for mock interview scenarios (mix of male & female).
 INTERVIEW_VOICES = [
-    {"id": "21m00Tcm4TlvDq8ikWAM", "name": "Rachel",  "gender": "female"},  # Warm, professional
     {"id": "EXAVITQu4vr4xnSDxMaL", "name": "Bella",   "gender": "female"},  # Confident, clear
     {"id": "ErXwobaYiN019PkySvjV", "name": "Antoni",  "gender": "male"},    # Authoritative
     {"id": "VR6AewLTigWG4xSOukaG", "name": "Arnold",  "gender": "male"},    # Deep, commanding
     {"id": "pNInz6obpgDQGcFmaJgB", "name": "Adam",    "gender": "male"},    # Professional, neutral
-    {"id": "yoZ06aMxZJJ28mfd3POQ", "name": "Sam",     "gender": "male"},    # Calm, articulate
-    {"id": "ThT5KcBeYPX3keUQqHPh", "name": "Dorothy", "gender": "female"},  # Mature, professional
-    {"id": "jBpfuIE2acCO8z3wKNLl", "name": "Gigi",    "gender": "female"},  # Energetic, clear
 ]
 
-# Legacy default kept for backward compatibility
-DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+# Default voice (first in pool)
+DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
 
 
 def get_random_interview_voice() -> str:
@@ -55,7 +51,7 @@ async def text_to_speech_stream(text: str, voice_id: str | None = None) -> Async
     }
     payload = {
         "text": text,
-        "model_id": "eleven_monolingual_v1",
+        "model_id": "eleven_flash_v2_5",
         "voice_settings": {
             "stability": 0.5,
             "similarity_boost": 0.75

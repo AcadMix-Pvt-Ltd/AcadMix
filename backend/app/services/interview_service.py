@@ -180,6 +180,12 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
     #     raise HTTPException(status_code=429, detail=f"Monthly interview quota exceeded ({settings.MOCK_INTERVIEW_MONTHLY_QUOTA}/month). Resets next month.")
 
     interview_type = req.get("interview_type", "technical")
+    mode = req.get("mode") or interview_type
+    round_type = req.get("round_type") or interview_type
+    branch = req.get("branch")
+    company_id = req.get("company_id")
+    resume_id = req.get("resume_id")
+    strictness = req.get("strictness", "balanced")
     target_role = req.get("target_role", "Software Developer")
     target_company = req.get("target_company")
     difficulty = req.get("difficulty", "intermediate")
@@ -194,9 +200,10 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
             models.ResumeScore.is_deleted == False,
             models.ResumeScore.parsed_text.isnot(None),
         )
-        .order_by(models.ResumeScore.created_at.desc())
-        .limit(1)
     )
+    if resume_id:
+        resume_stmt = resume_stmt.where(models.ResumeScore.id == resume_id)
+    resume_stmt = resume_stmt.order_by(models.ResumeScore.created_at.desc()).limit(1)
     resume_result = await session.execute(resume_stmt)
     resume_row = resume_result.scalar()
     if resume_row:
@@ -204,7 +211,15 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
 
     # Build system prompt
     company_context = f" at {target_company}" if target_company else ""
+    premium_context = "\n".join([
+        f"INTERVIEW MODE: {mode}",
+        f"ROUND TYPE: {round_type}",
+        f"CANDIDATE BRANCH: {branch or 'Not specified'}",
+        f"STRICTNESS: {strictness}",
+        f"COMPANY ID: {company_id or 'Not linked'}",
+    ])
     resume_section = f"CANDIDATE RESUME:\n{resume_text}" if resume_text else "No resume provided. Ask general questions appropriate for a fresh graduate."
+    resume_section = f"{premium_context}\n\n{resume_section}"
 
     system_prompt = INTERVIEW_SYSTEM_PROMPT.format(
         interview_type=interview_type,
@@ -261,6 +276,12 @@ Speak naturally and professionally. Do NOT include any brackets, placeholders, o
         "target_role": target_role,
         "target_company": target_company,
         "difficulty": difficulty,
+        "mode": mode,
+        "round_type": round_type,
+        "branch": branch,
+        "company_id": company_id,
+        "resume_id": resume_id,
+        "strictness": strictness,
         "question_number": 1,
         "max_questions": 10,
     }
