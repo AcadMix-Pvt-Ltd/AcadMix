@@ -613,6 +613,7 @@ export const careerAPI = {
   dsaRecommend: (data) => api.post('/career/dsa-recommend', data),
   careerPaths: (data) => api.post('/career/career-paths', data),
   companyIntel: () => api.get('/career/company-intel'),
+  resumeTemplates: () => api.get('/career/resume/templates'),
 };
 
 // Resume Profile — Student-editable resume enrichment data
