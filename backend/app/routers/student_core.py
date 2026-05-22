@@ -401,24 +401,45 @@ async def generate_resume_docx(
     )
 
 
-def _minimal_resume_pdf(profile: dict) -> io.BytesIO:
+def _minimal_resume_pdf(profile: dict, template: str = "classic") -> io.BytesIO:
     auto = profile.get("auto_filled") or {}
     editable = profile.get("editable") or {}
     name = auto.get("name") or "AcadMix Resume"
-    lines = [
+    header = {
+        "compact": "COMPACT ONE-PAGE RESUME",
+        "campus": "CAMPUS PLACEMENT RESUME",
+        "developer": "DEVELOPER PROFILE",
+        "core-engineering": "CORE ENGINEERING PROFILE",
+        "management": "MANAGEMENT PROFILE",
+        "ats-strict": "ATS STRICT RESUME",
+        "modern": "MODERN RESUME",
+    }.get(template, "CLASSIC ATS RESUME")
+    base_lines = [
         name,
+        header,
         " | ".join([v for v in [editable.get("email") or auto.get("email"), editable.get("phone") or auto.get("phone"), editable.get("location")] if v]),
         "",
-        "Summary",
-        editable.get("summary") or "Resume generated from AcadMix Career Tools.",
-        "",
-        "Education",
-        " ".join([auto.get("department") or "", auto.get("institution") or "", auto.get("batch") or ""]).strip(),
-        "",
-        "Skills",
-        ", ".join(sum((editable.get("skills") or {}).values(), [])) if isinstance(editable.get("skills"), dict) else "",
     ]
-    for section in ["projects", "experience", "certifications", "achievements"]:
+    sections = {
+        "summary": ["Summary", editable.get("summary") or "Resume generated from AcadMix Career Tools."],
+        "education": ["Education", " ".join([auto.get("department") or "", auto.get("institution") or "", auto.get("batch") or ""]).strip()],
+        "skills": ["Skills", ", ".join(sum((editable.get("skills") or {}).values(), [])) if isinstance(editable.get("skills"), dict) else ""],
+    }
+    section_order = {
+        "developer": ["summary", "skills", "projects", "experience", "education", "certifications", "achievements"],
+        "core-engineering": ["summary", "education", "skills", "projects", "certifications", "achievements"],
+        "campus": ["summary", "education", "projects", "skills", "experience", "certifications", "achievements"],
+        "management": ["summary", "experience", "projects", "education", "skills", "achievements", "certifications"],
+        "compact": ["education", "skills", "projects", "experience", "certifications", "achievements"],
+        "ats-strict": ["summary", "education", "skills", "experience", "projects", "certifications", "achievements"],
+    }.get(template, ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"])
+    lines = list(base_lines)
+    for section in section_order:
+        if section in sections:
+            title, value = sections[section]
+            if value:
+                lines += ["", title, value]
+            continue
         items = editable.get(section) or []
         if items:
             lines += ["", section.replace("_", " ").title()]
@@ -496,7 +517,7 @@ async def generate_resume(
     profile = await resume_profile_service.get_resume_profile(user, session)
     filename = f"{(profile.get('auto_filled') or {}).get('name') or 'AcadMix'}_Resume.pdf".replace(" ", "_")
     return StreamingResponse(
-        _minimal_resume_pdf(profile),
+        _minimal_resume_pdf(profile, template),
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

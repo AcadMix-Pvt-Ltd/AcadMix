@@ -92,6 +92,42 @@ def _bullet(doc, text):
     return p
 
 
+def _bullet_to_cell(cell, text, size=9):
+    p = cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run(f"• {text}")
+    r.font.name = "Arial"
+    r.font.size = Pt(size)
+    r.font.color.rgb = _CLR
+    return p
+
+
+def _cell_heading(cell, title, color="000000"):
+    p = cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(2)
+    r = p.add_run(title)
+    r.bold = True
+    r.font.name = "Arial"
+    r.font.size = Pt(9)
+    r.font.color.rgb = RGBColor.from_string(color)
+    return p
+
+
+def _cell_text(cell, text, size=8, bold=False, italic=False, color="000000"):
+    p = cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run(text)
+    r.font.name = "Arial"
+    r.font.size = Pt(size)
+    r.font.color.rgb = RGBColor.from_string(color)
+    r.bold = bold
+    r.font.italic = italic
+    return p
+
+
 def _tech_stack_line(doc, tech):
     """Tech Stack: label bold, items regular. Indented to match bullets, no bullet marker."""
     p = _para(doc, sp_before=1, sp_after=2)
@@ -267,6 +303,177 @@ def _build_classic(data: Dict[str, Any]) -> Document:
     return doc
 
 
+def _build_compact(data: Dict[str, Any]) -> Document:
+    doc = Document()
+    _margins(doc)
+    personal = data.get("personal", {})
+    skills = data.get("skills", {})
+    projects = data.get("projects", [])
+    experience = data.get("experience", [])
+    certs = data.get("certifications", [])
+    achievements = data.get("achievements", [])
+
+    p = _para(doc, sp_before=0, sp_after=1, align=WD_ALIGN_PARAGRAPH.LEFT)
+    _run(p, personal.get("name") or "[Your Full Name]", sz=Pt(17), bold=True)
+    contact = [personal.get("email"), personal.get("phone"), personal.get("location")]
+    _run(_para(doc, sp_after=4), " | ".join([x for x in contact if x]), sz=Pt(9))
+
+    table = doc.add_table(rows=1, cols=2)
+    left, right = table.rows[0].cells
+    left.width = Cm(7.0)
+    right.width = Cm(9.5)
+
+    current = personal.get("current_education") or {}
+    _cell_heading(left, "Education")
+    if current.get("institution"):
+        _cell_text(left, f"{current.get('degree', 'B.Tech')} {current.get('branch', '')}".strip(), 8, bold=True)
+        _cell_text(left, f"{current.get('institution')} | {current.get('batch', '')}".strip(" |"), 8)
+    for edu in data.get("education_history", [])[:3]:
+        _cell_text(left, f"{edu.get('degree') or edu.get('level', '')} - {edu.get('school', '')}".strip(" -"), 8, bold=True)
+
+    _cell_heading(left, "Skills")
+    for key, label in [("languages", "Languages"), ("frameworks", "Frameworks"), ("tools", "Tools"), ("databases", "Databases")]:
+        if skills.get(key):
+            _cell_text(left, f"{label}: {', '.join(skills[key])}", 8)
+
+    if certs:
+        _cell_heading(left, "Certifications")
+        for cert in certs[:5]:
+            _cell_text(left, cert.get("name", ""), 8)
+    if achievements:
+        _cell_heading(left, "Achievements")
+        for item in achievements[:5]:
+            _bullet_to_cell(left, item if isinstance(item, str) else item.get("title", ""), 8)
+
+    if data.get("summary"):
+        _cell_heading(right, "Summary")
+        _cell_text(right, data["summary"], 8)
+    _cell_heading(right, "Projects")
+    for project in projects[:4]:
+        _cell_text(right, project.get("title", "Untitled Project"), 9, bold=True)
+        for bullet in project.get("bullets", [])[:3]:
+            if str(bullet).strip():
+                _bullet_to_cell(right, bullet, 8)
+        if project.get("tech_stack"):
+            _cell_text(right, f"Stack: {project['tech_stack']}", 8, italic=True)
+    if experience:
+        _cell_heading(right, "Experience")
+        for exp in experience[:3]:
+            _cell_text(right, f"{exp.get('role', '')}, {exp.get('company', '')}".strip(", "), 9, bold=True)
+            for bullet in exp.get("bullets", [])[:3]:
+                if str(bullet).strip():
+                    _bullet_to_cell(right, bullet, 8)
+    return doc
+
+
+def _build_sidebar(data: Dict[str, Any], template: str) -> Document:
+    doc = Document()
+    _margins(doc)
+    accent = {
+        "developer": "2563EB",
+        "core-engineering": "0F766E",
+        "management": "7C3AED",
+        "modern": "111827",
+    }.get(template, "111827")
+    personal = data.get("personal", {})
+    skills = data.get("skills", {})
+    projects = data.get("projects", [])
+    experience = data.get("experience", [])
+
+    table = doc.add_table(rows=1, cols=2)
+    left, right = table.rows[0].cells
+    left.width = Cm(6.2)
+    right.width = Cm(10.4)
+    _cell_text(left, personal.get("name") or "[Your Full Name]", 15, bold=True, color=accent)
+    _cell_text(left, " | ".join([x for x in [personal.get("email"), personal.get("phone"), personal.get("location")] if x]), 8)
+    if data.get("summary"):
+        _cell_heading(left, "Profile", accent)
+        _cell_text(left, data["summary"], 8)
+    _cell_heading(left, "Skills", accent)
+    for key, label in [("languages", "Languages"), ("frameworks", "Frameworks"), ("tools", "Tools"), ("databases", "Databases")]:
+        if skills.get(key):
+            _cell_text(left, f"{label}: {', '.join(skills[key])}", 8)
+    current = personal.get("current_education") or {}
+    if current.get("institution"):
+        _cell_heading(left, "Education", accent)
+        _cell_text(left, f"{current.get('degree', 'B.Tech')} {current.get('branch', '')}".strip(), 8, bold=True)
+        _cell_text(left, current.get("institution", ""), 8)
+
+    primary_title = "Selected Engineering Projects" if template in {"developer", "core-engineering"} else "Leadership & Experience" if template == "management" else "Experience"
+    _cell_heading(right, primary_title, accent)
+    if template in {"developer", "core-engineering"}:
+        for project in projects[:5]:
+            _cell_text(right, project.get("title", "Untitled Project"), 10, bold=True)
+            for bullet in project.get("bullets", [])[:4]:
+                if str(bullet).strip():
+                    _bullet_to_cell(right, bullet, 9)
+            if project.get("tech_stack"):
+                _cell_text(right, f"Stack: {project['tech_stack']}", 8, italic=True)
+    else:
+        for exp in experience[:4]:
+            _cell_text(right, f"{exp.get('role', '')}, {exp.get('company', '')}".strip(", "), 10, bold=True)
+            for bullet in exp.get("bullets", [])[:4]:
+                if str(bullet).strip():
+                    _bullet_to_cell(right, bullet, 9)
+        if projects:
+            _cell_heading(right, "Projects", accent)
+            for project in projects[:3]:
+                _cell_text(right, project.get("title", "Untitled Project"), 9, bold=True)
+                for bullet in project.get("bullets", [])[:2]:
+                    if str(bullet).strip():
+                        _bullet_to_cell(right, bullet, 8)
+
+    if data.get("certifications"):
+        _cell_heading(right, "Certifications", accent)
+        for cert in data["certifications"][:5]:
+            _cell_text(right, cert.get("name", ""), 8)
+    return doc
+
+
+def _build_campus(data: Dict[str, Any]) -> Document:
+    doc = Document()
+    _margins(doc)
+    personal = data.get("personal", {})
+    p = _para(doc, sp_before=0, sp_after=2, align=WD_ALIGN_PARAGRAPH.LEFT)
+    _run(p, personal.get("name") or "[Your Full Name]", sz=Pt(18), bold=True)
+    _run(_para(doc, sp_after=5), " | ".join([x for x in [personal.get("email"), personal.get("phone"), personal.get("location")] if x]), sz=Pt(9))
+    if data.get("summary"):
+        _heading(doc, "Campus Recruiter Summary")
+        _run(_para(doc, sp_after=3), data["summary"], sz=Pt(10))
+    _heading(doc, "Education")
+    current = personal.get("current_education") or {}
+    if current.get("institution"):
+        _run(_para(doc, sp_after=2), f"{current.get('degree', 'B.Tech')} {current.get('branch', '')}, {current.get('institution', '')}".strip(", "), sz=Pt(11), bold=True)
+    _heading(doc, "Placement Projects")
+    for project in data.get("projects", [])[:4]:
+        _run(_para(doc, sp_after=1), project.get("title", "Untitled Project"), sz=Pt(11), bold=True)
+        for bullet in project.get("bullets", [])[:3]:
+            if str(bullet).strip():
+                _bullet(doc, bullet)
+    _heading(doc, "Technical Skills")
+    skills = data.get("skills", {})
+    for key, label in [("languages", "Languages"), ("frameworks", "Frameworks"), ("tools", "Tools"), ("databases", "Databases")]:
+        if skills.get(key):
+            p = _para(doc, sp_after=1)
+            _run(p, f"{label}: ", sz=Pt(10), bold=True)
+            _run(p, ", ".join(skills[key]), sz=Pt(10))
+    if data.get("experience"):
+        _heading(doc, "Experience")
+        for exp in data["experience"][:3]:
+            _run(_para(doc, sp_after=1), f"{exp.get('role', '')}, {exp.get('company', '')}".strip(", "), sz=Pt(10), bold=True)
+    return doc
+
+
+def _build_by_template(data: Dict[str, Any], template: str) -> Document:
+    if template == "compact":
+        return _build_compact(data)
+    if template == "campus":
+        return _build_campus(data)
+    if template in {"modern", "developer", "core-engineering", "management"}:
+        return _build_sidebar(data, template)
+    return _build_classic(data)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Public API
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -325,7 +532,7 @@ async def generate_docx(
         "achievements": resume.get("achievements", []),
     }
 
-    doc = _build_classic(data)
+    doc = _build_by_template(data, template)
 
     buffer = io.BytesIO()
     doc.save(buffer)
