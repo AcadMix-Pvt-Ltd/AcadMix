@@ -217,6 +217,151 @@ const ResumePreview = ({ data, template }: { data: any; template: string }) => {
 /* ═══════════════════════════════════════════════════════════
    DATA SUMMARY — shows what's filled vs empty
    ═══════════════════════════════════════════════════════════ */
+const PremiumResumePreview = ({ data, template }: { data: any; template: string }) => {
+  const personal = data?.personal || {};
+  const education = data?.education_history || [];
+  const skills = data?.skills || {};
+  const projects = data?.projects || [];
+  const experience = data?.experience || [];
+  const certs = data?.certifications || [];
+  const achievements = data?.achievements || [];
+  const summary = data?.summary || '';
+  const currentEdu = personal.current_education;
+  const accent = template === 'developer' ? '#2563eb' : template === 'core-engineering' ? '#0f766e' : template === 'management' ? '#7c3aed' : template === 'campus' ? '#0d9488' : '#111827';
+  const compact = template === 'compact' || template === 'ats-strict';
+  const sidebar = ['modern', 'developer', 'core-engineering', 'management'].includes(template);
+  const fontFamily = sidebar || template === 'campus' ? "'Inter', 'Arial', sans-serif" : "'Times New Roman', 'Georgia', serif";
+  const contact = [personal.email, personal.phone, personal.location].filter(Boolean).join(' | ');
+  const links = [personal.linkedin, personal.github, personal.portfolio].filter(Boolean).join(' | ');
+  const skillRows = ([['languages', 'Languages'], ['frameworks', 'Frameworks'], ['tools', 'Tools & Platforms'], ['databases', 'Databases']] as const).filter(([key]) => skills[key]?.length);
+  const skillItems = skillRows.flatMap(([key]) => skills[key]).slice(0, 24);
+
+  const SectionTitle = ({ children, inverse = false }: any) => (
+    <h3 className={`mt-[8px] mb-[3px] text-[10px] font-[900] uppercase tracking-[0.08em] border-b pb-[1px] ${inverse ? 'text-white/85 border-white/25' : 'text-black'}`}
+      style={inverse ? {} : { color: template === 'ats-strict' ? '#000' : accent, borderColor: template === 'ats-strict' ? '#000' : accent }}>
+      {children}
+    </h3>
+  );
+  const Bullet = ({ children }: any) => (
+    <p className={`${compact ? 'text-[7.2px]' : 'text-[8px]'} text-black leading-[1.42] pl-[9px] relative before:content-['•'] before:absolute before:left-0 before:text-[6px] before:top-[1px]`}>{children}</p>
+  );
+  const Education = ({ inverse = false }: any) => (
+    <>
+      <SectionTitle inverse={inverse}>Education</SectionTitle>
+      {currentEdu?.institution && (
+        <p className={`${inverse ? 'text-white/90' : 'text-black'} text-[7.6px] leading-[1.45]`}>
+          <b>{currentEdu.degree || 'B.Tech'}{currentEdu.branch ? ` in ${currentEdu.branch}` : ''}</b><br />
+          {currentEdu.institution}{currentEdu.batch ? ` | ${currentEdu.batch}` : ''}
+        </p>
+      )}
+      {education.slice(0, inverse ? 1 : 3).map((edu: any, i: number) => (
+        <p key={i} className={`${inverse ? 'text-white/85' : 'text-black'} text-[7.5px] leading-[1.45] mt-[3px]`}>
+          <b>{edu.degree || edu.level}</b>{edu.school ? `, ${edu.school}` : ''}{edu.year ? ` | ${edu.year}` : ''}
+        </p>
+      ))}
+    </>
+  );
+  const Skills = ({ chips = false, inverse = false }: any) => skillRows.length ? (
+    <>
+      <SectionTitle inverse={inverse}>Skills</SectionTitle>
+      {chips ? (
+        <div className="flex flex-wrap gap-[3px]">
+          {skillItems.map((item: string) => <span key={item} className={`text-[6.5px] font-[800] px-[5px] py-[2px] rounded-[4px] ${inverse ? 'bg-white/15 text-white' : ''}`} style={inverse ? {} : { backgroundColor: `${accent}16`, color: accent }}>{item}</span>)}
+        </div>
+      ) : (
+        <div className="space-y-[1px]">
+          {skillRows.map(([key, label]) => (
+            <p key={key} className={`${inverse ? 'text-white/85' : 'text-black'} text-[7.5px] leading-[1.45]`}><b>{label}: </b>{skills[key].join(', ')}</p>
+          ))}
+        </div>
+      )}
+    </>
+  ) : null;
+  const Projects = ({ limit = 3 }: any) => projects.length ? (
+    <>
+      <SectionTitle>{template === 'developer' ? 'Selected Engineering Projects' : 'Projects'}</SectionTitle>
+      {projects.slice(0, limit).map((p: any, i: number) => (
+        <div key={i} className="mb-[4px]">
+          <p className={`${compact ? 'text-[7.8px]' : 'text-[8.6px]'} font-[800] text-black`}>{p.title || 'Untitled Project'}</p>
+          {p.bullets?.filter((b: string) => b.trim()).slice(0, compact ? 3 : 4).map((b: string, j: number) => <Bullet key={j}>{b}</Bullet>)}
+          {p.tech_stack && <p className="text-[7.2px] text-black leading-[1.45] pl-[9px]"><b>Stack: </b>{p.tech_stack}</p>}
+        </div>
+      ))}
+    </>
+  ) : null;
+  const Experience = () => experience.length ? (
+    <>
+      <SectionTitle>{template === 'management' ? 'Leadership & Experience' : 'Experience'}</SectionTitle>
+      {experience.slice(0, compact ? 2 : 3).map((e: any, i: number) => (
+        <div key={i} className="mb-[4px]">
+          <p className={`${compact ? 'text-[7.8px]' : 'text-[8.6px]'} text-black`}><b>{e.role || 'Role'}</b>{e.company ? `, ${e.company}` : ''}</p>
+          {(e.duration || e.location) && <p className="text-[7.2px] text-black italic">{[e.duration, e.location].filter(Boolean).join(' | ')}</p>}
+          {e.bullets?.filter((b: string) => b.trim()).slice(0, compact ? 3 : 4).map((b: string, j: number) => <Bullet key={j}>{b}</Bullet>)}
+        </div>
+      ))}
+    </>
+  ) : null;
+  const Extras = () => (
+    <>
+      {certs.length > 0 && <><SectionTitle>Certifications</SectionTitle>{certs.slice(0, 5).map((c: any, i: number) => <p key={i} className="text-[7.5px] text-black leading-[1.45]"><b>{c.name}</b>{(c.issuer || c.year) ? ` - ${[c.issuer, c.year].filter(Boolean).join(', ')}` : ''}</p>)}</>}
+      {achievements.length > 0 && <><SectionTitle>Achievements</SectionTitle>{achievements.slice(0, 5).map((a: any, i: number) => { const text = typeof a === 'string' ? a : a.title || ''; return text.trim() ? <Bullet key={i}>{text}</Bullet> : null; })}</>}
+    </>
+  );
+
+  return (
+    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily }}>
+      {sidebar ? (
+        <div className="grid h-full" style={{ gridTemplateColumns: template === 'developer' ? '36% 64%' : '32% 68%' }}>
+          <aside className="h-full p-4" style={{ background: `linear-gradient(180deg, ${accent}, #111827)` }}>
+            <h1 className="text-[15px] font-[900] leading-tight text-white">{personal.name || 'Your Full Name'}</h1>
+            {contact && <p className="text-[7.2px] text-white/80 mt-2 leading-[1.45]">{contact}</p>}
+            {links && <p className="text-[7px] text-white/70 mt-1 leading-[1.45]">{links}</p>}
+            {summary.trim() && <p className="text-[7.4px] text-white/85 mt-4 leading-[1.52]">{summary}</p>}
+            <Skills chips inverse />
+            <Education inverse />
+          </aside>
+          <main className="p-5 h-full overflow-hidden">
+            {template === 'developer' ? <Projects limit={4} /> : <Experience />}
+            {template === 'management' ? <Projects limit={2} /> : <Experience />}
+            {template === 'core-engineering' && <Projects limit={3} />}
+            <Extras />
+          </main>
+        </div>
+      ) : template === 'campus' ? (
+        <div className="p-5 h-full overflow-hidden">
+          <div className="rounded-[8px] p-4 mb-3" style={{ backgroundColor: `${accent}12`, borderTop: `4px solid ${accent}` }}>
+            <h1 className="text-[17px] font-[900] leading-tight" style={{ color: accent }}>{personal.name || 'Your Full Name'}</h1>
+            {contact && <p className="text-[8px] text-black mt-[3px]">{contact}</p>}
+            {summary.trim() && <p className="text-[8px] text-black leading-[1.5] mt-2">{summary}</p>}
+          </div>
+          <Education />
+          <Projects limit={3} />
+          <Skills chips />
+          <Experience />
+          <Extras />
+        </div>
+      ) : (
+        <div className={`${compact ? 'p-4' : 'p-5'} h-full overflow-hidden`}>
+          <h1 className={`${compact ? 'text-[14px]' : 'text-[16px]'} ${template === 'ats-strict' ? 'text-left' : 'text-center'} font-[800] leading-tight text-black`}>
+            {personal.name || <span className="text-slate-300 italic">Your Full Name</span>}
+          </h1>
+          {contact && <p className={`${template === 'ats-strict' ? 'text-left' : 'text-center'} text-[8px] text-black mt-[2px] leading-snug`}>{contact}</p>}
+          {links && <p className={`${template === 'ats-strict' ? 'text-left' : 'text-center'} text-[8px] text-black mt-[1px] leading-snug`}>{links}</p>}
+          {summary.trim() && <><SectionTitle>Summary</SectionTitle><p className="text-[8px] text-black leading-[1.5]">{summary}</p></>}
+          {template === 'compact' ? (
+            <div className="grid grid-cols-2 gap-x-4">
+              <div><Education /><Skills /><Extras /></div>
+              <div><Projects limit={3} /><Experience /></div>
+            </div>
+          ) : (
+            <><Education /><Skills /><Projects /><Experience /><Extras /></>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const DataSummary = ({ data }: { data: any }) => {
   const sections = [
     { key: 'personal', label: 'Personal Info', icon: User, check: () => data?.personal?.name },
@@ -419,16 +564,16 @@ const ResumeStudioTab = ({ navigate }: any) => {
           {/* Template selector */}
           <div className="soft-card p-5">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Template</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 max-h-[320px] overflow-y-auto overflow-x-hidden pr-1">
               {templates.map(t => (
                 <button key={t.id} onClick={() => setTemplate(t.id)}
-                  className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
+                  className={`min-w-0 px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
                     template === t.id
                       ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-500/25 shadow-sm'
                       : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'
                   }`}>
-                  <span className="block">{t.label}</span>
-                  <span className="text-[10px] block text-slate-400 mt-1 leading-snug">{t.desc}</span>
+                  <span className="block truncate">{t.label}</span>
+                  <span className="text-[10px] block text-slate-400 mt-1 leading-snug line-clamp-2">{t.desc}</span>
                   {t.ats_safety && <span className="text-[9px] block text-emerald-500 mt-1">ATS {t.ats_safety}%</span>}
                 </button>
               ))}
@@ -483,7 +628,7 @@ const ResumeStudioTab = ({ navigate }: any) => {
           </div>
           <div className="soft-card p-4 bg-slate-100 dark:bg-slate-900/50">
             <div ref={previewRef}>
-              <ResumePreview data={profileData} template={template} />
+              <PremiumResumePreview data={profileData} template={template} />
             </div>
           </div>
         </div>
