@@ -59,14 +59,12 @@ async def text_to_speech_stream(text: str, voice_id: str | None = None) -> Async
     }
 
     async with httpx.AsyncClient(timeout=30.0) as client:
-        async with client.stream("POST", url, headers=headers, json=payload) as response:
-            if response.status_code != 200:
-                error_body = await response.aread()
-                logger.error(f"ElevenLabs TTS failed: {response.status_code} - {error_body.decode(errors='ignore')}")
-                raise HTTPException(status_code=response.status_code, detail=f"Voice synthesis failed: {error_body.decode(errors='ignore')}")
-            
-            async for chunk in response.iter_bytes(chunk_size=4096):
-                yield chunk
+        response = await client.post(url, headers=headers, json=payload)
+        if response.status_code != 200:
+            logger.error(f"ElevenLabs TTS failed: {response.status_code} - {response.text[:300]}")
+            raise HTTPException(status_code=response.status_code, detail=f"Voice synthesis failed: {response.text[:200]}")
+        
+        yield response.content
 
 async def transcribe_audio(file_bytes: bytes, filename: str = "audio.wav", content_type: str = "audio/wav") -> str:
     """
