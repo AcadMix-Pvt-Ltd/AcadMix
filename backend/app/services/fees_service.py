@@ -473,6 +473,9 @@ class FeesService:
         paginated: bool = False,
         academic_year: Optional[str] = None,
         batch: Optional[str] = None,
+        semester: Optional[int] = None,
+        department: Optional[str] = None,
+        section: Optional[str] = None,
     ):
         year_rows = (await self.db.execute(
             select(StudentFeeInvoice.academic_year)
@@ -491,20 +494,6 @@ class FeesService:
             active_academic_year = academic_years[0]
         year_filter = active_academic_year if active_academic_year.lower() != "all" else ""
 
-        batch_rows = (await self.db.execute(
-            select(UserProfile.batch)
-            .join(User, User.id == UserProfile.user_id)
-            .where(
-                User.college_id == college_id,
-                User.role == "student",
-                User.is_deleted == False,
-                UserProfile.batch.is_not(None),
-            )
-            .distinct()
-            .order_by(UserProfile.batch.desc())
-        )).scalars().all()
-        batches = [row for row in batch_rows if row]
-
         pattern = f"%{q.strip()}%"
         stmt = select(User, UserProfile).join(UserProfile, UserProfile.user_id == User.id, isouter=True).where(
             User.college_id == college_id,
@@ -515,6 +504,12 @@ class FeesService:
             stmt = stmt.where(or_(User.name.ilike(pattern), User.email.ilike(pattern), UserProfile.roll_number.ilike(pattern)))
         if batch and batch.strip():
             stmt = stmt.where(UserProfile.batch.ilike(batch.strip()))
+        if semester:
+            stmt = stmt.where(UserProfile.current_semester == semester)
+        if department and department.strip():
+            stmt = stmt.where(UserProfile.department.ilike(department.strip()))
+        if section and section.strip():
+            stmt = stmt.where(UserProfile.section.ilike(section.strip()))
         res = await self.db.execute(stmt)
         rows = res.all()
         student_ids = [user.id for user, _ in rows]
@@ -582,6 +577,10 @@ class FeesService:
             }
             for user, profile in rows
         ]
+        batches = sorted({row["batch"] for row in students if row["batch"]}, reverse=True)
+        semesters = sorted({int(row["current_semester"]) for row in students if row["current_semester"]})
+        departments = sorted({row["department"] for row in students if row["department"]})
+        sections = sorted({row["section"] for row in students if row["section"]})
         students.sort(
             key=lambda row: (
                 0 if float(row["total_due"] or 0) > 0 else 1,
@@ -602,6 +601,9 @@ class FeesService:
                 "academic_year": active_academic_year or "all",
                 "academic_years": academic_years,
                 "batches": batches,
+                "semesters": semesters,
+                "departments": departments,
+                "sections": sections,
             }
         return students[:limit]
 

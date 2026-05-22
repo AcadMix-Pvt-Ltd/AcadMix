@@ -125,8 +125,8 @@ const CashierWorkspace = () => {
   const [studentPage, setStudentPage] = useState(0);
   const [studentTotal, setStudentTotal] = useState(0);
   const [defaulterTotal, setDefaulterTotal] = useState(0);
-  const [studentMeta, setStudentMeta] = useState({ academic_year: '', academic_years: [], batches: [] });
-  const [studentFilters, setStudentFilters] = useState({ academicYear: '', batch: '' });
+  const [studentMeta, setStudentMeta] = useState({ academic_year: '', batches: [], semesters: [], departments: [], sections: [] });
+  const [studentFilters, setStudentFilters] = useState({ batch: '', semester: '', department: '', section: '' });
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [ledger, setLedger] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState('');
@@ -183,12 +183,14 @@ const CashierWorkspace = () => {
     setStudentsLoading(true);
     try {
       const offset = page * CASHIER_STUDENT_PAGE_SIZE;
+      const filterParams = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+      );
       const { data } = await feesAPI.searchStudents(q, {
         limit: CASHIER_STUDENT_PAGE_SIZE,
         offset,
         paginated: true,
-        academic_year: filters.academicYear,
-        batch: filters.batch,
+        ...filterParams,
       });
       if (Array.isArray(data)) {
         setStudents(data);
@@ -200,8 +202,10 @@ const CashierWorkspace = () => {
         setDefaulterTotal(Number(data?.defaulter_total || 0));
         setStudentMeta({
           academic_year: data?.academic_year || '',
-          academic_years: data?.academic_years || [],
           batches: data?.batches || [],
+          semesters: data?.semesters || [],
+          departments: data?.departments || [],
+          sections: data?.sections || [],
         });
       }
       setStudentPage(page);
@@ -217,6 +221,24 @@ const CashierWorkspace = () => {
 
   const updateStudentFilter = async (key, value) => {
     const nextFilters = { ...studentFilters, [key]: value };
+    if (key === 'batch') {
+      nextFilters.semester = '';
+      nextFilters.department = '';
+      nextFilters.section = '';
+    }
+    if (key === 'semester') {
+      nextFilters.department = '';
+      nextFilters.section = '';
+    }
+    if (key === 'department') {
+      nextFilters.section = '';
+    }
+    setStudentFilters(nextFilters);
+    await loadStudents(0, search, nextFilters);
+  };
+
+  const clearStudentFilters = async () => {
+    const nextFilters = { batch: '', semester: '', department: '', section: '' };
     setStudentFilters(nextFilters);
     await loadStudents(0, search, nextFilters);
   };
@@ -310,49 +332,80 @@ const CashierWorkspace = () => {
 
       <div className="space-y-5">
         <div className="soft-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div>
-                <h3 className="font-black text-slate-900 dark:text-white">Student Dues</h3>
-                <p className="text-xs font-semibold text-slate-500 mt-1">
-                  Showing {studentMeta.academic_year && studentMeta.academic_year !== 'all' ? studentMeta.academic_year : 'all academic years'}.
-                  {' '}{defaulterTotal} defaulters listed first by outstanding amount.
+          <div className="px-5 py-5 border-b border-slate-100 dark:border-white/10">
+            <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5">
+              <div className="min-w-[220px]">
+                <h3 className="font-black text-2xl text-slate-900 dark:text-white">Student Dues</h3>
+                <p className="text-sm font-semibold text-slate-500 mt-2">
+                  {studentMeta.academic_year && studentMeta.academic_year !== 'all' ? studentMeta.academic_year : 'Latest fee year'} - {defaulterTotal} defaulters
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                <select
-                  className="soft-input sm:w-40"
-                  value={studentFilters.academicYear}
-                  onChange={(e) => updateStudentFilter('academicYear', e.target.value)}
-                  title="Academic year scope"
-                >
-                  <option value="">Latest year</option>
-                  <option value="all">All years</option>
-                  {studentMeta.academic_years.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-                <select
-                  className="soft-input sm:w-36"
-                  value={studentFilters.batch}
-                  onChange={(e) => updateStudentFilter('batch', e.target.value)}
-                  title="Batch filter"
-                >
-                  <option value="">All batches</option>
-                  {studentMeta.batches.map((batch) => (
-                    <option key={batch} value={batch}>{batch}</option>
-                  ))}
-                </select>
-                <input
-                  className="soft-input flex-1 lg:w-80"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && findStudents()}
-                  placeholder="Search name, ID, roll no"
-                />
-                <button disabled={studentsLoading} onClick={findStudents} className="px-4 rounded-xl bg-indigo-500 text-white disabled:opacity-60">
-                  <MagnifyingGlass weight="bold" />
-                </button>
+              <div className="w-full xl:max-w-5xl space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    className="soft-input flex-1 min-w-0"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && findStudents()}
+                    placeholder="Search name, ID, roll no"
+                  />
+                  <button disabled={studentsLoading} onClick={findStudents} className="w-14 rounded-xl bg-indigo-500 text-white disabled:opacity-60 flex items-center justify-center">
+                    <MagnifyingGlass weight="bold" size={22} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2">
+                  <select
+                    className="soft-input"
+                    value={studentFilters.batch}
+                    onChange={(e) => updateStudentFilter('batch', e.target.value)}
+                    title="Batch filter"
+                  >
+                    <option value="">All batches</option>
+                    {studentMeta.batches.map((batch) => (
+                      <option key={batch} value={batch}>Batch {batch}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="soft-input"
+                    value={studentFilters.semester}
+                    onChange={(e) => updateStudentFilter('semester', e.target.value)}
+                    title="Semester filter"
+                  >
+                    <option value="">All semesters</option>
+                    {studentMeta.semesters.map((semester) => (
+                      <option key={semester} value={semester}>Sem {semester}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="soft-input"
+                    value={studentFilters.department}
+                    onChange={(e) => updateStudentFilter('department', e.target.value)}
+                    title="Department filter"
+                  >
+                    <option value="">All departments</option>
+                    {studentMeta.departments.map((department) => (
+                      <option key={department} value={department}>{department}</option>
+                    ))}
+                  </select>
+                  <select
+                    className="soft-input"
+                    value={studentFilters.section}
+                    onChange={(e) => updateStudentFilter('section', e.target.value)}
+                    title="Section filter"
+                  >
+                    <option value="">All sections</option>
+                    {studentMeta.sections.map((section) => (
+                      <option key={section} value={section}>Section {section}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={clearStudentFilters}
+                    disabled={studentsLoading || !Object.values(studentFilters).some(Boolean)}
+                    className="px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 font-black text-sm text-slate-600 dark:text-slate-200 disabled:opacity-40"
+                  >
+                    Clear
+                  </button>
+                </div>
               </div>
             </div>
           </div>
