@@ -252,10 +252,11 @@ async def finance_student_search(
 @router.get("/finance/students/{student_id}/ledger")
 async def finance_student_ledger(
     student_id: str,
+    academic_year: Optional[str] = None,
     user: dict = Depends(require_role(*CASHIER_ROLES)),
     svc: FeesService = Depends(get_fees_service),
 ):
-    return await svc.student_ledger(user["college_id"], student_id)
+    return await svc.student_ledger(user["college_id"], student_id, academic_year)
 
 
 @router.post("/finance/invoices/{invoice_id}/cancel")

@@ -607,14 +607,46 @@ class FeesService:
             }
         return students[:limit]
 
-    async def student_ledger(self, college_id: str, student_id: str):
+    async def student_ledger(self, college_id: str, student_id: str, academic_year: Optional[str] = None):
         user = await self.db.get(User, student_id)
         if not user or user.college_id != college_id:
             raise HTTPException(status_code=404, detail="Student not found")
         profile = (await self.db.execute(select(UserProfile).where(UserProfile.user_id == student_id))).scalars().first()
-        invoices = (await self.db.execute(select(StudentFeeInvoice).where(StudentFeeInvoice.college_id == college_id, StudentFeeInvoice.student_id == student_id, StudentFeeInvoice.is_deleted == False).order_by(StudentFeeInvoice.due_date.asc().nulls_last(), StudentFeeInvoice.fee_type.asc()))).scalars().all()
-        payments = (await self.db.execute(select(FeePayment).where(FeePayment.college_id == college_id, FeePayment.student_id == student_id, FeePayment.is_deleted == False).order_by(FeePayment.transaction_date.desc().nulls_last()))).scalars().all()
-        concessions = (await self.db.execute(select(FeeConcession).where(FeeConcession.college_id == college_id, FeeConcession.student_id == student_id, FeeConcession.is_deleted == False).order_by(FeeConcession.created_at.desc()))).scalars().all()
+        invoice_stmt = select(StudentFeeInvoice).where(
+            StudentFeeInvoice.college_id == college_id,
+            StudentFeeInvoice.student_id == student_id,
+            StudentFeeInvoice.is_deleted == False,
+        )
+        requested_year = (academic_year or "").strip()
+        if requested_year and requested_year.lower() != "all":
+            invoice_stmt = invoice_stmt.where(StudentFeeInvoice.academic_year == requested_year)
+        invoices = (await self.db.execute(
+            invoice_stmt.order_by(StudentFeeInvoice.due_date.asc().nulls_last(), StudentFeeInvoice.fee_type.asc())
+        )).scalars().all()
+        invoice_ids = [inv.id for inv in invoices]
+        payments = []
+        concessions = []
+        if invoice_ids:
+            payments = (await self.db.execute(
+                select(FeePayment)
+                .where(
+                    FeePayment.college_id == college_id,
+                    FeePayment.student_id == student_id,
+                    FeePayment.invoice_id.in_(invoice_ids),
+                    FeePayment.is_deleted == False,
+                )
+                .order_by(FeePayment.transaction_date.desc().nulls_last())
+            )).scalars().all()
+            concessions = (await self.db.execute(
+                select(FeeConcession)
+                .where(
+                    FeeConcession.college_id == college_id,
+                    FeeConcession.student_id == student_id,
+                    FeeConcession.invoice_id.in_(invoice_ids),
+                    FeeConcession.is_deleted == False,
+                )
+                .order_by(FeeConcession.created_at.desc())
+            )).scalars().all()
         items = []
         total_due = 0.0
         total_paid = 0.0
@@ -677,6 +709,7 @@ class FeesService:
                 "department": profile.department if profile else "",
                 "section": profile.section if profile else "",
                 "batch": profile.batch if profile else "",
+                "current_semester": profile.current_semester if profile else None,
             },
             "summary": {
                 "total_billed": total_billed,
@@ -685,6 +718,7 @@ class FeesService:
                 "total_due": total_due,
                 "invoice_count": len(items),
                 "due_invoice_count": len([x for x in items if x["due"] > 0]),
+                "academic_year": requested_year or "all",
             },
             "invoices": items,
             "payments": [

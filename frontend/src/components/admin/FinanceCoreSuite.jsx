@@ -244,7 +244,7 @@ const CashierWorkspace = () => {
   };
 
   const loadLedger = async (student) => {
-    const { data } = await feesAPI.studentLedger(student.id);
+    const { data } = await feesAPI.studentLedger(student.id, { academic_year: studentMeta.academic_year || '' });
     setLedger(data);
     const firstDue = (data.invoices || []).find((inv) => inv.due > 0);
     setSelectedInvoice(firstDue?.invoice_id || '');
@@ -268,7 +268,7 @@ const CashierWorkspace = () => {
       await loadSession();
       await loadStudents(studentPage, search);
       if (ledger?.student?.id) {
-        const refreshed = await feesAPI.studentLedger(ledger.student.id);
+        const refreshed = await feesAPI.studentLedger(ledger.student.id, { academic_year: studentMeta.academic_year || '' });
         setLedger(refreshed.data);
       }
     } catch (err) {

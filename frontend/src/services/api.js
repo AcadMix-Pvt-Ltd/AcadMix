@@ -556,7 +556,7 @@ export const feesAPI = {
   verifyReceipt: (token) => api.get(`/fees/receipts/verify/${token}`),
   financeSummary: () => api.get('/finance/summary'),
   searchStudents: (q, params = {}) => api.get('/finance/students/search', { params: { q, ...params } }),
-  studentLedger: (studentId) => api.get(`/finance/students/${studentId}/ledger`),
+  studentLedger: (studentId, params = {}) => api.get(`/finance/students/${studentId}/ledger`, { params }),
   cancelInvoice: (id, data) => api.post(`/finance/invoices/${id}/cancel`, data),
   listFeeStructures: (params = {}) => api.get('/finance/fee-structures', { params }),
   createFeeStructure: (data) => api.post('/finance/fee-structures', data),
