@@ -224,11 +224,15 @@ async def finance_summary(user: dict = Depends(require_role(*FINANCE_ROLES)), sv
 @router.get("/finance/students/search")
 async def finance_student_search(
     q: str = "",
-    limit: int = Query(15, ge=1, le=50),
+    academic_year: Optional[str] = None,
+    batch: Optional[str] = None,
+    limit: int = Query(15, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    paginated: bool = False,
     user: dict = Depends(require_role(*CASHIER_ROLES)),
     svc: FeesService = Depends(get_fees_service),
 ):
-    return await svc.search_students(user["college_id"], q, limit)
+    return await svc.search_students(user["college_id"], q, limit, offset, paginated, academic_year, batch)
 
 
 @router.get("/finance/students/{student_id}/ledger")

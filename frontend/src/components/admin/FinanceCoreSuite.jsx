@@ -29,6 +29,8 @@ const modeLabels = {
   adjustment: 'Adjustment',
 };
 
+const CASHIER_STUDENT_PAGE_SIZE = 10;
+
 const StatCard = ({ label, value, icon: Icon, tone = 'indigo' }) => (
   <div className="soft-card p-5">
     <div className="flex items-center justify-between mb-3">
@@ -120,6 +122,12 @@ const CashierWorkspace = () => {
   const [actualCash, setActualCash] = useState('');
   const [search, setSearch] = useState('');
   const [students, setStudents] = useState([]);
+  const [studentPage, setStudentPage] = useState(0);
+  const [studentTotal, setStudentTotal] = useState(0);
+  const [defaulterTotal, setDefaulterTotal] = useState(0);
+  const [studentMeta, setStudentMeta] = useState({ academic_year: '', academic_years: [], batches: [] });
+  const [studentFilters, setStudentFilters] = useState({ academicYear: '', batch: '' });
+  const [studentsLoading, setStudentsLoading] = useState(false);
   const [ledger, setLedger] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState('');
   const [amount, setAmount] = useState('');
@@ -141,7 +149,10 @@ const CashierWorkspace = () => {
     setSessionHistory(historyRes || []);
   };
 
-  useEffect(() => { loadSession().catch(() => {}); }, []);
+  useEffect(() => {
+    loadSession().catch(() => {});
+    loadStudents(0, '').catch(() => {});
+  }, []);
 
   const openSession = async () => {
     setBusy(true);
@@ -168,9 +179,46 @@ const CashierWorkspace = () => {
     setBusy(false);
   };
 
+  const loadStudents = async (page = studentPage, q = search, filters = studentFilters) => {
+    setStudentsLoading(true);
+    try {
+      const offset = page * CASHIER_STUDENT_PAGE_SIZE;
+      const { data } = await feesAPI.searchStudents(q, {
+        limit: CASHIER_STUDENT_PAGE_SIZE,
+        offset,
+        paginated: true,
+        academic_year: filters.academicYear,
+        batch: filters.batch,
+      });
+      if (Array.isArray(data)) {
+        setStudents(data);
+        setStudentTotal(data.length);
+        setDefaulterTotal(data.filter((row) => Number(row.total_due || 0) > 0).length);
+      } else {
+        setStudents(data?.students || []);
+        setStudentTotal(Number(data?.total || 0));
+        setDefaulterTotal(Number(data?.defaulter_total || 0));
+        setStudentMeta({
+          academic_year: data?.academic_year || '',
+          academic_years: data?.academic_years || [],
+          batches: data?.batches || [],
+        });
+      }
+      setStudentPage(page);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Could not load students');
+    }
+    setStudentsLoading(false);
+  };
+
   const findStudents = async () => {
-    const { data } = await feesAPI.searchStudents(search);
-    setStudents(data || []);
+    await loadStudents(0, search);
+  };
+
+  const updateStudentFilter = async (key, value) => {
+    const nextFilters = { ...studentFilters, [key]: value };
+    setStudentFilters(nextFilters);
+    await loadStudents(0, search, nextFilters);
   };
 
   const loadLedger = async (student) => {
@@ -196,6 +244,7 @@ const CashierWorkspace = () => {
       setReceipt(data);
       toast.success('Payment collected');
       await loadSession();
+      await loadStudents(studentPage, search);
       if (ledger?.student?.id) {
         const refreshed = await feesAPI.studentLedger(ledger.student.id);
         setLedger(refreshed.data);
@@ -243,30 +292,6 @@ const CashierWorkspace = () => {
         </div>
 
         <div className="soft-card p-5">
-          <h3 className="font-black text-slate-900 dark:text-white mb-3">Student Search</h3>
-          <div className="flex gap-2">
-            <input className="soft-input flex-1" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name, ID, roll no" />
-            <button onClick={findStudents} className="px-4 rounded-xl bg-indigo-500 text-white"><MagnifyingGlass weight="bold" /></button>
-          </div>
-          <div className="mt-3 space-y-2 max-h-72 overflow-y-auto">
-            {students.map((s) => (
-              <button key={s.id} onClick={() => loadLedger(s)} className="w-full text-left p-3 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black text-sm text-slate-900 dark:text-white">{s.name}</p>
-                    <p className="text-xs font-semibold text-slate-500">{s.roll_number || s.college_id} {s.department ? `- ${s.department}` : ''}</p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <p className={`text-xs font-black ${Number(s.total_due || 0) > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>{money(s.total_due)}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{s.due_invoice_count || 0} due</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="soft-card p-5">
           <h3 className="font-black text-slate-900 dark:text-white mb-3">Counter Sessions</h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {sessionHistory.map((row) => (
@@ -284,6 +309,124 @@ const CashierWorkspace = () => {
       </div>
 
       <div className="space-y-5">
+        <div className="soft-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-white/10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-black text-slate-900 dark:text-white">Student Dues</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-1">
+                  Showing {studentMeta.academic_year && studentMeta.academic_year !== 'all' ? studentMeta.academic_year : 'all academic years'}.
+                  {' '}{defaulterTotal} defaulters listed first by outstanding amount.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+                <select
+                  className="soft-input sm:w-40"
+                  value={studentFilters.academicYear}
+                  onChange={(e) => updateStudentFilter('academicYear', e.target.value)}
+                  title="Academic year scope"
+                >
+                  <option value="">Latest year</option>
+                  <option value="all">All years</option>
+                  {studentMeta.academic_years.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <select
+                  className="soft-input sm:w-36"
+                  value={studentFilters.batch}
+                  onChange={(e) => updateStudentFilter('batch', e.target.value)}
+                  title="Batch filter"
+                >
+                  <option value="">All batches</option>
+                  {studentMeta.batches.map((batch) => (
+                    <option key={batch} value={batch}>{batch}</option>
+                  ))}
+                </select>
+                <input
+                  className="soft-input flex-1 lg:w-80"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && findStudents()}
+                  placeholder="Search name, ID, roll no"
+                />
+                <button disabled={studentsLoading} onClick={findStudents} className="px-4 rounded-xl bg-indigo-500 text-white disabled:opacity-60">
+                  <MagnifyingGlass weight="bold" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-white/5">
+                <tr>
+                  {['Student', 'Department', 'Batch / Sem', 'Invoices', 'Billed', 'Paid', 'Due', 'Action'].map((h) => (
+                    <th key={h} className={`px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 ${['Billed', 'Paid', 'Due'].includes(h) ? 'text-right' : 'text-left'}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                {students.map((s) => (
+                  <tr key={s.id} className={ledger?.student?.id === s.id ? 'bg-indigo-50/70 dark:bg-indigo-500/10' : 'hover:bg-slate-50 dark:hover:bg-white/[0.03]'}>
+                    <td className="px-4 py-3">
+                      <p className="font-black text-slate-900 dark:text-white">{s.name}</p>
+                      <p className="text-xs font-semibold text-slate-500">{s.roll_number || s.college_id}</p>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-slate-500">{s.department || '-'}{s.section ? ` - ${s.section}` : ''}</td>
+                    <td className="px-4 py-3">
+                      <p className="font-black text-slate-700 dark:text-slate-200">{s.batch || '-'}</p>
+                      <p className="text-xs font-semibold text-slate-400">{s.current_semester ? `Sem ${s.current_semester}` : 'Sem -'}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${Number(s.due_invoice_count || 0) > 0 ? 'bg-rose-50 text-rose-500 dark:bg-rose-500/10' : 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10'}`}>
+                        {s.due_invoice_count || 0} due / {s.invoice_count || 0}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right font-bold text-slate-700 dark:text-slate-200">{money(s.total_billed)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-emerald-500">{money(s.total_paid)}</td>
+                    <td className="px-4 py-3 text-right font-black text-rose-500">{money(s.total_due)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => loadLedger(s)} className="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-black text-xs">
+                        Open
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {!students.length && (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-sm font-semibold text-slate-500">
+                      {studentsLoading ? 'Loading students...' : 'No students found.'}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-5 py-4 border-t border-slate-100 dark:border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-xs font-bold text-slate-500">
+              Showing {studentTotal ? studentPage * CASHIER_STUDENT_PAGE_SIZE + 1 : 0}
+              -{Math.min((studentPage + 1) * CASHIER_STUDENT_PAGE_SIZE, studentTotal)} of {studentTotal} students
+              {defaulterTotal ? ` (${defaulterTotal} defaulters)` : ''}
+            </p>
+            <div className="flex gap-2">
+              <button
+                disabled={studentsLoading || studentPage === 0}
+                onClick={() => loadStudents(Math.max(studentPage - 1, 0), search)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10 font-black text-sm disabled:opacity-40"
+              >
+                Previous
+              </button>
+              <button
+                disabled={studentsLoading || (studentPage + 1) * CASHIER_STUDENT_PAGE_SIZE >= studentTotal}
+                onClick={() => loadStudents(studentPage + 1, search)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-white/10 font-black text-sm disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
         {ledger ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -365,13 +508,7 @@ const CashierWorkspace = () => {
               {!session && <p className="text-xs font-bold text-rose-500 mt-3">Open a cashier session before collecting fees.</p>}
             </div>
           </>
-        ) : (
-          <div className="soft-card p-12 text-center">
-            <Receipt size={44} weight="duotone" className="mx-auto text-slate-300 mb-3" />
-            <h3 className="font-black text-xl text-slate-900 dark:text-white">Search a student to start collection</h3>
-            <p className="text-sm font-semibold text-slate-500 mt-1">Ledger, dues, partial payments, and receipts appear here.</p>
-          </div>
-        )}
+        ) : null}
         <ReceiptPanel receipt={receipt} />
       </div>
     </div>

@@ -464,7 +464,47 @@ class FeesService:
             ],
         }
 
-    async def search_students(self, college_id: str, q: str = "", limit: int = 15):
+    async def search_students(
+        self,
+        college_id: str,
+        q: str = "",
+        limit: int = 15,
+        offset: int = 0,
+        paginated: bool = False,
+        academic_year: Optional[str] = None,
+        batch: Optional[str] = None,
+    ):
+        year_rows = (await self.db.execute(
+            select(StudentFeeInvoice.academic_year)
+            .where(
+                StudentFeeInvoice.college_id == college_id,
+                StudentFeeInvoice.is_deleted == False,
+                StudentFeeInvoice.status != "cancelled",
+            )
+            .distinct()
+            .order_by(StudentFeeInvoice.academic_year.desc())
+        )).scalars().all()
+        academic_years = [year for year in year_rows if year]
+        requested_year = (academic_year or "").strip()
+        active_academic_year = requested_year
+        if not active_academic_year and academic_years:
+            active_academic_year = academic_years[0]
+        year_filter = active_academic_year if active_academic_year.lower() != "all" else ""
+
+        batch_rows = (await self.db.execute(
+            select(UserProfile.batch)
+            .join(User, User.id == UserProfile.user_id)
+            .where(
+                User.college_id == college_id,
+                User.role == "student",
+                User.is_deleted == False,
+                UserProfile.batch.is_not(None),
+            )
+            .distinct()
+            .order_by(UserProfile.batch.desc())
+        )).scalars().all()
+        batches = [row for row in batch_rows if row]
+
         pattern = f"%{q.strip()}%"
         stmt = select(User, UserProfile).join(UserProfile, UserProfile.user_id == User.id, isouter=True).where(
             User.college_id == college_id,
@@ -473,25 +513,14 @@ class FeesService:
         )
         if q.strip():
             stmt = stmt.where(or_(User.name.ilike(pattern), User.email.ilike(pattern), UserProfile.roll_number.ilike(pattern)))
-        res = await self.db.execute(stmt.limit(limit))
+        if batch and batch.strip():
+            stmt = stmt.where(UserProfile.batch.ilike(batch.strip()))
+        res = await self.db.execute(stmt)
         rows = res.all()
         student_ids = [user.id for user, _ in rows]
-        paid_by_student: Dict[str, float] = {}
-        if student_ids:
-            payment_rows = await self.db.execute(
-                select(FeePayment.student_id, func.coalesce(func.sum(FeePayment.amount_paid), 0))
-                .where(
-                    FeePayment.college_id == college_id,
-                    FeePayment.student_id.in_(student_ids),
-                    FeePayment.status == "success",
-                    FeePayment.is_deleted == False,
-                )
-                .group_by(FeePayment.student_id)
-            )
-            paid_by_student = {sid: float(total or 0) for sid, total in payment_rows.all()}
         invoice_rows = []
         if student_ids:
-            invoice_rows = (await self.db.execute(
+            invoice_stmt = (
                 select(StudentFeeInvoice)
                 .where(
                     StudentFeeInvoice.college_id == college_id,
@@ -499,16 +528,42 @@ class FeesService:
                     StudentFeeInvoice.is_deleted == False,
                     StudentFeeInvoice.status != "cancelled",
                 )
-            )).scalars().all()
+            )
+            if year_filter:
+                invoice_stmt = invoice_stmt.where(StudentFeeInvoice.academic_year == year_filter)
+            invoice_rows = (await self.db.execute(invoice_stmt)).scalars().all()
+        paid_by_student: Dict[str, float] = {}
+        if student_ids:
+            payment_stmt = (
+                select(FeePayment.student_id, func.coalesce(func.sum(FeePayment.amount_paid), 0))
+                .join(StudentFeeInvoice, StudentFeeInvoice.id == FeePayment.invoice_id)
+                .where(
+                    FeePayment.college_id == college_id,
+                    FeePayment.status == "success",
+                    FeePayment.is_deleted == False,
+                    StudentFeeInvoice.college_id == college_id,
+                    StudentFeeInvoice.student_id.in_(student_ids),
+                    StudentFeeInvoice.is_deleted == False,
+                    StudentFeeInvoice.status != "cancelled",
+                )
+            )
+            if year_filter:
+                payment_stmt = payment_stmt.where(StudentFeeInvoice.academic_year == year_filter)
+            payment_rows = await self.db.execute(
+                payment_stmt.group_by(FeePayment.student_id)
+            )
+            paid_by_student = {sid: float(total or 0) for sid, total in payment_rows.all()}
         billed_by_student: Dict[str, float] = {}
         invoice_count_by_student: Dict[str, int] = {}
         due_invoice_count_by_student: Dict[str, int] = {}
+        years_by_student: Dict[str, set] = {}
         for inv in invoice_rows:
             billed_by_student[inv.student_id] = billed_by_student.get(inv.student_id, 0) + float(inv.total_amount or 0)
             invoice_count_by_student[inv.student_id] = invoice_count_by_student.get(inv.student_id, 0) + 1
+            years_by_student.setdefault(inv.student_id, set()).add(inv.academic_year)
             if (inv.status or "unpaid") in {"unpaid", "partial", "overdue"}:
                 due_invoice_count_by_student[inv.student_id] = due_invoice_count_by_student.get(inv.student_id, 0) + 1
-        return [
+        students = [
             {
                 "id": user.id,
                 "college_id": user.email,
@@ -517,6 +572,8 @@ class FeesService:
                 "department": profile.department if profile else "",
                 "section": profile.section if profile else "",
                 "batch": profile.batch if profile else "",
+                "current_semester": profile.current_semester if profile else None,
+                "academic_years": sorted(list(years_by_student.get(user.id, set())), reverse=True),
                 "invoice_count": invoice_count_by_student.get(user.id, 0),
                 "due_invoice_count": due_invoice_count_by_student.get(user.id, 0),
                 "total_billed": billed_by_student.get(user.id, 0),
@@ -525,6 +582,28 @@ class FeesService:
             }
             for user, profile in rows
         ]
+        students.sort(
+            key=lambda row: (
+                0 if float(row["total_due"] or 0) > 0 else 1,
+                -float(row["total_due"] or 0),
+                -int(row["due_invoice_count"] or 0),
+                row["name"].lower(),
+            )
+        )
+        if paginated:
+            page = students[offset:offset + limit]
+            return {
+                "students": page,
+                "total": len(students),
+                "defaulter_total": len([row for row in students if float(row["total_due"] or 0) > 0]),
+                "offset": offset,
+                "limit": limit,
+                "has_more": offset + limit < len(students),
+                "academic_year": active_academic_year or "all",
+                "academic_years": academic_years,
+                "batches": batches,
+            }
+        return students[:limit]
 
     async def student_ledger(self, college_id: str, student_id: str):
         user = await self.db.get(User, student_id)
