@@ -4,14 +4,18 @@ Interview War Room — AI Mock Interview Router (thin layer).
 All business logic lives in app.services.interview_service.
 This router handles: HTTP interface, auth guards, DB session injection.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from app.core.security import require_role
-from app.services import interview_service
+from app.services import interview_service, voice_service
 
 router = APIRouter()
+
+# Per-session voice lock: ensures the same random voice is used throughout one interview
+_session_voices: dict[str, str] = {}
 
 
 @router.get("/interview/quota")
@@ -30,7 +34,12 @@ async def start_interview(
     session: AsyncSession = Depends(get_db),
 ):
     """Start a new mock interview session."""
-    return await interview_service.start_interview(req, user, session)
+    result = await interview_service.start_interview(req, user, session)
+    # Lock a random professional voice for this entire interview session
+    interview_id = result.get("interview_id") if isinstance(result, dict) else None
+    if interview_id:
+        _session_voices[interview_id] = voice_service.get_random_interview_voice()
+    return result
 
 
 @router.post("/interview/{interview_id}/message")
@@ -52,6 +61,8 @@ async def end_interview(
     session: AsyncSession = Depends(get_db),
 ):
     """End the interview session and queue AI feedback generation."""
+    # Clean up session voice lock
+    _session_voices.pop(interview_id, None)
     return await interview_service.end_interview(interview_id, user, session)
 
 
@@ -81,3 +92,40 @@ async def get_interview_detail(
 ):
     """Get full transcript + feedback for a specific interview session."""
     return await interview_service.get_detail(interview_id, user, session)
+
+
+@router.post("/interview/{interview_id}/speak")
+async def speak_text(
+    interview_id: str,
+    req: dict,
+    user: dict = Depends(require_role("student")),
+):
+    """Convert text to speech using ElevenLabs for the mock interview.
+    Uses the session-locked random voice so the interviewer stays consistent."""
+    text = req.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="Text is required")
+    # Use session-locked voice, or pick a new random one if session not tracked
+    voice_id = req.get("voice_id") or _session_voices.get(interview_id)
+    return StreamingResponse(
+        voice_service.text_to_speech_stream(text, voice_id),
+        media_type="audio/mpeg"
+    )
+
+
+@router.post("/interview/{interview_id}/transcribe")
+async def transcribe_audio(
+    interview_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_role("student")),
+):
+    """Transcribe recorded speech using ElevenLabs Scribe STT."""
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Audio file cannot be empty")
+    text = await voice_service.transcribe_audio(
+        content,
+        filename=file.filename or "recording.wav",
+        content_type=file.content_type or "audio/wav"
+    )
+    return {"text": text}
