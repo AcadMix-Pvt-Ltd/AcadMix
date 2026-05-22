@@ -43,13 +43,14 @@ const StatCard = ({ label, value, icon: Icon, tone = 'indigo' }) => (
   </div>
 );
 
-const ReceiptPanel = ({ receipt }) => {
+const ReceiptPanel = ({ receipt, onPrint, onReissue, onCancel, financeActions = false }) => {
   if (!receipt) return null;
   const verifyUrl = receipt.verification_token
     ? `${window.location.origin}/fees/verify/${receipt.verification_token}`
     : '';
 
   const printReceipt = () => {
+    onPrint?.(receipt);
     const lines = [
       'ACADMIX FEE RECEIPT',
       `Receipt No: ${receipt.receipt_no}`,
@@ -80,6 +81,16 @@ const ReceiptPanel = ({ receipt }) => {
           <Printer size={16} weight="bold" /> Print
         </button>
       </div>
+      {financeActions && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button onClick={() => onReissue?.(receipt)} className="px-3 py-2 rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-300 text-xs font-black">
+            Reissue QR
+          </button>
+          <button onClick={() => onCancel?.(receipt)} className="px-3 py-2 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300 text-xs font-black">
+            Cancel Receipt
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5 text-sm">
         <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Amount</p>
@@ -493,30 +504,46 @@ const CashierWorkspace = () => {
                 <h3 className="font-black text-slate-900 dark:text-white">Student Ledger</h3>
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{ledger.student.college_id}</span>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 dark:bg-white/5">
-                    <tr>
-                      {['Invoice', 'Fee', 'Due Date', 'Amount', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                    {ledger.invoices.map((inv) => (
-                      <tr key={inv.invoice_id}>
-                        <td className="px-4 py-3 font-bold">{inv.invoice_no || '-'}</td>
-                        <td className="px-4 py-3">
-                          <p className="font-bold">{inv.fee_type}</p>
-                          {inv.description && <p className="text-xs text-slate-400 mt-0.5">{inv.description}</p>}
-                        </td>
-                        <td className="px-4 py-3">{shortDate(inv.due_date)}</td>
-                        <td className="px-4 py-3">{money(inv.total_amount)}</td>
-                        <td className="px-4 py-3 text-emerald-500 font-bold">{money(inv.paid)}</td>
-                        <td className="px-4 py-3 text-rose-500 font-bold">{money(inv.due)}</td>
-                        <td className="px-4 py-3">{inv.status}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="divide-y divide-slate-100 dark:divide-white/10">
+                {(ledger.groups?.length ? ledger.groups : [{ academic_year: ledger.summary.academic_year, semester: 'Current view', invoices: ledger.invoices }]).map((group) => (
+                  <div key={`${group.academic_year}-${group.semester}`}>
+                    <div className="px-5 py-3 bg-slate-50 dark:bg-white/[0.03] flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="font-black text-slate-900 dark:text-white">{group.academic_year} / {group.semester}</p>
+                        <p className="text-xs font-bold text-slate-500">{group.due_invoice_count || 0} due invoices out of {group.invoice_count || group.invoices?.length || 0}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">Due</p>
+                        <p className="font-black text-rose-500">{money(group.total_due)}</p>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-white dark:bg-[#0B0F19]">
+                          <tr>
+                            {['Invoice', 'Fee', 'Due Date', 'Amount', 'Paid', 'Due', 'Status'].map((h) => <th key={h} className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{h}</th>)}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                          {(group.invoices || []).map((inv) => (
+                            <tr key={inv.invoice_id}>
+                              <td className="px-4 py-3 font-bold">{inv.invoice_no || '-'}</td>
+                              <td className="px-4 py-3">
+                                <p className="font-bold">{inv.fee_type}</p>
+                                {inv.description && <p className="text-xs text-slate-400 mt-0.5">{inv.description}</p>}
+                              </td>
+                              <td className="px-4 py-3">{shortDate(inv.due_date)}</td>
+                              <td className="px-4 py-3">{money(inv.total_amount)}</td>
+                              <td className="px-4 py-3 text-emerald-500 font-bold">{money(inv.paid)}</td>
+                              <td className="px-4 py-3 text-rose-500 font-bold">{money(inv.due)}</td>
+                              <td className="px-4 py-3">{inv.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -732,12 +759,46 @@ const FinanceWorkspace = () => {
     }
   };
 
+  const recordReceiptPrint = async (row) => {
+    if (!row?.receipt_no) return;
+    try {
+      await feesAPI.recordReceiptPrint(row.receipt_no);
+    } catch {
+      // Printing should not be blocked by audit write failure.
+    }
+  };
+
+  const reissueReceipt = async (row) => {
+    if (!row?.receipt_no) return;
+    const { data } = await feesAPI.reissueReceipt(row.receipt_no, { reason: 'Reissued from finance dashboard' });
+    setReceipt(data);
+    await lookupReceipt();
+    toast.success('Receipt QR reissued');
+  };
+
+  const cancelReceipt = async (row) => {
+    if (!row?.receipt_no) return;
+    const reason = window.prompt(`Cancel receipt ${row.receipt_no}? Enter reason:`);
+    if (!reason) return;
+    await feesAPI.cancelReceipt(row.receipt_no, { reason });
+    setReceipt(null);
+    await lookupReceipt();
+    if (selectedStudent?.student?.id) {
+      const { data } = await feesAPI.studentLedger(selectedStudent.student.id);
+      setSelectedStudent(data);
+    }
+    await loadFinanceData();
+    toast.success('Receipt cancelled and ledger reopened');
+  };
+
   const exportReportCsv = () => {
     const rows = [
       ['Report', 'Name', 'Amount', 'Count'],
       ...Object.entries(reports?.collection?.by_mode || {}).map(([mode, amount]) => ['Collection by mode', modeLabels[mode] || mode, amount, '']),
       ...Object.entries(reports?.collection?.by_fee_head || {}).map(([head, amount]) => ['Collection by fee head', head, amount, '']),
       ...Object.entries(reports?.collection?.by_cashier || {}).map(([cashier, amount]) => ['Collection by cashier', cashier, amount, '']),
+      ...(reports?.collection?.by_department || []).map((row) => ['Collection by department', row.department, row.amount, row.count]),
+      ...(reports?.collection?.by_academic_year || []).map((row) => ['Collection by academic year', row.academic_year, row.amount, row.count]),
       ...Object.entries(reports?.adjustments?.concessions || {}).map(([status, item]) => ['Concessions', status, item.amount, item.count]),
       ...Object.entries(reports?.adjustments?.refunds || {}).map(([status, item]) => ['Refunds', status, item.amount, item.count]),
       ...(reports?.dues?.defaulters || []).map((row) => ['Defaulter', `${row.student_name} / ${row.invoice_no}`, row.due, row.overdue ? 'overdue' : 'due']),
@@ -827,6 +888,28 @@ const FinanceWorkspace = () => {
                 <span className="text-sm font-black text-rose-500 shrink-0">{money(row.due)}</span>
               </div>
             ))}
+          </div>
+        </div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-5">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5">
+            <h4 className="font-black text-slate-900 dark:text-white mb-3">Department Collections</h4>
+            {(reports?.collection?.by_department || []).slice(0, 8).map((row) => (
+              <div key={row.department} className="flex items-center justify-between gap-4 py-2 border-b border-slate-200/60 dark:border-white/10 last:border-0">
+                <span className="text-sm font-bold text-slate-500 truncate">{row.department}</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white shrink-0">{money(row.amount)}</span>
+              </div>
+            ))}
+            {!reports?.collection?.by_department?.length && <p className="text-sm font-semibold text-slate-500">No department collections yet.</p>}
+          </div>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5">
+            <h4 className="font-black text-slate-900 dark:text-white mb-3">Academic Year Collections</h4>
+            {(reports?.collection?.by_academic_year || []).slice(0, 8).map((row) => (
+              <div key={row.academic_year} className="flex items-center justify-between gap-4 py-2 border-b border-slate-200/60 dark:border-white/10 last:border-0">
+                <span className="text-sm font-bold text-slate-500 truncate">{row.academic_year}</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white shrink-0">{money(row.amount)}</span>
+              </div>
+            ))}
+            {!reports?.collection?.by_academic_year?.length && <p className="text-sm font-semibold text-slate-500">No academic year collections yet.</p>}
           </div>
         </div>
       </div>
@@ -1124,7 +1207,13 @@ const FinanceWorkspace = () => {
             ))}
           </div>
           <div className="mt-4">
-            <ReceiptPanel receipt={receipt} />
+            <ReceiptPanel
+              receipt={receipt}
+              financeActions
+              onPrint={recordReceiptPrint}
+              onReissue={reissueReceipt}
+              onCancel={cancelReceipt}
+            />
           </div>
         </div>
       </div>

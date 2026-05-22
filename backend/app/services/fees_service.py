@@ -1,4 +1,5 @@
 import uuid
+import re
 import razorpay
 from datetime import datetime, timezone
 from fastapi import HTTPException
@@ -24,6 +25,7 @@ from app.core.config import settings
 RAZORPAY_KEY_ID = settings.RAZORPAY_KEY_ID
 RAZORPAY_KEY_SECRET = settings.RAZORPAY_KEY_SECRET
 PAYMENT_MODES = {"cash", "upi", "card", "bank_transfer", "cheque", "razorpay", "adjustment"}
+SEMESTER_RE = re.compile(r"\bsem(?:ester)?\s*[-:]?\s*(\d{1,2})\b", re.IGNORECASE)
 
 
 class FeesService:
@@ -104,11 +106,18 @@ class FeesService:
             "payment_mode": payment.payment_mode,
             "paid_at": payment.transaction_date.isoformat() if payment.transaction_date else None,
             "verified": payment.status == "success",
+            "cancelled": bool(payment.is_deleted),
+            "remarks": payment.remarks or "",
         }
         if not public:
             payload["transaction_ref"] = payment.transaction_reference or ""
             payload["verification_token"] = payment.verification_token
         return payload
+
+    def _invoice_semester_label(self, invoice: StudentFeeInvoice) -> str:
+        text = f"{invoice.fee_type or ''} {invoice.description or ''}"
+        match = SEMESTER_RE.search(text)
+        return f"Sem {match.group(1)}" if match else "Unmapped semester"
 
     async def _structure_payload(self, structure: FeeStructure, include_items: bool = True):
         items = []
@@ -668,6 +677,7 @@ class FeesService:
                 "invoice_no": inv.invoice_no or inv.id[:8].upper(),
                 "fee_type": inv.fee_type,
                 "academic_year": inv.academic_year,
+                "semester": self._invoice_semester_label(inv),
                 "total_amount": inv.total_amount,
                 "concession": concession,
                 "paid": paid,
@@ -734,7 +744,37 @@ class FeesService:
                 }
                 for p in payments
             ],
+            "groups": self._ledger_groups(items),
         }
+
+    def _ledger_groups(self, items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        grouped: Dict[str, Dict[str, Any]] = {}
+        for item in items:
+            key = f"{item.get('academic_year') or 'Unknown'}::{item.get('semester') or 'Unmapped semester'}"
+            group = grouped.setdefault(key, {
+                "academic_year": item.get("academic_year") or "Unknown",
+                "semester": item.get("semester") or "Unmapped semester",
+                "total_billed": 0.0,
+                "total_concession": 0.0,
+                "total_paid": 0.0,
+                "total_due": 0.0,
+                "invoice_count": 0,
+                "due_invoice_count": 0,
+                "invoices": [],
+            })
+            group["total_billed"] += float(item.get("total_amount") or 0)
+            group["total_concession"] += float(item.get("concession") or 0)
+            group["total_paid"] += float(item.get("paid") or 0)
+            group["total_due"] += float(item.get("due") or 0)
+            group["invoice_count"] += 1
+            if float(item.get("due") or 0) > 0:
+                group["due_invoice_count"] += 1
+            group["invoices"].append(item)
+        return sorted(
+            grouped.values(),
+            key=lambda row: (str(row["academic_year"]), str(row["semester"])),
+            reverse=True,
+        )
 
     async def create_fee_structure(self, college_id: str, user_id: str, data: dict):
         structure = FeeStructure(college_id=college_id, created_by=user_id, **data)
@@ -1078,6 +1118,95 @@ class FeesService:
         college = await self.db.get(College, college_id)
         return await self._receipt_payload(payment, invoice, student, college)
 
+    async def cancel_receipt(self, college_id: str, user_id: str, receipt_no: str, reason: str = ""):
+        payment = (await self.db.execute(
+            select(FeePayment).where(
+                FeePayment.college_id == college_id,
+                FeePayment.receipt_no == receipt_no,
+                FeePayment.status == "success",
+                FeePayment.is_deleted == False,
+            )
+        )).scalars().first()
+        if not payment:
+            raise HTTPException(status_code=404, detail="Active receipt not found")
+        invoice = await self.db.get(StudentFeeInvoice, payment.invoice_id)
+        old_value = {
+            "receipt_no": payment.receipt_no,
+            "amount": payment.amount_paid,
+            "payment_mode": payment.payment_mode,
+            "invoice_id": payment.invoice_id,
+        }
+        payment.is_deleted = True
+        payment.deleted_at = datetime.now(timezone.utc)
+        payment.remarks = f"{payment.remarks or ''}\nCancelled receipt: {reason}".strip()
+        if invoice:
+            await self._refresh_invoice_status(invoice)
+        from app.services.audit_service import AuditService
+        await AuditService.log_audit(
+            db=self.db,
+            college_id=college_id,
+            user_id=user_id,
+            action="FEE_RECEIPT_CANCELLED",
+            resource_type="fees",
+            resource_id=str(payment.id),
+            old_value=old_value,
+            new_value={"receipt_no": receipt_no, "reason": reason},
+        )
+        await self.db.commit()
+        return {"receipt_no": receipt_no, "status": "cancelled"}
+
+    async def reissue_receipt(self, college_id: str, user_id: str, receipt_no: str, reason: str = ""):
+        payment = (await self.db.execute(
+            select(FeePayment).where(
+                FeePayment.college_id == college_id,
+                FeePayment.receipt_no == receipt_no,
+                FeePayment.status == "success",
+                FeePayment.is_deleted == False,
+            )
+        )).scalars().first()
+        if not payment:
+            raise HTTPException(status_code=404, detail="Active receipt not found")
+        previous_token = payment.verification_token
+        payment.verification_token = str(uuid.uuid4())
+        payment.remarks = f"{payment.remarks or ''}\nReceipt reissued: {reason}".strip()
+        from app.services.audit_service import AuditService
+        await AuditService.log_audit(
+            db=self.db,
+            college_id=college_id,
+            user_id=user_id,
+            action="FEE_RECEIPT_REISSUED",
+            resource_type="fees",
+            resource_id=str(payment.id),
+            old_value={"receipt_no": receipt_no, "verification_token": previous_token},
+            new_value={"receipt_no": receipt_no, "verification_token": payment.verification_token, "reason": reason},
+        )
+        await self.db.commit()
+        return await self.get_receipt(college_id, receipt_no)
+
+    async def record_receipt_print(self, college_id: str, user_id: str, receipt_no: str):
+        payment = (await self.db.execute(
+            select(FeePayment).where(
+                FeePayment.college_id == college_id,
+                FeePayment.receipt_no == receipt_no,
+                FeePayment.status == "success",
+                FeePayment.is_deleted == False,
+            )
+        )).scalars().first()
+        if not payment:
+            raise HTTPException(status_code=404, detail="Active receipt not found")
+        from app.services.audit_service import AuditService
+        await AuditService.log_audit(
+            db=self.db,
+            college_id=college_id,
+            user_id=user_id,
+            action="FEE_RECEIPT_PRINTED",
+            resource_type="fees",
+            resource_id=str(payment.id),
+            new_value={"receipt_no": receipt_no},
+        )
+        await self.db.commit()
+        return {"receipt_no": receipt_no, "status": "print_recorded"}
+
     async def search_receipts(self, college_id: str, q: str = "", limit: int = 20):
         stmt = (
             select(FeePayment, StudentFeeInvoice, User)
@@ -1151,6 +1280,21 @@ class FeesService:
             .where(*payment_filters, FeePayment.collected_by.is_not(None))
             .group_by(User.name)
         )).all()
+        department_collection_rows = (await self.db.execute(
+            select(UserProfile.department, func.coalesce(func.sum(FeePayment.amount_paid), 0), func.count(FeePayment.id))
+            .join(User, User.id == FeePayment.student_id)
+            .outerjoin(UserProfile, UserProfile.user_id == User.id)
+            .where(*payment_filters)
+            .group_by(UserProfile.department)
+            .order_by(func.coalesce(func.sum(FeePayment.amount_paid), 0).desc())
+        )).all()
+        academic_year_collection_rows = (await self.db.execute(
+            select(StudentFeeInvoice.academic_year, func.coalesce(func.sum(FeePayment.amount_paid), 0), func.count(FeePayment.id))
+            .join(StudentFeeInvoice, StudentFeeInvoice.id == FeePayment.invoice_id)
+            .where(*payment_filters)
+            .group_by(StudentFeeInvoice.academic_year)
+            .order_by(StudentFeeInvoice.academic_year.desc())
+        )).all()
         recent_rows = (await self.db.execute(
             select(FeePayment, StudentFeeInvoice, User)
             .join(StudentFeeInvoice, StudentFeeInvoice.id == FeePayment.invoice_id)
@@ -1163,6 +1307,14 @@ class FeesService:
         by_mode = {mode: float(total or 0) for mode, total in mode_rows}
         by_fee_head = {fee_head: float(total or 0) for fee_head, total in fee_head_rows}
         by_cashier = {cashier_name: float(total or 0) for cashier_name, total in cashier_rows}
+        by_department = [
+            {"department": department or "Unassigned", "amount": float(total or 0), "count": int(count or 0)}
+            for department, total, count in department_collection_rows
+        ]
+        by_academic_year = [
+            {"academic_year": academic_year or "Unknown", "amount": float(total or 0), "count": int(count or 0)}
+            for academic_year, total, count in academic_year_collection_rows
+        ]
         recent_collections = []
         for payment, invoice, student in recent_rows:
             amount = float(payment.amount_paid or 0)
@@ -1265,6 +1417,8 @@ class FeesService:
                 "by_mode": by_mode,
                 "by_fee_head": by_fee_head,
                 "by_cashier": by_cashier,
+                "by_department": by_department,
+                "by_academic_year": by_academic_year,
                 "recent": recent_collections,
             },
             "dues": {

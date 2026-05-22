@@ -129,6 +129,10 @@ class CancelInvoicePayload(BaseModel):
     reason: str = ""
 
 
+class ReceiptActionPayload(BaseModel):
+    reason: str = ""
+
+
 @router.get("/fees/due")
 async def get_my_due_fees(
     student_id: Optional[str] = Query(None, description="Required for parent role"),
@@ -347,6 +351,35 @@ async def finance_receipt_search(
     svc: FeesService = Depends(get_fees_service),
 ):
     return await svc.search_receipts(user["college_id"], q, limit)
+
+
+@router.post("/finance/receipts/{receipt_no}/cancel")
+async def finance_cancel_receipt(
+    receipt_no: str,
+    payload: ReceiptActionPayload,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.cancel_receipt(user["college_id"], user["id"], receipt_no, payload.reason)
+
+
+@router.post("/finance/receipts/{receipt_no}/reissue")
+async def finance_reissue_receipt(
+    receipt_no: str,
+    payload: ReceiptActionPayload,
+    user: dict = Depends(require_role(*FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.reissue_receipt(user["college_id"], user["id"], receipt_no, payload.reason)
+
+
+@router.post("/finance/receipts/{receipt_no}/print")
+async def finance_record_receipt_print(
+    receipt_no: str,
+    user: dict = Depends(require_role("cashier", *FINANCE_FULL_ROLES)),
+    svc: FeesService = Depends(get_fees_service),
+):
+    return await svc.record_receipt_print(user["college_id"], user["id"], receipt_no)
 
 
 @router.get("/finance/reports")
