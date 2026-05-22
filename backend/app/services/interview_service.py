@@ -47,6 +47,9 @@ INTERVIEW RULES:
     - depth (1-10): How deep was their technical/contextual understanding?
     - accuracy (1-10): Were their statements factually correct?
 
+RESUME VERIFICATION:
+The resume is the VERIFIED source of truth for all factual claims. If the candidate states something that contradicts their resume (name, CGPA, projects, skills), politely point out the discrepancy. Example: "Interesting — your resume mentions [X], but you said [Y]. Could you clarify?" Never blindly accept verbal claims over resume data.
+
 TONE: Professional but encouraging. Like a friendly senior engineer, not an interrogator. Acknowledge good answers briefly before moving on.
 
 {resume_section}
@@ -444,6 +447,7 @@ async def end_interview(interview_id: str, user: dict, session: AsyncSession) ->
         interview.overall_score = feedback.get("overall_score", 50)
         flag_modified(interview, "ai_feedback")
         flag_modified(interview, "scores")
+        await session.commit()
 
     return {
         "interview_id": interview.id,

@@ -695,6 +695,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const transcriptRef = useRef('');
   const prevDisplayedRef = useRef(''); // Tracks last full displayed text (final+interim) to detect real changes
   const isSpeakingRef = useRef(false);
+  const isSubmittingRef = useRef(false);
   const phaseRef = useRef('setup');
   const interviewIdRef = useRef<any>(null); // Avoids stale closure in submitAnswer
   const stopListeningAndTranscribeRef = useRef<(() => void) | null>(null);
@@ -763,7 +764,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   }, []);
 
   // ── Speech Synthesis (AI speaks via ElevenLabs backend) ──
-  const speakText = useCallback((text) => {
+  const speakText = useCallback((text, onAudioStart) => {
     return new Promise<void>(async (resolve) => {
       // 1. Interrupt any active playback
       if (currentAudioRef.current) {
@@ -772,8 +773,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       }
 
       setIsSpeaking(true);
+      isSpeakingRef.current = true; // Sync directly
       setOrbState('speaking');
-      setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
       stopListening();
 
       try {
@@ -781,6 +782,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         console.log('[TTS] speakText called, activeId:', activeId, 'text length:', text?.length);
         if (!activeId) {
           console.warn('[TTS] No activeId — skipping speak. interviewIdRef is null.');
+          setIsSpeaking(false);
+          isSpeakingRef.current = false;
           resolve();
           return;
         }
@@ -797,6 +800,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         if (!audioBlob || audioBlob.size === 0) {
           console.error('[TTS] Empty or invalid audio blob');
           setIsSpeaking(false);
+          isSpeakingRef.current = false;
+          if (onAudioStart) onAudioStart();
           resolve();
           return;
         }
@@ -811,6 +816,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           if (!resolved) {
             resolved = true;
             setIsSpeaking(false);
+            isSpeakingRef.current = false; // Sync directly
             URL.revokeObjectURL(audioUrl);
             currentAudioRef.current = null;
             resolve();
@@ -834,9 +840,13 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
         await audio.play();
         console.log('[TTS] audio.play() started successfully');
+        setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
+        if (onAudioStart) onAudioStart();
       } catch (err) {
         console.error('[TTS] speakText error:', err);
         setIsSpeaking(false);
+        isSpeakingRef.current = false;
+        if (onAudioStart) onAudioStart();
         resolve();
       }
     });
@@ -991,7 +1001,9 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   // ── Submit answer to backend ──
   const submitAnswer = useCallback(async (answer) => {
     const currentInterviewId = interviewIdRef.current;
-    if (!currentInterviewId || !answer.trim()) return;
+    if (!currentInterviewId || !answer.trim() || isSubmittingRef.current) return;
+    
+    isSubmittingRef.current = true;
     stopListening();
     setOrbState('thinking');
     setShowTranscript(false); // ← Hide text immediately when entering thinking mode
@@ -1001,23 +1013,30 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
     try {
       const { data } = await interviewAPI.sendMessage(currentInterviewId, { content: answer });
-      setConversation(prev => [
-        ...prev,
-        { role: 'user', content: answer },
-        { role: 'assistant', content: data.ai_response },
-      ]);
-      setQuestionNumber(data.question_number);
-      setCurrentQuestion(data.ai_response);
+      
+      const onAudioStart = () => {
+        setConversation(prev => [
+          ...prev,
+          { role: 'user', content: answer },
+          { role: 'assistant', content: data.ai_response },
+        ]);
+        setQuestionNumber(data.question_number);
+        setCurrentQuestion(data.ai_response);
+      };
 
       // AI speaks the response
-      await speakText(data.ai_response);
+      await speakText(data.ai_response, onAudioStart);
       
       // Stop execution context if user clicked "End Interview" while AI was speaking
-      if (phaseRef.current === 'ending') return;
+      if (phaseRef.current === 'ending') {
+        isSubmittingRef.current = false;
+        return;
+      }
 
       // If final question, auto-end
       if (data.is_final || data.question_number >= maxQuestions) {
         handleEndInterview();
+        isSubmittingRef.current = false;
         return;
       }
 
@@ -1028,6 +1047,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       toast.error('Failed to process response. Please try again.');
       setOrbState('listening');
       startListening();
+    } finally {
+      isSubmittingRef.current = false;
     }
   }, [stopListening, speakText, startListening, maxQuestions, handleEndInterview]);
 
