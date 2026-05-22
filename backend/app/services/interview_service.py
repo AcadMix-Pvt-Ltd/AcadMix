@@ -183,6 +183,12 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
     target_role = req.get("target_role", "Software Developer")
     target_company = req.get("target_company")
     difficulty = req.get("difficulty", "intermediate")
+    mode = req.get("mode", "practice")
+    company_id = req.get("company_id")
+    round_type = req.get("round_type") or interview_type
+    branch = req.get("branch")
+    resume_id = req.get("resume_id")
+    strictness = req.get("strictness", "standard")
 
     # Fetch latest resume text (if available)
     resume_text = ""
@@ -197,6 +203,18 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
         .order_by(models.ResumeScore.created_at.desc())
         .limit(1)
     )
+    if resume_id:
+        resume_stmt = (
+            select(models.ResumeScore.parsed_text)
+            .where(
+                models.ResumeScore.id == resume_id,
+                models.ResumeScore.student_id == user["id"],
+                models.ResumeScore.college_id == user["college_id"],
+                models.ResumeScore.is_deleted == False,
+                models.ResumeScore.parsed_text.isnot(None),
+            )
+            .limit(1)
+        )
     resume_result = await session.execute(resume_stmt)
     resume_row = resume_result.scalar()
     if resume_row:
@@ -204,7 +222,19 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
 
     # Build system prompt
     company_context = f" at {target_company}" if target_company else ""
-    resume_section = f"CANDIDATE RESUME:\n{resume_text}" if resume_text else "No resume provided. Ask general questions appropriate for a fresh graduate."
+    premium_context = "\n".join([
+        "PREMIUM SESSION CONTEXT:",
+        f"- Mode: {mode}",
+        f"- Round type: {round_type}",
+        f"- Branch: {branch or 'Not specified'}",
+        f"- Company ID: {company_id or 'Not linked'}",
+        f"- Strictness: {strictness}",
+    ])
+    resume_section = (
+        f"{premium_context}\n\nCANDIDATE RESUME:\n{resume_text}"
+        if resume_text
+        else f"{premium_context}\n\nNo resume provided. Ask general questions appropriate for a fresh graduate."
+    )
 
     system_prompt = INTERVIEW_SYSTEM_PROMPT.format(
         interview_type=interview_type,
@@ -261,6 +291,12 @@ Speak naturally and professionally. Do NOT include any brackets, placeholders, o
         "target_role": target_role,
         "target_company": target_company,
         "difficulty": difficulty,
+        "mode": mode,
+        "company_id": company_id,
+        "round_type": round_type,
+        "branch": branch,
+        "resume_id": resume_id,
+        "strictness": strictness,
         "question_number": 1,
         "max_questions": 10,
     }

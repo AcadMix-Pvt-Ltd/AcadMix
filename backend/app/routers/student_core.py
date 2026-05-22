@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List, Optional
 from datetime import datetime, date, timedelta
+import io
+import textwrap
 
 from database import get_db
 from app.core.security import get_current_user
@@ -395,6 +397,107 @@ async def generate_resume_docx(
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def _minimal_resume_pdf(profile: dict) -> io.BytesIO:
+    auto = profile.get("auto_filled") or {}
+    editable = profile.get("editable") or {}
+    name = auto.get("name") or "AcadMix Resume"
+    lines = [
+        name,
+        " | ".join([v for v in [editable.get("email") or auto.get("email"), editable.get("phone") or auto.get("phone"), editable.get("location")] if v]),
+        "",
+        "Summary",
+        editable.get("summary") or "Resume generated from AcadMix Career Tools.",
+        "",
+        "Education",
+        " ".join([auto.get("department") or "", auto.get("institution") or "", auto.get("batch") or ""]).strip(),
+        "",
+        "Skills",
+        ", ".join(sum((editable.get("skills") or {}).values(), [])) if isinstance(editable.get("skills"), dict) else "",
+    ]
+    for section in ["projects", "experience", "certifications", "achievements"]:
+        items = editable.get(section) or []
+        if items:
+            lines += ["", section.replace("_", " ").title()]
+            for item in items[:6]:
+                if isinstance(item, dict):
+                    text = item.get("title") or item.get("role") or item.get("name") or item.get("company") or ""
+                    bullets = item.get("bullets") or []
+                    lines.append(text)
+                    lines.extend([f"- {bullet}" for bullet in bullets[:3] if str(bullet).strip()])
+                else:
+                    lines.append(f"- {item}")
+
+    text_lines = []
+    for line in lines:
+        text_lines.extend(textwrap.wrap(str(line), width=92) or [""])
+
+    def esc(value: str) -> str:
+        return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+    y = 790
+    stream_parts = ["BT", "/F1 11 Tf", "50 790 Td"]
+    for index, line in enumerate(text_lines[:58]):
+        if index:
+            stream_parts.append("0 -14 Td")
+        stream_parts.append(f"({esc(line)}) Tj")
+        y -= 14
+    stream_parts.append("ET")
+    stream = "\n".join(stream_parts).encode("latin-1", errors="replace")
+
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode("ascii") + b" >>\nstream\n" + stream + b"\nendstream",
+    ]
+    pdf = io.BytesIO()
+    pdf.write(b"%PDF-1.4\n")
+    offsets = [0]
+    for idx, obj in enumerate(objects, start=1):
+        offsets.append(pdf.tell())
+        pdf.write(f"{idx} 0 obj\n".encode("ascii"))
+        pdf.write(obj)
+        pdf.write(b"\nendobj\n")
+    xref = pdf.tell()
+    pdf.write(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode("ascii"))
+    for offset in offsets[1:]:
+        pdf.write(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.write(f"trailer << /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF".encode("ascii"))
+    pdf.seek(0)
+    return pdf
+
+
+@router.post("/student/resume/generate")
+async def generate_resume(
+    body: dict = Body(default={}),
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Generate a PDF or DOCX resume from the student's resume profile data."""
+    template = body.get("template", "classic")
+    export_format = (body.get("format") or "pdf").lower()
+    if export_format == "docx":
+        try:
+            buffer, filename = await resume_builder_service.generate_docx(user, session, template)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    if export_format != "pdf":
+        raise HTTPException(status_code=400, detail="format must be pdf or docx")
+    profile = await resume_profile_service.get_resume_profile(user, session)
+    filename = f"{(profile.get('auto_filled') or {}).get('name') or 'AcadMix'}_Resume.pdf".replace(" ", "_")
+    return StreamingResponse(
+        _minimal_resume_pdf(profile),
+        media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 

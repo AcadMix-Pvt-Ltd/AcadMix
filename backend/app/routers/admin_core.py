@@ -10,12 +10,39 @@ from database import get_db
 from app.core.security import require_role
 from app.schemas.users import ProfileReview
 from app.services.admin_service import AdminService
+from app.services import admin_ami_service
 
 router = APIRouter()
 
 
 def get_admin_service(session: AsyncSession = Depends(get_db)):
     return AdminService(session)
+
+
+@router.get("/admin/ami/context-map")
+async def get_admin_ami_context_map(
+    admin: dict = Depends(require_role("admin", "principal", "super_admin")),
+    session: AsyncSession = Depends(get_db),
+):
+    return await admin_ami_service.get_context_map(admin, session)
+
+
+@router.post("/admin/ami/query")
+async def query_admin_ami(
+    req: dict = Body(...),
+    admin: dict = Depends(require_role("admin", "principal", "super_admin")),
+    session: AsyncSession = Depends(get_db),
+):
+    return await admin_ami_service.answer_query(req.get("message", ""), admin, session)
+
+
+@router.post("/admin/ami/action-preview")
+async def preview_admin_ami_action(
+    req: dict = Body(...),
+    admin: dict = Depends(require_role("admin", "principal", "super_admin")),
+    session: AsyncSession = Depends(get_db),
+):
+    return await admin_ami_service.preview_action(req.get("action", ""), req.get("payload") or {}, admin, session)
 
 
 @router.get("/admin/reports/faculty-research")

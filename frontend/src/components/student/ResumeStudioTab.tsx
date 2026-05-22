@@ -6,17 +6,22 @@ import {
   LinkedinLogo, GithubLogo, Envelope, Phone, MapPin, User,
   CaretDown, Check, Warning, ArrowRight, Notebook
 } from '@phosphor-icons/react';
-import { resumeProfileAPI } from '../../services/api';
+import { careerAPI, resumeProfileAPI } from '../../services/api';
 import { toast } from 'sonner';
-import html2pdf from 'html2pdf.js';
 
 /* ── Animation Variants ─────────────────────────────────── */
 const fadeIn = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
 
 /* ── Template Configs ────────────────────────────────────── */
 const TEMPLATES = [
-  { id: 'classic', label: 'Classic', desc: 'Clean, ATS-friendly single column' },
-  { id: 'modern', label: 'Modern', desc: 'Coming soon', disabled: true },
+  { id: 'classic', label: 'Classic', desc: 'Clean, ATS-friendly single column', ats_safety: 98 },
+  { id: 'modern', label: 'Modern', desc: 'Premium campus layout', ats_safety: 92 },
+  { id: 'compact', label: 'Compact', desc: 'Dense one-page layout', ats_safety: 95 },
+  { id: 'campus', label: 'Campus', desc: 'Placement-cell friendly format', ats_safety: 94 },
+  { id: 'developer', label: 'Developer', desc: 'Projects and GitHub focused', ats_safety: 93 },
+  { id: 'core-engineering', label: 'Core Engineering', desc: 'Core branch technical profile', ats_safety: 94 },
+  { id: 'management', label: 'Management', desc: 'Leadership and business profile', ats_safety: 91 },
+  { id: 'ats-strict', label: 'ATS Strict', desc: 'Maximum parser safety', ats_safety: 100 },
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -32,10 +37,15 @@ const ResumePreview = ({ data, template }: { data: any; template: string }) => {
   const achievements = data?.achievements || [];
   const summary = data?.summary || '';
   const currentEdu = personal.current_education;
+  const accent = template === 'developer' ? '#2563eb' : template === 'core-engineering' ? '#0f766e' : template === 'management' ? '#7c3aed' : '#000000';
+  const compact = template === 'compact' || template === 'ats-strict';
+  const fontFamily = ['modern', 'developer', 'management', 'core-engineering'].includes(template)
+    ? "'Inter', 'Arial', sans-serif"
+    : "'Times New Roman', 'Georgia', serif";
 
   const SectionTitle = ({ children }: any) => (
     <div className="mt-[8px] mb-[3px] first:mt-0">
-      <h3 className="text-[11px] font-[700] text-black border-b border-black pb-[1px]">{children}</h3>
+      <h3 className="text-[11px] font-[700] border-b pb-[1px]" style={{ color: accent, borderColor: accent }}>{children}</h3>
     </div>
   );
   const Bullet = ({ children }: any) => (
@@ -50,11 +60,11 @@ const ResumePreview = ({ data, template }: { data: any; template: string }) => {
   const hasSkills = skills.languages?.length || skills.frameworks?.length || skills.tools?.length || skills.databases?.length;
 
   return (
-    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily: "'Times New Roman', 'Georgia', serif" }}>
-      <div className="p-5 h-full overflow-hidden">
+    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily }}>
+      <div className={`${compact ? 'p-4' : 'p-5'} h-full overflow-hidden`}>
 
         {/* Name */}
-        <h1 className="text-center text-[16px] font-[700] text-black leading-tight">
+        <h1 className="text-center text-[16px] font-[800] leading-tight" style={{ color: accent }}>
           {personal.name || <span className="text-slate-300 italic">Your Full Name</span>}
         </h1>
 
@@ -268,6 +278,7 @@ const ResumeStudioTab = ({ navigate }: any) => {
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState<any>(null);
   const [template, setTemplate] = useState('classic');
+  const [templates, setTemplates] = useState(TEMPLATES);
   const [downloading, setDownloading] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -311,11 +322,25 @@ const ResumeStudioTab = ({ navigate }: any) => {
   }, [buildPreviewData]);
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
+  useEffect(() => {
+    careerAPI.resumeTemplates()
+      .then(({ data }) => {
+        if (data?.templates?.length) {
+          setTemplates(data.templates.map((item: any) => ({
+            id: item.id,
+            label: item.label,
+            desc: item.description || item.desc,
+            ats_safety: item.ats_safety,
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleDownloadDocx = async () => {
     setDownloading('docx');
     try {
-      const response = await resumeProfileAPI.generateDocx(template);
+      const response = await resumeProfileAPI.generate({ template, format: 'docx' });
       const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -338,86 +363,18 @@ const ResumeStudioTab = ({ navigate }: any) => {
     if (!profileData) return;
     setDownloading('pdf');
     try {
-      const p = profileData.personal || {};
-      const eduList = profileData.education_history || [];
-      const sk = profileData.skills || {};
-      const proj = profileData.projects || [];
-      const exp = profileData.experience || [];
-      const certsList = profileData.certifications || [];
-      const achv = profileData.achievements || [];
-      const sum = profileData.summary || '';
-      const ce = p.current_education;
-      const studentName = p.name?.replace(/\s+/g, '_') || 'Resume';
-
-      const esc = (s: string) => s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '';
-      const sectionHead = (t: string) => `<div style="margin-top:14px;margin-bottom:4px;border-bottom:1.5px solid #000;padding-bottom:2px"><span style="font-size:13px;font-weight:700">${t}</span></div>`;
-      const bulletPt = (t: string) => `<div style="font-size:11px;padding-left:14px;position:relative;line-height:1.5"><span style="position:absolute;left:0;top:0">&#9679;</span>${esc(t)}</div>`;
-
-      let html = `<div style="font-family:'Times New Roman',Georgia,serif;color:#000;padding:48px 56px;width:794px;min-height:1123px;box-sizing:border-box;background:#fff">`;
-      html += `<h1 style="text-align:center;font-size:22px;font-weight:700;margin:0;line-height:1.3">${esc(p.name || '')}</h1>`;
-      const contact = [p.email, p.phone, p.location].filter(Boolean).map(esc);
-      if (contact.length) html += `<p style="text-align:center;font-size:11px;margin:2px 0 0">${contact.join('  |  ')}</p>`;
-      const links = [p.linkedin, p.github, p.portfolio].filter(Boolean).map(esc);
-      if (links.length) html += `<p style="text-align:center;font-size:11px;margin:2px 0 0">${links.join('  |  ')}</p>`;
-      if (sum.trim()) { html += sectionHead('Summary'); html += `<p style="font-size:11px;line-height:1.6;margin:0">${esc(sum)}</p>`; }
-      html += sectionHead('Education');
-      if (ce?.institution) {
-        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:12px"><b>${esc(ce.degree||'B.Tech')}${ce.branch?' in '+esc(ce.branch):''}</b>, ${esc(ce.institution)}</span>${ce.batch?`<span style="font-size:11px;font-style:italic">${esc(ce.batch)}</span>`:''}</div>`;
-      }
-      eduList.forEach((e: any) => {
-        const deg = e.degree||e.level||''; const fld = e.field||e.board||'';
-        const yr = e.gradYear||e.year||''; const mo = e.gradMonth||'';
-        const gd = mo ? `${mo} ${yr}`.trim() : yr;
-        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><span style="font-size:12px"><b>${esc(deg)}</b>${e.school?', '+esc(e.school):''}</span>${gd?`<span style="font-size:11px;font-style:italic">${esc(String(gd))}</span>`:''}</div>`;
-        const sub = [fld, e.location, e.percentage].filter(Boolean).map(esc);
-        if (sub.length) html += `<p style="font-size:10px;font-style:italic;margin:0 0 4px">${sub.join('  |  ')}</p>`;
-      });
-      const skRows = [['languages','Languages'],['frameworks','Frameworks'],['tools','Tools &amp; Platforms'],['databases','Databases']] as const;
-      if (skRows.some(([k]) => sk[k]?.length)) {
-        html += sectionHead('Technical Skills');
-        skRows.forEach(([k, label]) => { if (sk[k]?.length) html += `<p style="font-size:11px;line-height:1.6;margin:0"><b>${label}:</b> ${esc(sk[k].join(', '))}</p>`; });
-      }
-      if (proj.length) {
-        html += sectionHead('Projects');
-        proj.forEach((pr: any) => {
-          html += `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:12px">${esc(pr.title||'')}</b>${pr.duration?`<span style="font-size:11px;font-style:italic">${esc(pr.duration)}</span>`:''}</div>`;
-          pr.bullets?.filter((b: string) => b.trim()).forEach((b: string) => { html += bulletPt(b); });
-          if (pr.tech_stack) html += `<div style="font-size:11px;padding-left:14px;line-height:1.5"><b>Tech Stack:</b> ${esc(pr.tech_stack)}</div>`;
-          html += `</div>`;
-        });
-      }
-      if (exp.length) {
-        html += sectionHead('Experience');
-        exp.forEach((e: any) => {
-          html += `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12px"><b>${esc(e.role||'')}</b>${e.company?', '+esc(e.company):''}</span>${e.duration?`<span style="font-size:11px;font-style:italic">${esc(e.duration)}</span>`:''}</div>`;
-          if (e.location) html += `<p style="font-size:10px;font-style:italic;margin:0">${esc(e.location)}</p>`;
-          e.bullets?.filter((b: string) => b.trim()).forEach((b: string) => { html += bulletPt(b); });
-          html += `</div>`;
-        });
-      }
-      if (certsList.length) {
-        html += sectionHead('Certifications');
-        certsList.forEach((c: any) => { html += `<p style="font-size:11px;line-height:1.6;margin:0"><b>${esc(c.name||'')}</b>${(c.issuer||c.year)?' &mdash; '+[c.issuer,c.year].filter(Boolean).map(esc).join(', '):''}</p>`; });
-      }
-      if (achv.length) {
-        html += sectionHead('Achievements');
-        achv.forEach((a: any) => { const t = typeof a === 'string' ? a : a.title || ''; if (t.trim()) html += bulletPt(t); });
-      }
-      html += `</div>`;
-
-      const container = document.createElement('div');
-      container.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
-      container.innerHTML = html;
-      document.body.appendChild(container);
-
-      await html2pdf().set({
-        margin: 0, filename: `${studentName}_Resume.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: 'px', format: [794, 1123], orientation: 'portrait' as const },
-      }).from(container.firstChild).save();
-
-      document.body.removeChild(container);
+      const response = await resumeProfileAPI.generate({ template, format: 'pdf' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const disposition = response.headers['content-disposition'];
+      const match = disposition?.match(/filename="(.+)"/);
+      a.download = match ? match[1] : 'Resume.pdf';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
       toast.success('PDF downloaded!');
     } catch { toast.error('Failed to generate PDF'); }
     setDownloading(null);
@@ -462,18 +419,17 @@ const ResumeStudioTab = ({ navigate }: any) => {
           {/* Template selector */}
           <div className="soft-card p-5">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Template</h3>
-            <div className="flex gap-2">
-              {TEMPLATES.map(t => (
-                <button key={t.id} onClick={() => !t.disabled && setTemplate(t.id)} disabled={t.disabled}
-                  className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all border ${
+            <div className="grid grid-cols-2 gap-2">
+              {templates.map(t => (
+                <button key={t.id} onClick={() => setTemplate(t.id)}
+                  className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
                     template === t.id
                       ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-500/25 shadow-sm'
-                      : t.disabled
-                        ? 'bg-slate-50 dark:bg-white/[0.02] text-slate-300 dark:text-slate-600 border-transparent cursor-not-allowed'
-                        : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'
+                      : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'
                   }`}>
-                  {t.label}
-                  {t.disabled && <span className="text-[9px] block text-slate-300 dark:text-slate-600 mt-0.5">Soon</span>}
+                  <span className="block">{t.label}</span>
+                  <span className="text-[10px] block text-slate-400 mt-1 leading-snug">{t.desc}</span>
+                  {t.ats_safety && <span className="text-[9px] block text-emerald-500 mt-1">ATS {t.ats_safety}%</span>}
                 </button>
               ))}
             </div>

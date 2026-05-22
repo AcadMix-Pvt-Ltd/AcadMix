@@ -18,6 +18,21 @@ from app.core.config import settings
 
 logger = logging.getLogger("acadmix.career_service")
 
+RESUME_TEMPLATES = [
+    {"id": "classic", "label": "Classic", "description": "Clean single-column resume for ATS systems.", "ats_safety": 98, "formats": ["pdf", "docx"], "sections": ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "modern", "label": "Modern", "description": "Premium campus resume with stronger headings and balanced spacing.", "ats_safety": 92, "formats": ["pdf", "docx"], "sections": ["summary", "education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "compact", "label": "Compact", "description": "Dense one-page layout for students with many projects.", "ats_safety": 95, "formats": ["pdf", "docx"], "sections": ["education", "skills", "projects", "experience", "certifications", "achievements"]},
+    {"id": "campus", "label": "Campus", "description": "Placement-cell friendly format with education and projects up front.", "ats_safety": 94, "formats": ["pdf", "docx"], "sections": ["education", "skills", "projects", "achievements", "certifications"]},
+    {"id": "developer", "label": "Developer", "description": "Software profile optimized for projects, GitHub and tech stacks.", "ats_safety": 93, "formats": ["pdf", "docx"], "sections": ["summary", "skills", "projects", "experience", "education", "certifications"]},
+    {"id": "core-engineering", "label": "Core Engineering", "description": "Mechanical, Civil, EEE and ECE layout for labs, tools and technical projects.", "ats_safety": 94, "formats": ["pdf", "docx"], "sections": ["summary", "education", "technical_skills", "projects", "industrial_training", "certifications"]},
+    {"id": "management", "label": "Management", "description": "Business analyst and operations layout with leadership signals.", "ats_safety": 91, "formats": ["pdf", "docx"], "sections": ["summary", "education", "experience", "leadership", "projects", "skills"]},
+    {"id": "ats-strict", "label": "ATS Strict", "description": "Maximum parser safety with minimal styling.", "ats_safety": 100, "formats": ["pdf", "docx"], "sections": ["summary", "education", "skills", "experience", "projects", "certifications"]},
+]
+
+
+def get_resume_templates() -> dict:
+    return {"templates": RESUME_TEMPLATES}
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LLM + Caching Core
@@ -750,6 +765,100 @@ COMPANY_INTEL = [
 ]
 
 
-def get_company_intel() -> dict:
-    """Get company intel cards for common campus recruiters."""
-    return {"companies": COMPANY_INTEL}
+def _round_tip(round_name: str) -> str:
+    lowered = round_name.lower()
+    if "coding" in lowered:
+        return "Practice timed coding with clear explanation, edge cases, and complexity analysis."
+    if "technical" in lowered:
+        return "Prepare project deep-dives, fundamentals, tradeoffs, and one whiteboard explanation."
+    if "group" in lowered or "gd" in lowered:
+        return "Use a 30-second point, evidence, counterpoint, and conclusion structure."
+    if "hr" in lowered or "behavioral" in lowered:
+        return "Prepare STAR stories for teamwork, conflict, failure, leadership, and relocation."
+    if "assessment" in lowered or "aptitude" in lowered:
+        return "Prioritize arithmetic speed, verbal accuracy, puzzles, and company pattern mocks."
+    return "Clarify the evaluation criteria and practice concise, evidence-backed answers."
+
+
+def _upgrade_company_intel(company: dict) -> dict:
+    key_topics = company.get("key_topics", [])
+    roles = [
+        {"title": "Software Engineer Trainee", "branches": ["CSE", "ECE", "EEE"], "package_band": company.get("avg_package_lpa")},
+        {"title": "Graduate Engineer Trainee", "branches": ["ECE", "EEE", "Mech", "Civil"], "package_band": company.get("avg_package_lpa")},
+        {"title": "Business Analyst", "branches": ["CSE", "ECE", "EEE", "Civil", "Mech"], "package_band": company.get("avg_package_lpa")},
+    ]
+    if company.get("category") in {"Product/Tech", "IT Services", "IT Consulting"}:
+        roles.insert(0, {"title": "Associate Developer", "branches": ["CSE", "ECE"], "package_band": company.get("avg_package_lpa")})
+
+    return {
+        **company,
+        "roles": roles,
+        "eligibility": {
+            "cgpa": "Usually 6.0+ for service companies, 7.0+ for product roles",
+            "backlogs": "Prefer no active backlogs; some service recruiters allow limited history",
+            "branches": sorted({branch for role in roles for branch in role["branches"]}),
+        },
+        "round_strategy": [{"round": round_name, "prep": _round_tip(round_name)} for round_name in company.get("interview_rounds", [])],
+        "branch_playbooks": {
+            "CSE": ["DSA patterns", "DBMS/OS/CN", "project architecture", "GitHub proof"],
+            "ECE": ["C fundamentals", "digital electronics", "embedded/IoT project story", "aptitude"],
+            "EEE": ["electrical machines basics", "PLC/control systems", "power electronics", "aptitude"],
+            "Civil": ["estimation basics", "surveying/materials", "project/site exposure story", "aptitude"],
+            "Mech": ["SOM/Thermo/FM basics", "CAD/manufacturing", "mini-project explanation", "aptitude"],
+        },
+        "common_rejection_reasons": [
+            "Weak explanation of own projects",
+            "No structured answer in HR/GD rounds",
+            "Poor fundamentals under follow-up questions",
+            "Resume claims not supported by examples",
+        ],
+        "preparation_plan": [
+            "Week 1: aptitude, resume cleanup, company pattern",
+            "Week 2: core fundamentals and project deep-dives",
+            "Week 3: mock interview, HR stories, past questions",
+            "Final 3 days: revision sheet and timed mocks",
+        ],
+        "department_specific_topics": key_topics,
+    }
+
+
+def get_company_intel(
+    branch: Optional[str] = None,
+    role: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    package_band: Optional[str] = None,
+) -> dict:
+    """Get structured company intel cards for common campus recruiters."""
+    branch_filter = branch.upper() if branch and branch.lower() != "all" else None
+    role_filter = role.lower() if role and role.lower() != "all" else None
+    difficulty_filter = difficulty.lower() if difficulty and difficulty.lower() != "all" else None
+    package_filter = package_band.lower() if package_band and package_band.lower() != "all" else None
+
+    companies = [_upgrade_company_intel(company) for company in COMPANY_INTEL]
+    if branch_filter:
+        companies = [
+            company for company in companies
+            if branch_filter in company["eligibility"]["branches"]
+        ]
+    if role_filter:
+        companies = [
+            company for company in companies
+            if any(role_filter in role_item["title"].lower() for role_item in company["roles"])
+        ]
+    if difficulty_filter:
+        companies = [company for company in companies if company.get("difficulty", "").lower() == difficulty_filter]
+    if package_filter:
+        companies = [
+            company for company in companies
+            if package_filter in str(company.get("avg_package_lpa", "")).lower()
+            or package_filter in str(company.get("dream_package_lpa", "")).lower()
+        ]
+
+    return {
+        "companies": companies,
+        "filters": {
+            "branches": ["ALL", "CSE", "ECE", "EEE", "Civil", "Mech"],
+            "difficulty": sorted({company.get("difficulty") for company in COMPANY_INTEL if company.get("difficulty")}),
+            "categories": sorted({company.get("category") for company in COMPANY_INTEL if company.get("category")}),
+        },
+    }

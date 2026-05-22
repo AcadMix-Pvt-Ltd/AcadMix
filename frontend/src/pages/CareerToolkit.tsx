@@ -805,10 +805,16 @@ const CompanyIntelTab = () => {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [branch, setBranch] = useState('ALL');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
 
   useEffect(() => {
-    careerAPI.companyIntel().then(r => { setCompanies(r.data?.companies || []); setLoading(false); }).catch(() => setLoading(false));
-  }, []);
+    setLoading(true);
+    careerAPI.companyIntel({
+      branch,
+      difficulty: difficultyFilter === 'all' ? undefined : difficultyFilter,
+    }).then(r => { setCompanies(r.data?.companies || []); setLoading(false); }).catch(() => setLoading(false));
+  }, [branch, difficultyFilter]);
 
   const diffColors = { 'easy-moderate': 'text-emerald-600', moderate: 'text-amber-600', hard: 'text-orange-600', 'very hard': 'text-red-600' };
   const categories = ['all', ...new Set(companies.map(c => c.category))];
@@ -830,6 +836,14 @@ const CompanyIntelTab = () => {
 
       {/* Filter */}
       <motion.div variants={itemV} className="flex gap-2 flex-wrap">
+        <select value={branch} onChange={e => setBranch(e.target.value)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 outline-none">
+          {['ALL', 'CSE', 'ECE', 'EEE', 'Civil', 'Mech'].map(item => <option key={item} value={item}>{item}</option>)}
+        </select>
+        <select value={difficultyFilter} onChange={e => setDifficultyFilter(e.target.value)}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 outline-none">
+          {['all', 'easy-moderate', 'moderate', 'hard', 'very hard'].map(item => <option key={item} value={item}>{item === 'all' ? 'All difficulty' : item}</option>)}
+        </select>
         {categories.map(c => (
           <button key={c} onClick={() => setFilter(c)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === c ? 'bg-teal-500 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
@@ -886,6 +900,26 @@ const CompanyIntelTab = () => {
                       <div className="flex flex-wrap gap-1">{co.key_topics.map((t, j) => <span key={j} className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">{t}</span>)}</div>
                     </div>
 
+                    {co.eligibility && (
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Eligibility</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {Object.entries(co.eligibility).map(([k, v]) => (
+                            <p key={k} className="text-[11px] font-bold px-3 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400">
+                              <span className="uppercase text-slate-400">{k}: </span>{Array.isArray(v) ? v.join(', ') : String(v)}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {co.branch_playbooks?.[branch] && (
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">{branch} Prep Plan</p>
+                        <ul className="space-y-1.5">{co.branch_playbooks[branch].map((t, j) => <li key={j} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-1.5"><CaretRight size={10} weight="bold" className="text-sky-500 mt-0.5 shrink-0" />{t}</li>)}</ul>
+                      </div>
+                    )}
+
                     <div>
                       <p className="text-xs font-bold text-slate-500 uppercase mb-2">Prep Tips</p>
                       <ul className="space-y-1.5">{co.tips.map((t, j) => <li key={j} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-1.5"><CaretRight size={10} weight="bold" className="text-teal-500 mt-0.5 shrink-0" />{t}</li>)}</ul>
@@ -895,6 +929,20 @@ const CompanyIntelTab = () => {
                       <div>
                         <p className="text-xs font-bold text-slate-500 uppercase mb-2">Past Questions</p>
                         <ul className="space-y-1">{co.past_questions.map((q, j) => <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"><span className="text-amber-500">→</span>{q}</li>)}</ul>
+                      </div>
+                    )}
+
+                    {co.common_rejection_reasons?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Common Rejection Reasons</p>
+                        <ul className="space-y-1">{co.common_rejection_reasons.map((q, j) => <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"><span className="text-rose-500">-</span>{q}</li>)}</ul>
+                      </div>
+                    )}
+
+                    {co.preparation_plan?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Preparation Plan</p>
+                        <ul className="space-y-1">{co.preparation_plan.map((q, j) => <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"><span className="text-emerald-500">{j + 1}.</span>{q}</li>)}</ul>
                       </div>
                     )}
 

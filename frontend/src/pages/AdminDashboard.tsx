@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Users, ChartBar, GraduationCap, SignOut, Database, Sun, Moon, Bell, Info, UserCircle, Sparkle, Trash, MapPin, Buildings } from '@phosphor-icons/react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { StudentResultsSearch } from '../components/StudentResultsSearch';
-import { analyticsAPI, insightsAPI } from '../services/api';
+import { analyticsAPI, insightsAPI, adminAmiAPI } from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 import DashboardSkeleton from '../components/DashboardSkeleton';
 import AdminExpertManagement from '../components/admin/AdminExpertManagement';
@@ -47,8 +47,102 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const COMMAND_MODULES = [
+  ['admissions', 'Admissions CRM', 'beta'], ['student_lifecycle', 'Student Lifecycle', 'production'],
+  ['academics', 'Academics', 'production'], ['exams', 'Exams', 'production'],
+  ['finance', 'Finance', 'production'], ['hr-payroll', 'HRMS', 'beta'],
+  ['hostel', 'Hostel', 'beta'], ['transport', 'Transport', 'beta'],
+  ['library', 'Library', 'demo'], ['inventory', 'Inventory & Procurement', 'demo'],
+  ['communication', 'Communication', 'demo'], ['placements', 'Placement & Career', 'production'],
+  ['alumni', 'Alumni & Industry', 'beta'], ['accreditation', 'Accreditation', 'beta'],
+  ['governance', 'Governance', 'beta'], ['ami', 'Ami AI Layer', 'beta'],
+];
+
+const AdminCommandCenter = ({ navigate, setActiveTab }) => {
+  const [message, setMessage] = useState('Show ERP module readiness and immediate gaps');
+  const [answer, setAnswer] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const askAmi = async () => {
+    setLoading(true);
+    try {
+      const { data } = await adminAmiAPI.query({ message });
+      setAnswer(data);
+    } catch (err) {
+      toast.error('Admin Ami query failed');
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { askAmi(); }, []);
+
+  const statusClasses = {
+    production: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300',
+    beta: 'bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300',
+    demo: 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-300',
+  };
+
+  return (
+    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-6">
+      <motion.div variants={itemVariants} className="soft-card p-6 bg-gradient-to-br from-indigo-50 to-cyan-50 dark:from-indigo-500/10 dark:to-cyan-500/10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-indigo-500 mb-2">Admin Command Center</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">One AcadMix account, every college workflow</h3>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Launch modules, inspect readiness, and ask Ami for read-only operational answers.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setActiveTab('finance')} className="px-4 py-2 rounded-xl bg-white dark:bg-[#111827] text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm">Finance</button>
+            <button onClick={() => setActiveTab('hr-payroll')} className="px-4 py-2 rounded-xl bg-white dark:bg-[#111827] text-sm font-bold text-slate-700 dark:text-slate-200 shadow-sm">HRMS</button>
+            <button onClick={() => setActiveTab('insights')} className="px-4 py-2 rounded-xl bg-indigo-600 text-sm font-bold text-white shadow-sm">Ami Insights</button>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          {COMMAND_MODULES.map(([id, label, status]) => (
+            <button key={id} onClick={() => id === 'finance' || id === 'hr-payroll' ? setActiveTab(id) : navigate(id)}
+              className="soft-card-hover p-4 text-left min-h-[112px]">
+              <div className="flex items-start justify-between gap-2">
+                <p className="font-extrabold text-sm text-slate-900 dark:text-white leading-snug">{label}</p>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${statusClasses[status]}`}>{status}</span>
+              </div>
+              <p className="text-xs font-medium text-slate-400 mt-3">Open workspace</p>
+            </button>
+          ))}
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="soft-card p-5 space-y-4">
+          <div>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-slate-400 mb-2">Ask Admin Ami</p>
+            <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4}
+              className="w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#0B1120] px-4 py-3 text-sm font-semibold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-400" />
+            <button onClick={askAmi} disabled={loading} className="mt-3 w-full px-4 py-3 rounded-2xl bg-indigo-600 text-white font-extrabold disabled:opacity-60">
+              {loading ? 'Thinking...' : 'Ask Ami'}
+            </button>
+          </div>
+          {answer && (
+            <div className="space-y-3">
+              <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{answer.answer}</p>
+              <div className="rounded-2xl bg-slate-50 dark:bg-white/[0.03] p-3 max-h-64 overflow-auto">
+                {(answer.tables?.[0]?.rows || []).slice(0, 8).map((row, idx) => (
+                  <div key={idx} className="text-xs font-semibold text-slate-500 dark:text-slate-400 py-1 border-b last:border-0 border-slate-200 dark:border-white/5">
+                    {Object.entries(row).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ')}
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] font-bold text-emerald-500">Guardrails: read-only, college-scoped, action previews only</p>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </motion.div>
+  );
+};
+
 const AdminDashboard = ({ navigate, user, onLogout }) => {
-  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'overview');
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'command-center');
   const [showProfile, setShowProfile] = useState(false);
   useEffect(() => { sessionStorage.setItem('admin_tab', activeTab); }, [activeTab]);
   const [dashboardData, setDashboardData] = useState(null);
@@ -245,6 +339,7 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
         {/* Tabs */}
         <div className="flex overflow-x-auto gap-2 p-1.5 bg-slate-100 dark:bg-white/5 rounded-xl mb-8 hide-scrollbar">
             {[
+              { id: 'command-center', label: 'Command Center' },
               { id: 'overview', label: 'Overview' }, 
               { id: 'metrics', label: 'Metrics' },
               { id: 'student-profiles', label: 'Student Profiles' },
@@ -271,6 +366,10 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
               </button>
             ))}
           </div>
+
+        {activeTab === 'command-center' && (
+          <AdminCommandCenter navigate={navigate} setActiveTab={setActiveTab} />
+        )}
 
         {activeTab === 'overview' && (
           <motion.div data-testid="overview-content" variants={containerVariants} initial="hidden" animate="show">

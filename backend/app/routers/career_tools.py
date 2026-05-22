@@ -4,7 +4,7 @@ Career Toolkit — AI-Powered Career Prep Tools Router (thin layer).
 All business logic lives in app.services.career_service.
 This router handles: HTTP interface, Pydantic validation, auth guards.
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
@@ -171,7 +171,19 @@ async def explore_career_paths(
 
 @router.get("/career/company-intel")
 async def get_company_intel(
+    branch: Optional[str] = Query(None),
+    role: Optional[str] = Query(None),
+    difficulty: Optional[str] = Query(None),
+    package_band: Optional[str] = Query(None),
     user: dict = Depends(require_role("student")),
 ):
     """Get company intel cards for common campus recruiters."""
-    return career_service.get_company_intel()
+    return career_service.get_company_intel(branch=branch, role=role, difficulty=difficulty, package_band=package_band)
+
+
+@router.get("/career/resume/templates")
+async def get_resume_templates(
+    user: dict = Depends(require_role("student")),
+):
+    """Get supported resume templates and export metadata."""
+    return career_service.get_resume_templates()

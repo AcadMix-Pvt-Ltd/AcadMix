@@ -592,6 +592,12 @@ export const hrPayrollAPI = {
   getPayslip: (payslipId) => api.get(`/hr-payroll/payslips/${payslipId}`),
 };
 
+export const adminAmiAPI = {
+  contextMap: () => api.get('/admin/ami/context-map'),
+  query: (data) => api.post('/admin/ami/query', data),
+  actionPreview: (data) => api.post('/admin/ami/action-preview', data),
+};
+
 // Interview War Room — AI Mock Interviews
 export const interviewAPI = {
   getQuota: () => api.get('/interview/quota'),
@@ -630,7 +636,8 @@ export const careerAPI = {
   hrQuestions: (data) => api.post('/career/hr-questions', data),
   dsaRecommend: (data) => api.post('/career/dsa-recommend', data),
   careerPaths: (data) => api.post('/career/career-paths', data),
-  companyIntel: () => api.get('/career/company-intel'),
+  companyIntel: (params = {}) => api.get('/career/company-intel', { params }),
+  resumeTemplates: () => api.get('/career/resume/templates'),
 };
 
 // Resume Profile — Student-editable resume enrichment data
@@ -639,6 +646,7 @@ export const resumeProfileAPI = {
   update: (data) => api.put('/student/resume-profile', data),
   verifySocial: (platform, username) => api.get('/student/verify-social-profile', { params: { platform, username } }),
   generateDocx: (template = 'classic') => api.post('/student/resume/generate-docx', { template }, { responseType: 'blob' }),
+  generate: (data) => api.post('/student/resume/generate', data, { responseType: 'blob' }),
 };
 
 // Hostel Management — Sleeper Bus Bed Booking
