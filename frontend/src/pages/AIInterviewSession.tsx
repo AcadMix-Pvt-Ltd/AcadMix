@@ -16,126 +16,140 @@ const ORB_STATES = {
   evaluating:  { color1: '#8b5cf6', color2: '#ec4899', label: 'Evaluating...', speed: 1 },
 };
 
-// ─── Premium Animated Orb Avatar ──────────────────────────────────────────────
-const OrbAvatar = ({ state, analyserRef }) => {
-  const glowRef = useRef<HTMLDivElement>(null);
-  const orbRef = useRef<HTMLDivElement>(null);
-  const coreRef = useRef<HTMLDivElement>(null);
-
-  // Custom states for inertia based simulation
-  const currentScaleRef = useRef(1);
-  const targetScaleRef = useRef(1);
-  const frameRef = useRef(0);
+// ─── Premium Horizontal Aura Wave ──────────────────────────────────────────────
+const HorizontalAuraWave = ({ state, analyserRef }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
     let animationId: number;
+    let time = 0;
+    
+    // High DPI Canvas setup
+    const resize = () => {
+      if (!containerRef.current) return;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = containerRef.current.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+    };
+    window.addEventListener('resize', resize);
+    resize();
 
-    const renderLoop = () => {
-      frameRef.current++;
+    const NUM_POINTS = 100;
+    const smoothedData = new Array(NUM_POINTS).fill(0);
+    const targetData = new Array(NUM_POINTS).fill(0);
 
-      // Logic for LISTENING (Real Audio Analysis)
-      if (state === 'listening' && analyserRef?.current) {
-        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        let sum = 0;
-        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-        const avg = sum / dataArray.length;
-        
-        // Map average volume to scale (1 to 1.3)
-        const val = avg / 255;
-        targetScaleRef.current = 1 + val * 0.4;
-      } 
-      // Logic for SPEAKING (Simulated Inertia Walk)
-      else if (state === 'speaking' || state === 'evaluating') {
-        const volatility = state === 'speaking' ? 0.25 : 0.1;
-        
-        if (frameRef.current % 5 === 0) {
-          targetScaleRef.current = 1 + Math.random() * volatility;
-        }
-      }
-      // Logic for THINKING (Breathing pulse)
-      else if (state === 'thinking') {
-        const wave = Math.sin(frameRef.current * 0.05); // -1 to 1
-        targetScaleRef.current = 1 + ((wave + 1) / 2) * 0.15; // 1 to 1.15
-      }
-      // IDLE or INTERRUPTED (Low flat pulse)
-      else {
-        const pulse = Math.sin(frameRef.current * 0.02) * 0.05; 
-        targetScaleRef.current = 1 + pulse;
-      }
-
-      currentScaleRef.current += (targetScaleRef.current - currentScaleRef.current) * 0.2;
+    const render = () => {
+      time += 0.03;
+      const rect = containerRef.current?.getBoundingClientRect();
+      const width = rect?.width || 800;
+      const height = rect?.height || 128;
+      const centerY = height / 2;
       
-      if (orbRef.current) {
-        orbRef.current.style.transform = `scale(${currentScaleRef.current})`;
-      }
-      if (glowRef.current) {
-        glowRef.current.style.transform = `scale(${currentScaleRef.current * 1.2})`;
-        glowRef.current.style.opacity = `${0.3 + (currentScaleRef.current - 1) * 2}`;
-      }
-      if (coreRef.current) {
-        coreRef.current.style.transform = `scale(${1 + (currentScaleRef.current - 1) * 0.5})`;
+      ctx.clearRect(0, 0, width, height);
+
+      // Data collection & Smoothing
+      if (state === 'listening' && analyserRef?.current) {
+         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+         analyserRef.current.getByteFrequencyData(dataArray);
+         
+         for (let i = 0; i < NUM_POINTS; i++) {
+           const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.4)); // use lower 40% of frequencies
+           const val = dataArray[binIndex] / 255;
+           const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI); // 0 at edges, 1 in middle
+           targetData[i] = val * 50 * bell; // Max amplitude 50px
+         }
+      } else if (state === 'speaking' || state === 'evaluating') {
+         // Simulated speaking waveform
+         if (Math.floor(time * 30) % 4 === 0) {
+           for (let i = 0; i < NUM_POINTS; i++) {
+             const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
+             targetData[i] = Math.random() * 35 * bell;
+           }
+         }
+      } else if (state === 'thinking') {
+         // Smooth undulating wave
+         for (let i = 0; i < NUM_POINTS; i++) {
+           const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
+           targetData[i] = Math.sin(time * 2 + i * 0.1) * 12 * bell;
+         }
+      } else {
+         for (let i = 0; i < NUM_POINTS; i++) {
+           targetData[i] = 0;
+         }
       }
 
-      animationId = requestAnimationFrame(renderLoop);
+      // Apply smoothing to transitions
+      for (let i = 0; i < NUM_POINTS; i++) {
+        smoothedData[i] += (targetData[i] - smoothedData[i]) * 0.15;
+      }
+
+      const orbColor1 = ORB_STATES[state]?.color1 || '#14b8a6';
+      const orbColor2 = ORB_STATES[state]?.color2 || '#06b6d4';
+      const colors = [orbColor1, orbColor2, '#ffffff'];
+
+      ctx.globalCompositeOperation = 'screen';
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // Draw 3 layers of overlapping fluid lines
+      for (let layer = 0; layer < 3; layer++) {
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
+        
+        for (let i = 0; i < NUM_POINTS; i++) {
+          const x = (i / (NUM_POINTS - 1)) * width;
+          const phaseOffset = layer * Math.PI * 0.6;
+          // Base idle animation
+          const idleWave = Math.sin(time + (i / NUM_POINTS) * Math.PI * 2 + phaseOffset) * 4;
+          
+          // Apply audio amplitude. Layer 1 is inverted for a mirroring effect.
+          const direction = layer === 1 ? -1 : 1;
+          const amplitude = smoothedData[i] * direction * (1 - layer * 0.1); // Slightly reduce amplitude per layer
+          const y = centerY + idleWave + amplitude;
+          
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        
+        ctx.strokeStyle = colors[layer];
+        ctx.lineWidth = 4 - layer; // Inner lines are thinner
+        ctx.shadowColor = colors[layer];
+        ctx.shadowBlur = 12 + layer * 8; // Inner lines have wider glow
+        ctx.stroke();
+      }
+
+      animationId = requestAnimationFrame(render);
     };
 
-    renderLoop();
-    return () => cancelAnimationFrame(animationId);
+    render();
+    
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationId);
+    };
   }, [state, analyserRef]);
 
-  const orbColor = ORB_STATES[state]?.color1 || '#14b8a6';
-  const orbColor2 = ORB_STATES[state]?.color2 || '#06b6d4';
-
   return (
-    <div className="relative w-80 h-80 mx-auto flex items-center justify-center">
-      {/* Background ambient glow */}
-      <div 
-        ref={glowRef}
-        className="absolute inset-0 rounded-full blur-[50px] transition-colors duration-700 ease-in-out"
-        style={{ 
-          background: `radial-gradient(circle, ${orbColor} 0%, transparent 70%)`,
-          opacity: 0.4 
-        }}
-      />
-      
-      {/* Main Orb Body */}
-      <div 
-        ref={orbRef}
-        className="relative w-44 h-44 rounded-full transition-colors duration-700 ease-in-out shadow-[0_0_80px_rgba(0,0,0,0.5)]"
-        style={{ 
-          background: `linear-gradient(135deg, ${orbColor}, ${orbColor2})`,
-          boxShadow: `inset 0 0 40px rgba(255,255,255,0.4), inset 10px 0 40px rgba(255,255,255,0.2), 0 0 50px ${orbColor}60` 
-        }}
+    <div className="w-full flex flex-col items-center gap-6 my-10">
+      <div ref={containerRef} className="w-full max-w-[1200px] h-32 relative flex items-center justify-center">
+        <canvas ref={canvasRef} className="w-full h-full" />
+      </div>
+      <span 
+        className="text-xs font-black uppercase tracking-[0.3em] transition-colors duration-700 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
+        style={{ color: ORB_STATES[state]?.color1 || '#14b8a6' }}
       >
-        {/* Inner core / reflection */}
-        <div 
-          ref={coreRef}
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%)',
-            mixBlendMode: 'overlay'
-          }}
-        />
-        {/* Dark inner shadow for depth */}
-        <div 
-          className="absolute inset-0 rounded-full"
-          style={{
-            boxShadow: 'inset -15px -15px 40px rgba(0,0,0,0.4)'
-          }}
-        />
-      </div>
-      
-      {/* State label below orb */}
-      <div className="absolute -bottom-8 left-0 right-0 text-center">
-        <span 
-          className="text-xs font-black uppercase tracking-[0.2em] transition-colors duration-700 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
-          style={{ color: orbColor }}
-        >
-          {ORB_STATES[state]?.label || 'Ready'}
-        </span>
-      </div>
+        {ORB_STATES[state]?.label || 'Ready'}
+      </span>
     </div>
   );
 };
@@ -1220,14 +1234,15 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       </div>
 
       {/* Center content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-5xl mx-auto w-full">
-        {/* Premium Orb Avatar */}
-        <OrbAvatar state={orbState} analyserRef={analyserRef} />
-
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-[1400px] mx-auto w-full">
+        
         {/* Current question (typewriter) */}
-        <div className="mt-20 mb-8 text-center px-4 min-h-[120px] w-full">
+        <div className="mt-4 mb-8 text-center px-4 min-h-[120px] w-full max-w-4xl mx-auto flex items-end justify-center">
           {showTranscript && currentQuestion && <TypewriterText text={currentQuestion} isSpeaking={isSpeaking} />}
         </div>
+
+        {/* Horizontal Aura Wave (Replaces Orb) */}
+        <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
 
         {/* Student transcript (live) */}
         <AnimatePresence>

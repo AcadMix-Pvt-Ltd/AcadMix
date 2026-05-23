@@ -68,6 +68,7 @@ const DirectorDashboard = React.lazy(() => import('./pages/DirectorDashboard'));
 const CashierDashboard = React.lazy(() => import('./pages/CashierDashboard'));
 const FinanceOfficerDashboard = React.lazy(() => import('./pages/FinanceOfficerDashboard'));
 const ReceiptVerificationPage = React.lazy(() => import('./pages/ReceiptVerificationPage'));
+const OrbShowcase = React.lazy(() => import('./pages/OrbShowcase'));
 
 
 
@@ -241,6 +242,7 @@ function AppRoutes({ user, onLogin, onLogout }) {
       {/* ── Pre-Enrollment ────────────────────────────────────────── */}
       <Route path="/pre-enroll/hostel" element={<PreEnrollBooking navigate={navigate} />} />
       <Route path="/fees/verify/:token" element={<ReceiptVerificationPage />} />
+      <Route path="/orb-test" element={<OrbShowcase />} />
 
       {/* ── Role Dashboards ──────────────────────────────────────── */}
       <Route path="/student" element={
