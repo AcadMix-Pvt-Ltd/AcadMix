@@ -137,6 +137,52 @@ async def stream_llm(messages: list, model: str = None):
 # Service Methods
 # ═══════════════════════════════════════════════════════════════════════════════
 
+async def _fetch_dynamic_company_intel(target_company: str, target_role: str) -> Optional[dict]:
+    from app.core.cache import _get_redis
+    
+    redis = await _get_redis()
+    cache_key = f"glassdoor_intel:{target_company.lower()}:{target_role.lower()}"
+    
+    if redis:
+        cached = await redis.get(cache_key)
+        if cached:
+            try:
+                return json.loads(cached)
+            except:
+                pass
+                
+    prompt = (
+        f"Search the web (especially Glassdoor, LeetCode, and prep sites) for the most recent interview questions, "
+        f"interview rounds, and technical topics for the {target_role} role at {target_company}. "
+        f"Return a strict JSON object with exactly three keys: 'past_questions' (list of strings), 'key_topics' (list of strings), and 'interview_rounds' (list of strings)."
+    )
+    
+    try:
+        from app.services.llm_gateway import gateway
+        result_text = await gateway.complete(
+            purpose="career_tools",
+            messages=[{"role": "user", "content": prompt}],
+            json_mode=True,
+            grounding=True
+        )
+        
+        # Clean up Markdown JSON wrapper if exists
+        result_text = result_text.strip()
+        if result_text.startswith("```json"):
+            result_text = result_text[7:]
+        if result_text.endswith("```"):
+            result_text = result_text[:-3]
+            
+        intel = json.loads(result_text)
+        
+        if redis:
+            await redis.set(cache_key, json.dumps(intel), ex=7 * 24 * 3600)  # 7 days TTL
+            
+        return intel
+    except Exception as e:
+        logger.error(f"Failed to fetch dynamic company intel for {target_company} / {target_role}: {e}")
+        return None
+
 async def get_quota(user: dict, session: AsyncSession) -> dict:
     """Returns the student's remaining mock interview quota for the current month."""
     now = datetime.now(timezone.utc)
@@ -213,7 +259,34 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
         resume_text = resume_row
 
     # Build system prompt
-    company_context = f" at {target_company}" if target_company else ""
+    intel = None
+    if target_company:
+        intel = await _fetch_dynamic_company_intel(target_company, target_role)
+        if not intel:
+            from app.services.career_service import COMPANY_INTEL
+            for c in COMPANY_INTEL:
+                if c["name"].lower() == target_company.lower():
+                    intel = c
+                    break
+
+    if target_company:
+        intel_context = ""
+        if intel:
+            intel_context = (
+                f"\n\nACTUAL INTERVIEW INTEL FOR {target_company}:\n"
+                f"- Past Questions: {', '.join(intel.get('past_questions', []))}\n"
+                f"- Key Topics: {', '.join(intel.get('key_topics', []))}\n"
+                f"- Interview Rounds: {', '.join(intel.get('interview_rounds', []))}\n"
+                f"You MUST use the 'Past Questions' above or generate extremely similar questions from these 'Key Topics'. "
+            )
+
+        company_context = (
+            f" at {target_company}.\n\n"
+            f"ROLE & COMPANY KNOWLEDGE ACTIVATION:\n"
+            f"You must NOT act like a generic interviewer. Internally access your pre-trained knowledge of {target_company}'s exact interviewing playbooks, culture, and technical focus areas specifically for the {target_role} role. You MUST strictly enforce these specific frameworks. Format your questions, follow-ups, and tone to perfectly mimic a real {target_company} interviewer assessing a {target_role}.{intel_context}"
+        )
+    else:
+        company_context = ""
     premium_context = "\n".join([
         f"INTERVIEW MODE: {mode}",
         f"ROUND TYPE: {round_type}",
@@ -319,7 +392,14 @@ async def send_message(interview_id: str, content: str, user: dict, session: Asy
     q_number = interview.question_count + 1
 
     # Build system prompt with updated question count
-    company_context = f" at {interview.target_company}" if interview.target_company else ""
+    if interview.target_company:
+        company_context = (
+            f" at {interview.target_company}.\n\n"
+            f"ROLE & COMPANY KNOWLEDGE ACTIVATION:\n"
+            f"You must NOT act like a generic interviewer. Internally access your pre-trained knowledge of {interview.target_company}'s exact interviewing playbooks, culture, and technical focus areas specifically for the {interview.target_role} role. You MUST strictly enforce these specific frameworks. Format your questions, follow-ups, and tone to perfectly mimic a real {interview.target_company} interviewer assessing a {interview.target_role}."
+        )
+    else:
+        company_context = ""
     if q_number == 1:
         resume_section = f"CANDIDATE RESUME:\n{interview.resume_context}" if interview.resume_context else "No resume provided."
     else:

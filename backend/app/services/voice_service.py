@@ -25,10 +25,28 @@ DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
 
 
 def get_random_interview_voice() -> str:
-    """Pick a random professional voice for each interview session."""
+    """Pick a random professional voice for each interview session (Legacy)."""
     voice = random.choice(INTERVIEW_VOICES)
     logger.info(f"Selected interview voice: {voice['name']} ({voice['gender']})")
     return voice["id"]
+
+def get_persona_voice(interview_type: str) -> str:
+    """Map the interview type to a specific ElevenLabs Persona voice."""
+    # "pNInz6obpgDQGcFmaJgB" = Adam (Technical)
+    # "EXAVITQu4vr4xnSDxMaL" = Bella (HR)
+    # "ErXwobaYiN019PkySvjV" = Antoni (Behavioral)
+    # "VR6AewLTigWG4xSOukaG" = Arnold (Full Mock / VP)
+    
+    mapping = {
+        "technical": "pNInz6obpgDQGcFmaJgB",
+        "hr": "EXAVITQu4vr4xnSDxMaL",
+        "behavioral": "ErXwobaYiN019PkySvjV",
+        "mixed": "VR6AewLTigWG4xSOukaG"
+    }
+    
+    voice_id = mapping.get(interview_type.lower(), DEFAULT_VOICE_ID)
+    logger.info(f"Assigned persona voice {voice_id} for interview type: {interview_type}")
+    return voice_id
 
 
 async def text_to_speech_stream(text: str, voice_id: str | None = None) -> AsyncGenerator[bytes, None]:

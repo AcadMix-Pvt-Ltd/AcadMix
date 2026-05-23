@@ -35,10 +35,15 @@ async def start_interview(
 ):
     """Start a new mock interview session."""
     result = await interview_service.start_interview(req, user, session)
-    # Lock a random professional voice for this entire interview session
+    # Lock the specific persona voice provided by the frontend for this session
     interview_id = result.get("interview_id") if isinstance(result, dict) else None
     if interview_id:
-        _session_voices[interview_id] = voice_service.get_random_interview_voice()
+        voice_id = req.get("voice_id")
+        if voice_id:
+            _session_voices[interview_id] = voice_id
+        else:
+            interview_type = req.get("interview_type", "technical")
+            _session_voices[interview_id] = voice_service.get_persona_voice(interview_type)
     return result
 
 

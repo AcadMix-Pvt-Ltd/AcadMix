@@ -296,6 +296,9 @@ async def _vertex_complete(model_name: str, messages: list[dict], **kwargs) -> s
             types.Part.from_bytes(data=media_bytes, mime_type=mime_type)
         ]))
         
+    if kwargs.get("grounding") is True:
+        config_params["tools"] = [types.Tool(google_search=types.GoogleSearch())]
+
     config = types.GenerateContentConfig(**config_params)
 
     response = await client.aio.models.generate_content(
@@ -419,6 +422,7 @@ class LLMGateway:
         timeout: Optional[float] = None,
         media_bytes: Optional[bytes] = None,
         mime_type: str = "application/pdf",
+        grounding: bool = False,
     ) -> str:
         """
         Route a completion request to the right provider.
@@ -471,7 +475,7 @@ class LLMGateway:
                     result = await _vertex_complete(
                         model, messages,
                         temperature=temp, max_tokens=tokens, json_mode=json_mode,
-                        media_bytes=media_bytes, mime_type=mime_type,
+                        media_bytes=media_bytes, mime_type=mime_type, grounding=grounding,
                     )
                 self._log_call(purpose, provider, model, start)
                 return result
@@ -491,7 +495,7 @@ class LLMGateway:
                 "gemini-2.5-flash", messages,
                 temperature=temp, max_tokens=tokens,
                 json_mode=json_mode, timeout=tout,
-                media_bytes=media_bytes, mime_type=mime_type,
+                media_bytes=media_bytes, mime_type=mime_type, grounding=grounding,
             )
             self._log_call(purpose, "vertex_fallback", "gemini-2.5-flash", start)
             return result
