@@ -64,9 +64,13 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
          
          for (let i = 0; i < NUM_POINTS; i++) {
            const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.4)); // use lower 40% of frequencies
-           const val = dataArray[binIndex] / 255;
+           let val = dataArray[binIndex] / 255;
+           
+           // Apply a power curve to boost quiet and mid-level sounds, making the mic highly reactive
+           val = Math.pow(val, 0.7) * 1.5;
+           
            const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI); // 0 at edges, 1 in middle
-           targetData[i] = val * 50 * bell; // Max amplitude 50px
+           targetData[i] = val * 100 * bell; // Increased max amplitude to 100px
          }
       } else if (state === 'speaking' || state === 'evaluating') {
          // Simulated speaking waveform
