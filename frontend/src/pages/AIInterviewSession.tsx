@@ -158,7 +158,7 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
 // ─── Voice-Synced Text (Time-Proportional) ────────────────────────────────────────
 // Smooth rAF animation calibrated to TTS speech rate (0.95 × ~150WPM ≈ 70ms/char).
 // No dependency on onboundary — works reliably across all browsers and voices.
-const TypewriterText = ({ text, isSpeaking }) => {
+const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text: string, isSpeaking: boolean, className?: string, cursorClassName?: string }) => {
   const [displayLength, setDisplayLength] = useState(0);
   const startTimeRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -190,19 +190,6 @@ const TypewriterText = ({ text, isSpeaking }) => {
     };
   }, [isSpeaking, text]);
 
-  // Force-complete when speech ends
-  useEffect(() => {
-    if (!isSpeaking && text) {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      setDisplayLength(text.length);
-    }
-  }, [isSpeaking, text]);
-
-  const isComplete = displayLength >= (text?.length || 0);
-
-  return (
-    <p className="text-xl sm:text-2xl font-semibold text-white leading-relaxed max-w-3xl mx-auto drop-shadow-md tracking-wide">
-      {text?.slice(0, displayLength)}
       {!isComplete && <span className="inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse" />}
     </p>
   );
@@ -1250,36 +1237,74 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         </div>
       </div>
 
-      {/* Center content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-[1400px] mx-auto w-full">
+      {/* Center content: Live Chat & Wave */}
+      <div className="relative z-10 flex-1 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
         
-        {/* Current question (typewriter) */}
-        <div className="mt-4 mb-8 text-center px-4 min-h-[120px] w-full max-w-4xl mx-auto flex items-end justify-center">
-          {showTranscript && currentQuestion && <TypewriterText text={currentQuestion} isSpeaking={isSpeaking} />}
+        {/* Chat History Container */}
+        <div 
+          className="flex-1 w-full overflow-y-auto flex flex-col gap-6 pt-10 pb-8 [mask-image:linear-gradient(to_bottom,transparent,black_5%,black_90%,transparent)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          ref={(el) => { if (el) { el.scrollTop = el.scrollHeight; } }}
+        >
+           {/* Conversation History */}
+           {conversation.map((msg, i) => {
+             const isLast = i === conversation.length - 1;
+             const isAI = msg.role === 'assistant';
+             
+             return (
+               <motion.div 
+                 key={i} 
+                 initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                 animate={{ opacity: 1, y: 0, scale: 1 }}
+                 className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+               >
+                 <div className={`max-w-[85%] md:max-w-[75%] rounded-3xl px-6 py-4 backdrop-blur-md border shadow-2xl ${
+                   msg.role === 'user'
+                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-50 rounded-br-sm'
+                     : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-50 rounded-bl-sm'
+                 }`}>
+                   {isLast && isAI && isSpeaking && showTranscript ? (
+                      <TypewriterText 
+                        text={msg.content} 
+                        isSpeaking={isSpeaking} 
+                        className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium"
+                        cursorClassName="inline-block w-1.5 h-4 ml-1.5 bg-indigo-400 animate-pulse align-middle"
+                      />
+                   ) : (
+                      <p className={`text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'opacity-90 font-medium' : 'text-slate-200'}`}>
+                        {msg.content}
+                      </p>
+                   )}
+                 </div>
+               </motion.div>
+             );
+           })}
+
+           {/* Live Student Transcript Bubble */}
+           <AnimatePresence>
+             {transcript && (
+               <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex w-full justify-end"
+               >
+                  <div className="max-w-[85%] md:max-w-[75%] rounded-3xl rounded-br-sm px-6 py-4 backdrop-blur-md border bg-emerald-500/10 border-emerald-500/20 text-emerald-50 flex flex-col gap-2 shadow-2xl">
+                    <div className="flex items-center gap-2 mb-1">
+                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                       <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 opacity-80">Listening...</span>
+                    </div>
+                    <p className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium opacity-90">{transcript}</p>
+                  </div>
+               </motion.div>
+             )}
+           </AnimatePresence>
+           <div className="h-20 shrink-0" /> {/* Bottom padding so chat scrolls above wave */}
         </div>
 
-        {/* Horizontal Aura Wave (Replaces Orb) */}
-        <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
-
-        {/* Student transcript (live) */}
-        <AnimatePresence>
-          {transcript && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="absolute bottom-10 max-w-2xl w-full bg-[#111827]/80 backdrop-blur-2xl rounded-3xl border border-white/5 shadow-2xl px-6 py-5"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]" />
-                </div>
-                <p className="text-base font-medium text-slate-300 leading-relaxed tracking-wide">{transcript}</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Horizontal Aura Wave (Bottom Anchored) */}
+        <div className="shrink-0 h-32 sm:h-40 w-full flex items-center justify-center mt-auto border-t border-white/[0.02] pt-4">
+           <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
+        </div>
       </div>
 
       {/* Floating Draggable Camera */}
