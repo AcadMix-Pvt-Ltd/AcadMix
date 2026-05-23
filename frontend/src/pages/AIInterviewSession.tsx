@@ -140,16 +140,10 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
   }, [state, analyserRef]);
 
   return (
-    <div className="w-full flex flex-col items-center gap-6 my-10">
-      <div ref={containerRef} className="w-full max-w-[1200px] h-32 relative flex items-center justify-center">
+    <div className="w-full flex flex-col items-center pointer-events-none">
+      <div ref={containerRef} className="w-full h-24 sm:h-32 relative flex items-center justify-center [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
         <canvas ref={canvasRef} className="w-full h-full" />
       </div>
-      <span 
-        className="text-xs font-black uppercase tracking-[0.3em] transition-colors duration-700 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
-        style={{ color: ORB_STATES[state]?.color1 || '#14b8a6' }}
-      >
-        {ORB_STATES[state]?.label || 'Ready'}
-      </span>
     </div>
   );
 };
@@ -1311,13 +1305,13 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
                </motion.div>
              )}
            </AnimatePresence>
-           <div className="h-20 shrink-0" /> {/* Bottom padding so chat scrolls above wave */}
+           <div className="h-40 shrink-0" /> {/* Bottom padding so chat scrolls above wave */}
         </div>
+      </div>
 
-        {/* Horizontal Aura Wave (Bottom Anchored) */}
-        <div className="shrink-0 h-32 sm:h-40 w-full flex items-center justify-center mt-auto border-t border-white/[0.02] pt-4">
-           <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
-        </div>
+      {/* Horizontal Aura Wave (Full Screen Width) */}
+      <div className="absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-0 h-24 sm:h-32 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
+         <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
       </div>
 
       {/* Floating Draggable Camera */}
