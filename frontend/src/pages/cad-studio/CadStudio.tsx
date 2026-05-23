@@ -265,20 +265,25 @@ const CadStudio = () => {
                 onClick={() => setSelectedId(node.id)}
                 className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedId === node.id ? (theme === 'dark' ? 'bg-indigo-500/20 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-200') : (theme === 'dark' ? 'hover:bg-slate-800 border border-transparent' : 'hover:bg-slate-100 border border-transparent')}`}
               >
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${node.visible ? 'bg-emerald-400' : 'bg-slate-400'}`}></div>
-                  <span className={`text-sm truncate ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700 font-medium'}`}>{node.name}</span>
+                <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                  <div className={`w-2 h-2 rounded-full ${node.visible ? (selectedId === node.id ? 'bg-indigo-400' : 'bg-emerald-400') : 'bg-slate-500'}`}></div>
+                  <span className={`text-sm truncate flex-1 ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700 font-medium'} ${!node.visible && 'opacity-50 line-through'}`}>{node.name}</span>
                 </div>
-                                {selectedId === node.id && (
-                  <div className="flex gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); duplicateNode(node.id); }} className="text-slate-400 hover:text-indigo-400">
-                      <Copy size={14} />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); deleteNode(node.id); }} className="text-slate-400 hover:text-rose-500">
-                      <Trash size={14} />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  <button onClick={(e) => { e.stopPropagation(); updateNode(node.id, { visible: !node.visible }); }} className={`ml-auto ${theme === 'dark' ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
+                    {node.visible ? <Eye size={16} /> : <EyeClosed size={16} />}
+                  </button>
+                  {selectedId === node.id && (
+                    <div className="flex gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); duplicateNode(node.id); }} className="text-slate-400 hover:text-indigo-400">
+                        <Copy size={14} />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteNode(node.id); }} className="text-slate-400 hover:text-rose-500">
+                        <Trash size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -371,7 +376,7 @@ const CadStudio = () => {
                 })}
 
                 {/* Grid */}
-                <Grid infiniteGrid fadeDistance={100} sectionColor={theme === 'dark' ? "#334155" : "#cbd5e1"} cellColor={theme === 'dark' ? "#1e293b" : "#e2e8f0"} position={[0, 0, 0]} />
+                <Grid infiniteGrid fadeDistance={5000} sectionSize={10} cellSize={1} sectionColor={theme === 'dark' ? "#334155" : "#cbd5e1"} cellColor={theme === 'dark' ? "#1e293b" : "#e2e8f0"} position={[0, 0, 0]} />
                 <OrbitControls makeDefault />
 
                 <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
