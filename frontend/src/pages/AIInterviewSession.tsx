@@ -717,6 +717,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const [feedback, setFeedback] = useState(null);
   const [sessionMicId, setSessionMicId] = useState('');
   const [sessionVideoId, setSessionVideoId] = useState('');
+  const sessionMicIdRef = useRef('');
+  const sessionVideoIdRef = useRef('');
   const dragConstraintsRef = useRef(null);
 
   // Refs
@@ -892,8 +894,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (!audioContextRef.current) {
       try {
         const constraints = {
-          audio: sessionMicId ? { deviceId: { exact: sessionMicId } } : true,
-          video: sessionVideoId ? { deviceId: { exact: sessionVideoId } } : true
+          audio: sessionMicIdRef.current ? { deviceId: { exact: sessionMicIdRef.current } } : true,
+          video: sessionVideoIdRef.current ? { deviceId: { exact: sessionVideoIdRef.current } } : true
         };
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         mediaStreamRef.current = stream;
@@ -1147,8 +1149,23 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const handleStart = async (hardwareIds) => {
     if (!sessionConfig?.interview_type) { navigate('interview-warroom'); return; }
     
-    if (hardwareIds?.micId) setSessionMicId(hardwareIds.micId);
-    if (hardwareIds?.videoId) setSessionVideoId(hardwareIds.videoId);
+    // Ensure AudioContext is created securely during the click gesture to avoid browser suspension
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass();
+    }
+    if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+    }
+    
+    if (hardwareIds?.micId) {
+      setSessionMicId(hardwareIds.micId);
+      sessionMicIdRef.current = hardwareIds.micId;
+    }
+    if (hardwareIds?.videoId) {
+      setSessionVideoId(hardwareIds.videoId);
+      sessionVideoIdRef.current = hardwareIds.videoId;
+    }
 
     // Enter fullscreen
     try {
