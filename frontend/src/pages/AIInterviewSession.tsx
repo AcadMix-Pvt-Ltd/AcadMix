@@ -1203,10 +1203,11 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       interviewIdRef.current = data.interview_id; // Sync ref immediately — useEffect is async
       setQuestionNumber(1);
       setCurrentQuestion(data.first_question);
-      setConversation([{ role: 'assistant', content: data.first_question }]);
 
-      // Speak the first question
-      await speakText(data.first_question);
+      // Speak the first question — only add to chat when audio begins to prevent text leak
+      await speakText(data.first_question, () => {
+        setConversation([{ role: 'assistant', content: data.first_question }]);
+      });
 
       // Start continuous listening
       setOrbState('listening');
