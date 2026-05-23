@@ -190,8 +190,21 @@ const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text
     };
   }, [isSpeaking, text]);
 
-      {!isComplete && <span className="inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse" />}
-    </p>
+  // Force-complete when speech ends
+  useEffect(() => {
+    if (!isSpeaking && text) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      setDisplayLength(text.length);
+    }
+  }, [isSpeaking, text]);
+
+  const isComplete = displayLength >= (text?.length || 0);
+
+  return (
+    <motion.p className={className || "text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 tracking-tight leading-tight"}>
+      {text?.slice(0, displayLength)}
+      {!isComplete && <span className={cursorClassName || "inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse"} />}
+    </motion.p>
   );
 };
 
