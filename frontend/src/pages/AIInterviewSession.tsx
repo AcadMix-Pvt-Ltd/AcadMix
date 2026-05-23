@@ -5,6 +5,7 @@ import { interviewAPI, resumeAPI } from '../services/api';
 import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
+import Avatar from 'boring-avatars';
 
 // ─── Orb State Colors ────────────────────────────────────────────────────────
 const ORB_STATES = {
@@ -1260,9 +1261,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       {/* Minimal Header */}
       <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6 border-b border-white/[0.03]">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-teal-500/20 flex items-center justify-center border border-white/5 shadow-inner">
-            <Sparkle size={18} weight="fill" className="text-indigo-400" />
-          </div>
+          <Avatar size={36} name="AcadMix Intelligence" variant="beam" colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} />
           <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">AcadMix Intelligence</span>
         </div>
         <div className="flex items-center gap-4">
