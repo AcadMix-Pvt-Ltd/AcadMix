@@ -141,7 +141,7 @@ async def _fetch_dynamic_company_intel(target_company: str, target_role: str) ->
     from app.core.cache import _get_redis
     
     redis = await _get_redis()
-    cache_key = f"glassdoor_intel:{target_company.lower()}:{target_role.lower()}"
+    cache_key = f"dynamic_intel:{target_company.lower()}:{target_role.lower()}"
     
     if redis:
         cached = await redis.get(cache_key)
@@ -152,7 +152,7 @@ async def _fetch_dynamic_company_intel(target_company: str, target_role: str) ->
                 pass
                 
     prompt = (
-        f"Search the web (especially Glassdoor, LeetCode, and prep sites) for the most recent interview questions, "
+        f"Search the web (including Glassdoor, LeetCode, GeeksforGeeks, AmbitionBox, Blind, and Reddit) for the most recent interview questions, "
         f"interview rounds, and technical topics for the {target_role} role at {target_company}. "
         f"Return a strict JSON object with exactly three keys: 'past_questions' (list of strings), 'key_topics' (list of strings), and 'interview_rounds' (list of strings)."
     )

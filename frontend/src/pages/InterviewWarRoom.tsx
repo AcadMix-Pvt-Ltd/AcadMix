@@ -99,7 +99,7 @@ const ROLES_DATA = [
   // Business & Management
   { name: 'Management Trainee', tags: ['business', 'management'] },
   { name: 'Marketing Analyst', tags: ['business', 'marketing'] },
-  { name: 'Sales Executive / B2B', tags: ['business', 'sales'] },
+  { name: 'Sales Executive / B2B', tags: ['sales'] },
   { name: 'HR Generalist', tags: ['business', 'hr'] },
   { name: 'Financial Analyst', tags: ['business', 'finance'] },
   { name: 'Operations Manager', tags: ['business', 'operations'] },
@@ -189,15 +189,15 @@ const COMPANIES_DATA = [
   { name: 'Uber', tags: ['software', 'data-ai', 'infra', 'product', 'business'] },
   { name: 'Atlassian', tags: ['software', 'infra', 'product'] },
   { name: 'Adobe', tags: ['software', 'data-ai', 'product'] },
-  { name: 'Salesforce', tags: ['software', 'infra', 'product', 'business'] },
+  { name: 'Salesforce', tags: ['software', 'infra', 'product', 'business', 'sales'] },
   // Trending & Actively Hiring
   { name: 'NVIDIA', tags: ['software', 'data-ai', 'hardware', 'ece', 'eee'] },
   { name: 'Databricks', tags: ['software', 'data-ai'] },
   { name: 'Snowflake', tags: ['software', 'data-ai'] },
   { name: 'Palo Alto Networks', tags: ['software', 'infra'] },
-  { name: 'Oracle', tags: ['software', 'data-ai', 'infra', 'business'] },
-  { name: 'SAP', tags: ['software', 'data-ai', 'business'] },
-  { name: 'Cisco', tags: ['software', 'infra', 'hardware', 'ece', 'eee'] },
+  { name: 'Oracle', tags: ['software', 'data-ai', 'infra', 'business', 'sales'] },
+  { name: 'SAP', tags: ['software', 'data-ai', 'business', 'sales'] },
+  { name: 'Cisco', tags: ['software', 'infra', 'hardware', 'ece', 'eee', 'sales'] },
   { name: 'Samsung', tags: ['software', 'hardware', 'ece', 'eee', 'mech'] },
   // Indian Service & Global IT
   { name: 'TCS', tags: ['software', 'data-ai', 'infra', 'business', 'it'] },
@@ -208,7 +208,7 @@ const COMPANIES_DATA = [
   { name: 'Capgemini', tags: ['software', 'data-ai', 'infra', 'business', 'it'] },
   { name: 'Tech Mahindra', tags: ['software', 'infra', 'business', 'it'] },
   { name: 'HCL', tags: ['software', 'infra', 'hardware', 'ece', 'it'] },
-  { name: 'IBM', tags: ['software', 'data-ai', 'infra', 'business', 'hardware', 'ece'] },
+  { name: 'IBM', tags: ['software', 'data-ai', 'infra', 'business', 'hardware', 'ece', 'sales'] },
   { name: 'LTIMindtree', tags: ['software', 'data-ai', 'it'] },
   { name: 'Mphasis', tags: ['software', 'it'] },
   // Finance & Consulting
