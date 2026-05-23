@@ -1346,7 +1346,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       </div>
 
       {/* Horizontal Aura Wave (Full Screen Width) */}
-      <div className="absolute bottom-[40px] sm:bottom-[48px] left-0 right-0 z-0 h-48 sm:h-56 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
+      <div className="absolute bottom-[56px] sm:bottom-[60px] left-0 right-0 z-0 h-48 sm:h-56 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
          <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
       </div>
 
