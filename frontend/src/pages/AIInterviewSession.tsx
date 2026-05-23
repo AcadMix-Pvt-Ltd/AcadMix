@@ -223,8 +223,12 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
   const ratingBgs = { strong: 'bg-emerald-50 dark:bg-emerald-500/15', average: 'bg-amber-50 dark:bg-amber-500/15', needs_work: 'bg-red-50 dark:bg-red-500/15' };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] p-4 sm:p-8 overflow-y-auto">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#06090e] p-4 sm:p-8 overflow-y-auto relative font-sans">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 -left-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+        <div className="absolute top-1/2 -right-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+      </div>
+      <div className="max-w-3xl mx-auto relative z-10">
         {/* Hero Score */}
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center mb-8">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Overall Score</p>
@@ -242,13 +246,13 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
         {/* Radar Chart */}
         {radarData.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="soft-card p-6 mb-6">
-            <h3 className="text-sm font-extrabold text-slate-800 dark:text-white mb-4 text-center">Performance Dimensions</h3>
+            className="bg-[#111827]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-6 mb-6">
+            <h3 className="text-sm font-extrabold text-white mb-4 text-center">Performance Dimensions</h3>
             <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData}>
-                  <PolarGrid stroke={isDark ? '#1e293b' : '#e2e8f0'} />
-                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: isDark ? '#94a3b8' : '#64748b', fontWeight: 600 }} />
+                  <PolarGrid stroke="#334155" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
                   <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Radar name="Score" dataKey="score" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.25} strokeWidth={2} />
                 </RadarChart>
@@ -261,16 +265,16 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {feedback.strengths?.length > 0 && (
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-              className="soft-card p-5">
-              <h4 className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400 mb-3">💪 Strengths</h4>
-              <ul className="space-y-2">{feedback.strengths.map((s, i) => <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2"><span className="text-emerald-500 mt-0.5">✓</span>{s}</li>)}</ul>
+              className="bg-[#111827]/80 backdrop-blur-xl border border-emerald-500/10 shadow-2xl rounded-3xl p-5">
+              <h4 className="font-extrabold text-sm text-emerald-400 mb-3">💪 Strengths</h4>
+              <ul className="space-y-2">{feedback.strengths.map((s, i) => <li key={i} className="text-sm text-slate-300 flex items-start gap-2"><span className="text-emerald-500 mt-0.5">✓</span>{s}</li>)}</ul>
             </motion.div>
           )}
           {feedback.weaknesses?.length > 0 && (
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
-              className="soft-card p-5">
-              <h4 className="font-extrabold text-sm text-amber-600 dark:text-amber-400 mb-3">⚡ Areas to Improve</h4>
-              <ul className="space-y-2">{feedback.weaknesses.map((w, i) => <li key={i} className="text-sm text-slate-600 dark:text-slate-400 flex items-start gap-2"><span className="text-amber-500 mt-0.5">→</span>{w}</li>)}</ul>
+              className="bg-[#111827]/80 backdrop-blur-xl border border-amber-500/10 shadow-2xl rounded-3xl p-5">
+              <h4 className="font-extrabold text-sm text-amber-400 mb-3">⚡ Areas to Improve</h4>
+              <ul className="space-y-2">{feedback.weaknesses.map((w, i) => <li key={i} className="text-sm text-slate-300 flex items-start gap-2"><span className="text-amber-500 mt-0.5">→</span>{w}</li>)}</ul>
             </motion.div>
           )}
         </div>
@@ -278,27 +282,27 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
         {/* Per-Question Breakdown */}
         {feedback.per_question?.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-            className="soft-card p-5 mb-6">
-            <h4 className="font-extrabold text-sm text-slate-800 dark:text-white mb-4">Question-by-Question Feedback</h4>
+            className="bg-[#111827]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-5 mb-6">
+            <h4 className="font-extrabold text-sm text-white mb-4">Question-by-Question Feedback</h4>
             <div className="space-y-3">
               {feedback.per_question.map((pq, i) => (
                 <details key={i} className="group">
-                  <summary className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  <summary className="flex items-center justify-between p-3 rounded-xl bg-white/5 cursor-pointer hover:bg-white/10 transition-colors border border-white/5">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-7 h-7 rounded-lg bg-teal-50 dark:bg-teal-500/15 flex items-center justify-center text-xs font-extrabold text-teal-600 dark:text-teal-400 shrink-0">{i + 1}</span>
-                      <p className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">{pq.question}</p>
+                      <span className="w-7 h-7 rounded-lg bg-teal-500/20 flex items-center justify-center text-xs font-extrabold text-teal-400 shrink-0">{i + 1}</span>
+                      <p className="text-sm font-bold text-slate-200 truncate">{pq.question}</p>
                     </div>
-                    <span className={`soft-badge text-xs ml-2 shrink-0 ${ratingBgs[pq.rating] || ''} ${ratingColors[pq.rating] || 'text-slate-500'}`}>
+                    <span className={`px-2 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ml-2 shrink-0 ${pq.rating === 'strong' ? 'bg-emerald-500/20 text-emerald-400' : pq.rating === 'average' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>
                       {(pq.rating || 'n/a').replace('_', ' ')}
                     </span>
                   </summary>
-                  <div className="px-3 pb-3 pt-2 space-y-2">
-                    {pq.student_answer_summary && <p className="text-xs text-slate-500"><span className="font-bold">Your answer: </span>{pq.student_answer_summary}</p>}
-                    {pq.feedback && <p className="text-sm text-slate-600 dark:text-slate-400">{pq.feedback}</p>}
+                  <div className="px-3 pb-3 pt-3 space-y-3 border-x border-b border-white/5 rounded-b-xl -mt-2 bg-black/20">
+                    {pq.student_answer_summary && <p className="text-xs text-slate-400"><span className="font-bold text-slate-300">Your answer: </span>{pq.student_answer_summary}</p>}
+                    {pq.feedback && <p className="text-sm text-slate-300 leading-relaxed">{pq.feedback}</p>}
                     {pq.ideal_answer_hint && (
-                      <div className="bg-teal-50/50 dark:bg-teal-500/5 rounded-xl p-3 border border-teal-100 dark:border-teal-500/20">
-                        <p className="text-xs font-bold text-teal-600 dark:text-teal-400 mb-1">💡 Ideal Answer Should Include:</p>
-                        <p className="text-xs text-teal-700 dark:text-teal-300/80">{pq.ideal_answer_hint}</p>
+                      <div className="bg-teal-500/10 rounded-xl p-3 border border-teal-500/20">
+                        <p className="text-xs font-bold text-teal-400 mb-1">💡 Ideal Answer Should Include:</p>
+                        <p className="text-xs text-teal-300/80 leading-relaxed">{pq.ideal_answer_hint}</p>
                       </div>
                     )}
                   </div>
@@ -311,19 +315,19 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
         {/* Improvement Tips */}
         {feedback.improvement_tips?.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-            className="soft-card p-5 mb-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 dark:from-teal-500/5 dark:to-cyan-500/5 border-teal-200/50 dark:border-teal-500/20">
-            <h4 className="font-extrabold text-sm text-teal-700 dark:text-teal-400 mb-3">🎯 Coach Tips</h4>
-            <ul className="space-y-2">{feedback.improvement_tips.map((t, i) => <li key={i} className="text-sm text-teal-800 dark:text-teal-300/80 flex items-start gap-2"><Sparkle size={14} weight="fill" className="text-teal-500 mt-0.5 shrink-0" />{t}</li>)}</ul>
+            className="bg-[#111827]/80 backdrop-blur-xl p-5 mb-6 bg-gradient-to-r from-teal-500/10 to-cyan-500/10 border border-teal-500/20 rounded-3xl shadow-2xl">
+            <h4 className="font-extrabold text-sm text-teal-400 mb-3">🎯 Coach Tips</h4>
+            <ul className="space-y-2">{feedback.improvement_tips.map((t, i) => <li key={i} className="text-sm text-teal-300/90 flex items-start gap-2 leading-relaxed"><Sparkle size={14} weight="fill" className="text-teal-400 mt-0.5 shrink-0" />{t}</li>)}</ul>
           </motion.div>
         )}
 
         {/* Action buttons */}
-        <div className="flex gap-3">
-          <button onClick={onBack} className="flex-1 py-3 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-            Back to War Room
+        <div className="flex items-center justify-between mt-8 mb-12">
+          <button onClick={onBack} className="text-slate-400 hover:text-white text-sm font-bold transition-colors">
+            ← Exit
           </button>
-          <button onClick={onRetry} className="flex-1 py-3 rounded-2xl font-bold text-sm bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:from-teal-600 hover:to-cyan-700 transition-all">
-            Practice Again
+          <button onClick={onRetry} className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:from-teal-400 hover:to-cyan-400 transition-all shadow-[0_0_20px_rgba(20,184,166,0.3)]">
+            Retry Session
           </button>
         </div>
       </div>
@@ -545,18 +549,30 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] flex items-center justify-center p-6">
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-2xl w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen bg-[#06090e] flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+      </div>
+
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-2xl w-full bg-[#111827]/80 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/5">
         <div className="p-6 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white mb-2">Hardware Setup</h2>
-          <p className="text-sm text-slate-500 mb-6 group">
-            {sessionConfig?.interview_type?.charAt(0).toUpperCase() + sessionConfig?.interview_type?.slice(1)} Interview
-            {sessionConfig?.target_company && ` @ ${sessionConfig.target_company}`}
-            {' — '}{sessionConfig?.target_role}
-          </p>
+          <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-6">
+             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 shadow-inner">
+               <Sparkle size={24} weight="fill" className="text-indigo-400" />
+             </div>
+             <div>
+               <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Hardware Setup</h2>
+               <p className="text-sm text-slate-400">
+                 {sessionConfig?.interview_type?.charAt(0).toUpperCase() + sessionConfig?.interview_type?.slice(1)} Interview
+                 {sessionConfig?.target_company && ` @ ${sessionConfig.target_company}`}
+                 {' — '}{sessionConfig?.target_role}
+               </p>
+             </div>
+          </div>
           
           {/* Camera Preview */}
-          <div className="relative w-full aspect-video bg-slate-100 dark:bg-slate-950 rounded-2xl overflow-hidden mb-6 border border-slate-200 dark:border-slate-800">
+          <div className="relative w-full aspect-video bg-black/40 rounded-2xl overflow-hidden mb-6 border border-white/10 shadow-inner">
             {permissionsGranted ? (
                <video 
                   ref={videoRef} 
@@ -566,9 +582,9 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                   className="w-full h-full object-cover scale-x-[-1]" 
                />
             ) : (
-               <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                  <Warning size={32} className="mb-2 opacity-50" />
-                  <span className="text-sm font-bold uppercase tracking-wider">Awaiting Permissions</span>
+               <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                  <Warning size={32} className="mb-2 opacity-50 text-amber-500" />
+                  <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Awaiting Permissions</span>
                </div>
             )}
           </div>
@@ -576,37 +592,37 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
           <div className="space-y-4">
             {/* Microphone Selector */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Microphone</label>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/50 p-3">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Microphone</label>
+              <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md p-3 transition-colors hover:bg-white/10">
                 <select 
-                  className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer truncate"
+                  className="w-full bg-transparent text-sm font-bold text-slate-200 outline-none cursor-pointer truncate"
                   value={selectedAudioId}
                   onChange={(e) => setSelectedAudioId(e.target.value)}
                   disabled={devices.audio.length === 0}
                 >
                   {devices.audio.length > 0 ? devices.audio.map(d => (
-                    <option key={d.deviceId} value={d.deviceId} className="bg-white dark:bg-slate-900">{d.label || `Microphone ${d.deviceId.slice(0, 5)}`}</option>
+                    <option key={d.deviceId} value={d.deviceId} className="bg-slate-900 text-slate-200">{d.label || `Microphone ${d.deviceId.slice(0, 5)}`}</option>
                   )) : <option>No microphone found</option>}
                 </select>
                 {/* Amplitude Bar */}
-                <div className="mt-3 h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden flex items-center">
-                  <div ref={amplitudeBarRef} className="h-full bg-emerald-500 w-0 transition-all duration-75" />
+                <div className="mt-3 h-1.5 w-full bg-black/40 rounded-full overflow-hidden flex items-center border border-white/5">
+                  <div ref={amplitudeBarRef} className="h-full bg-emerald-400 w-0 transition-all duration-75 shadow-[0_0_10px_#34d399]" />
                 </div>
               </div>
             </div>
 
             {/* Camera Selector */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Camera</label>
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/50 p-3">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Camera</label>
+              <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md p-3 transition-colors hover:bg-white/10">
                 <select 
-                  className="w-full bg-transparent text-sm font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer truncate"
+                  className="w-full bg-transparent text-sm font-bold text-slate-200 outline-none cursor-pointer truncate"
                   value={selectedVideoId}
                   onChange={(e) => setSelectedVideoId(e.target.value)}
                   disabled={devices.video.length === 0}
                 >
                   {devices.video.length > 0 ? devices.video.map(d => (
-                    <option key={d.deviceId} value={d.deviceId} className="bg-white dark:bg-slate-900">{d.label || `Camera ${d.deviceId.slice(0, 5)}`}</option>
+                    <option key={d.deviceId} value={d.deviceId} className="bg-slate-900 text-slate-200">{d.label || `Camera ${d.deviceId.slice(0, 5)}`}</option>
                   )) : <option>No camera found</option>}
                 </select>
               </div>
@@ -618,15 +634,15 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={onDrop}
-              className="mt-6 mb-6 p-5 rounded-2xl border-2 border-dashed border-amber-300 dark:border-amber-500/40 bg-amber-50/50 dark:bg-amber-500/5 transition-colors"
+              className="mt-6 mb-6 p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-md transition-colors hover:bg-amber-500/15"
             >
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 bg-amber-100 dark:bg-amber-500/20 rounded-xl flex items-center justify-center shrink-0">
-                  <FileText size={22} weight="duotone" className="text-amber-600 dark:text-amber-400" />
+                <div className="w-11 h-11 bg-amber-500/20 rounded-xl flex items-center justify-center shrink-0 border border-amber-500/30 shadow-inner">
+                  <FileText size={22} weight="duotone" className="text-amber-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-sm text-amber-800 dark:text-amber-300 mb-1">Resume Required</h4>
-                  <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mb-3 leading-relaxed">
+                  <h4 className="font-extrabold text-sm text-amber-300 mb-1">Resume Required</h4>
+                  <p className="text-xs text-amber-200/70 mb-3 leading-relaxed">
                     Ami personalizes your interview using your resume. Upload a PDF to get started.
                   </p>
                   <input
@@ -639,7 +655,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-bold text-xs shadow-md shadow-amber-500/20 transition-all disabled:opacity-60"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-full font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-60"
                   >
                     <Upload size={14} weight="bold" />
                     {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
@@ -1299,13 +1315,13 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       {/* Bottom status bar */}
       <div className="relative z-10 px-8 py-5 border-t border-white/[0.03] bg-black/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {isListening ? (
+          {orbState === 'listening' ? (
             <div className="flex items-center gap-2.5 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
               <Microphone size={16} className="text-emerald-400" />
               <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Listening</span>
             </div>
-          ) : isSpeaking ? (
+          ) : orbState === 'speaking' ? (
             <div className="flex items-center gap-2.5 bg-cyan-500/10 px-4 py-2 rounded-full border border-cyan-500/20 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_#06b6d4]" />
               <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">AI Speaking</span>
