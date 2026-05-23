@@ -499,14 +499,15 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
         for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
         const average = sum / bufferLength;
         
-        // Filter out ambient noise floor (~4-6)
-        const noiseFloor = 6;
+        // Filter out ambient noise floor (most laptop mics sit around 15-20 when silent)
+        const noiseFloor = 15;
         const normalizedVolume = Math.max(0, average - noiseFloor);
         
         if (normalizedVolume > 0) setHasMicSignal(true);
         if (amplitudeBarRef.current) {
-           // Multiply for visual heft, hard cap at 100%
-           amplitudeBarRef.current.style.width = `${Math.min(100, normalizedVolume * 4)}%`;
+           // Smooth the visual representation and make it less twitchy at the bottom
+           const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+           amplitudeBarRef.current.style.width = `${visualWidth}%`;
         }
         animationFrameRef.current = requestAnimationFrame(checkVolume);
       };
