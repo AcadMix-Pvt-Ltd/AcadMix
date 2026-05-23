@@ -67,11 +67,11 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
            const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.4)); // use lower 40% of frequencies
            let val = dataArray[binIndex] / 255;
            
-           // Apply a power curve to boost quiet and mid-level sounds, making the mic highly reactive
-           val = Math.pow(val, 0.7) * 1.5;
+           // Noise floor gate: ignore ambient mic noise below 8% intensity
+           val = val < 0.08 ? 0 : (val - 0.08) / 0.92; // remap 0.08–1.0 → 0–1
            
            const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI); // 0 at edges, 1 in middle
-           targetData[i] = val * 60 * bell; // Max amplitude ~60px (fits h-48 container = 192px, centerY = 96px)
+           targetData[i] = val * 70 * bell; // Max amplitude ~70px
          }
       } else if (state === 'speaking' || state === 'evaluating') {
          // Simulated speaking waveform
@@ -114,8 +114,9 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
         for (let i = 0; i < NUM_POINTS; i++) {
           const x = (i / (NUM_POINTS - 1)) * width;
           const phaseOffset = layer * Math.PI * 0.6;
-          // Base idle animation
-          const idleWave = Math.sin(time + (i / NUM_POINTS) * Math.PI * 2 + phaseOffset) * 4;
+          // Base idle animation — very subtle breathing when silent, more visible when not listening
+          const idleAmp = state === 'listening' ? 1.5 : 4;
+          const idleWave = Math.sin(time + (i / NUM_POINTS) * Math.PI * 2 + phaseOffset) * idleAmp;
           
           // Apply audio amplitude. Layer 1 is inverted for a mirroring effect.
           const direction = layer === 1 ? -1 : 1;

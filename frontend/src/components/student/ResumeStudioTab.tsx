@@ -478,10 +478,10 @@ const ResumeStudioTab = ({ navigate }: any) => {
           {/* Template selector */}
           <div className="soft-card p-5">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Template</h3>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {templates.map(t => (
                 <button key={t.id} onClick={() => setTemplate(t.id)}
-                  className={`min-w-[150px] flex-1 px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
+                  className={`px-4 py-3 rounded-xl text-sm font-bold transition-all border text-left ${
                     template === t.id
                       ? 'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-500/25 shadow-sm'
                       : 'bg-slate-50 dark:bg-white/[0.02] text-slate-500 dark:text-slate-400 border-transparent hover:border-slate-200 dark:hover:border-white/10'

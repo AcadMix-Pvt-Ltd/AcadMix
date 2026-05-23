@@ -5,10 +5,10 @@
     "professional_summary": 70,
     "work_experience": 0,
     "education": 100,
-    "skills": 50,
+    "skills": 60,
     "projects": 75,
     "certifications": 50,
-    "formatting": 90
+    "formatting": 100
   },
   "keywords_found": [
     "Python",
@@ -18,37 +18,41 @@
     "CSS",
     "React.js",
     "MongoDB",
-    "MySQL",
-    "PostgreSQL",
     "Docker",
     "Jenkins",
     "CI/CD",
+    "MySQL",
+    "PostgreSQL",
     "Git",
     "Agile/Scrum",
-    "Flutter"
+    "Flutter",
+    "OpenCV",
+    "MediaPipe"
   ],
   "keywords_missing": [
-    "Java",
-    "SQL",
-    "RESTful APIs",
-    "Microservices",
+    "Software Engineering",
+    "API Development",
+    "Backend Development",
+    "Frontend Development",
     "Unit Testing",
-    "Object-Oriented Programming (OOP)",
+    "System Design",
     "Data Structures",
     "Algorithms",
-    "Software Design Patterns",
-    "Version Control (Git)",
-    "Cloud Computing (AWS/Azure/GCP)",
+    "Object-Oriented Programming",
+    "Version Control",
+    "Databases",
+    "Cloud Computing",
     "Problem Solving",
-    "Debugging"
+    "Debugging",
+    "Software Development Life Cycle"
   ],
   "improvement_tips": [
-    "Add a dedicated 'Work Experience' section detailing any internships or previous roles with quantifiable achievements relevant to software development.",
-    "Expand on project descriptions to highlight specific software development methodologies, challenges overcome, and the impact of your code.",
-    "Incorporate more core software development languages and frameworks like Java, SQL, and explore concepts like RESTful APIs and microservices.",
-    "Tailor the 'Professional Summary' to explicitly mention 'Software Developer' and briefly state relevant experience duration or aspirations.",
-    "Seek certifications or online courses specifically focused on software development principles, object-oriented design, and common development tools."
+    "Add a 'Work Experience' section to showcase any internships or part-time roles related to software development, even if they were brief.",
+    "Quantify achievements in projects where possible, e.g., 'Improved performance by X%' or 'Reduced processing time by Y seconds'.",
+    "Expand the 'Professional Summary' to explicitly mention 'Software Developer' and ideally a duration of experience (even academic) to align with the target role.",
+    "Consider adding certifications or coursework that are more directly aligned with core software development principles, such as specific backend frameworks or software engineering methodologies.",
+    "While Data Science and AI are mentioned, ensure the resume highlights transferable software development skills within those projects, such as code structure, modularity, and testing."
   ],
-  "summary": "This resume presents a motivated Computer Science undergraduate with a strong foundation in programming and web technologies. While it showcases relevant technical skills and projects for a Software Developer role, the absence of work experience and a lack of emphasis on core software engineering principles (like OOP, design patterns, and testing) limit its immediate impact for this specific target role."
+  "summary": "This resume presents a strong foundation for a Software Developer role, particularly with its emphasis on web technologies and programming languages. However, the absence of direct work experience and a more explicit focus on core software development principles in the summary and projects limits its immediate impact for this specific role."
 }
 ```
