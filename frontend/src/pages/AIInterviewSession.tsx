@@ -890,29 +890,44 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
   // ── Speech Recognition & MediaRecorder (Student speaks) ──
   const startListening = useCallback(async () => {
-    // 1. Initialize Web Audio API for visualizer & restart camera
-    if (!audioContextRef.current) {
+   // 1. Acquire mic+camera stream if not already active
+    if (!mediaStreamRef.current) {
       try {
         const constraints = {
           audio: sessionMicIdRef.current ? { deviceId: { exact: sessionMicIdRef.current } } : true,
           video: sessionVideoIdRef.current ? { deviceId: { exact: sessionVideoIdRef.current } } : true
         };
+        console.log('[MIC] Requesting getUserMedia with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         mediaStreamRef.current = stream;
-        
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        audioContextRef.current = new AudioContextClass();
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 256; // 128 bins — better frequency resolution for speech
-        
-        sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(stream);
-        sourceNodeRef.current.connect(analyserRef.current);
+        console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}`));
       } catch (err) {
-        console.error("Camera/Microphone access denied.", err);
+        console.error('[MIC] Camera/Microphone access denied.', err);
         toast.error('Camera and Microphone access are required for the interview.');
       }
-    } else if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
+    }
+
+    // 2. Connect analyser to stream for visualizer (if not already wired up)
+    if (mediaStreamRef.current && !analyserRef.current) {
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContextClass();
+        }
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+
+        sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
+        sourceNodeRef.current.connect(analyserRef.current);
+        console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize);
+      } catch (err) {
+        console.error('[MIC] Failed to connect analyser:', err);
+      }
+    } else if (audioContextRef.current?.state === 'suspended') {
+      await audioContextRef.current.resume();
     }
 
     // 2. Prepare MediaRecorder for High-Fidelity Audio capture
