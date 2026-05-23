@@ -1,7 +1,8 @@
 import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Environment } from '@react-three/drei';
-import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, ArrowsOutCardinal, ArrowsClockwise, DownloadSimple, UploadSimple, Magnet, ArrowsIn, Eye, EyeClosed } from '@phosphor-icons/react';
+import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, ArrowsOutCardinal, ArrowsClockwise, DownloadSimple, UploadSimple, Magnet, ArrowsIn, Eye, EyeClosed, TextT } from '@phosphor-icons/react';
+import { v4 as uuidv4 } from 'uuid';
 import * as THREE from 'three';
 import { v4 as uuidv4 } from 'uuid';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
@@ -15,6 +16,13 @@ const initialNodes: CadNode[] = [
 ];
 
 const CadStudio = () => {
+  useEffect(() => {
+    preloadCadAssets(() => {
+      _setNodes(prev => [...prev]); // Trigger re-render when assets load
+    });
+  }, []);
+
+  const [clipboard, setClipboard] = useState<CadNode | null>(null);
   const [nodes, _setNodes] = useState<CadNode[]>(() => {
     const saved = localStorage.getItem('acadmix_cad_nodes');
     if (saved) {
@@ -70,6 +78,22 @@ const CadStudio = () => {
           _setNodes(next);
           return f.slice(1);
         });
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        if (selectedId) {
+          const target = nodes.find(n => n.id === selectedId);
+          if (target) setClipboard(JSON.parse(JSON.stringify(target)));
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        if (clipboard) {
+          const clone = JSON.parse(JSON.stringify(clipboard));
+          clone.id = uuidv4();
+          clone.name = clone.name + ' (Copy)';
+          if (clone.position) {
+            clone.position = [clone.position[0] + 2, clone.position[1] + 2, clone.position[2]];
+          }
+          setNodes(prev => [...prev, clone]);
+          setSelectedId(clone.id);
+        }
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selectedId) {
           setNodes(prev => prev.filter(n => n.id !== selectedId));
@@ -215,6 +239,7 @@ const CadStudio = () => {
             <button onClick={() => addPrimitive('sphere')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-300 hover:text-white' : 'hover:bg-slate-200 text-slate-600 hover:text-slate-900'}`} title="Add Sphere"><SphereIcon size={18} /></button>
             <button onClick={() => addPrimitive('cone')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-300 hover:text-white' : 'hover:bg-slate-200 text-slate-600 hover:text-slate-900'}`} title="Add Cone"><CaretUp size={18} /></button>
             <button onClick={() => addPrimitive('torus')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-300 hover:text-white' : 'hover:bg-slate-200 text-slate-600 hover:text-slate-900'}`} title="Add Torus"><Circle size={18} /></button>
+            <button onClick={() => addPrimitive('text')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-slate-700 text-slate-300 hover:text-white' : 'hover:bg-slate-200 text-slate-600 hover:text-slate-900'}`} title="Add 3D Text"><TextT size={18} /></button>
             <div className={`w-px h-6 mx-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
             <button onClick={() => addBoolean('union')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-indigo-500/20 text-indigo-400' : 'hover:bg-indigo-100 text-indigo-600'}`} title="Boolean Union"><Plus size={18} /></button>
             <button onClick={() => addBoolean('subtract')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'hover:bg-rose-500/20 text-rose-400' : 'hover:bg-rose-100 text-rose-600'}`} title="Boolean Subtract"><Minus size={18} /></button>
@@ -318,7 +343,7 @@ const CadStudio = () => {
                 {/* Render CSG Meshes */}
                 {renderMeshes.map(({ id, mesh }) => {
                   const isSelected = id === selectedId;
-                  const isPrimitive = ['box', 'cylinder', 'sphere', 'cone', 'torus'].includes(
+                  const isPrimitive = ['box', 'cylinder', 'sphere', 'cone', 'torus', 'text'].includes(
                     nodes.find(n => n.id === id)?.type || ''
                   );
 
@@ -339,12 +364,18 @@ const CadStudio = () => {
                               setNodes(prev => prev.map(n => {
                                 if (n.id !== id) return n;
                                 const n2 = { ...n };
-                                if (n.type === 'box' && n.size) n2.size = [n.size[0]*sx, n.size[1]*sy, n.size[2]*sz];
+                                if (n.type === 'box' && n.size) {
+                                  n2.size = [
+                                    Math.max(0.1, Math.abs(n.size[0] * sx)),
+                                    Math.max(0.1, Math.abs(n.size[1] * sy)),
+                                    Math.max(0.1, Math.abs(n.size[2] * sz))
+                                  ];
+                                }
                                 else if (n.radius) {
-                                  const s = Math.max(sx, sz);
-                                  n2.radius = n.radius * s;
-                                  if (n.height) n2.height = n.height * sy;
-                                  if (n.tube) n2.tube = n.tube * s;
+                                  const s = Math.abs(Math.max(sx, sz));
+                                  n2.radius = Math.max(0.1, Math.abs(n.radius * s));
+                                  if (n.height) n2.height = Math.max(0.1, Math.abs(n.height * sy));
+                                  if (n.tube) n2.tube = Math.max(0.1, Math.abs(n.tube * s));
                                 }
                                 return n2;
                               }));

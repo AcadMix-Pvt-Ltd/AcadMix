@@ -987,7 +987,7 @@ const MECH_SIMULATOR_BOARDS: Record<string, { id: string; label: string; url: st
     { id: 'au-python', label: 'Python (Engines)', url: jupyterUrl(JUPYTER_CODES['au-python']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },
   ],
   cad_3d: [
-    { id: 'mech-cad3d-native', label: 'CAD / 3D Modeling Studio', url: '', isNativeBlock: true, mechTool: 'cad3d' },
+    { id: 'mech-cad3d-native', label: 'AcadMix Premium CAD Studio', url: '/cad-studio', openLabel: 'Launch CAD Studio', noEmbed: true },
     { id: 'cad-openscad', label: 'OpenJSCAD (Parametric)', url: 'https://openjscad.xyz/', openLabel: 'Open JSCAD' },
     { id: 'cad-threejs', label: 'Three.js Editor', url: 'https://threejs.org/editor/', openLabel: 'Open 3D Editor' },
     { id: 'cad-python', label: 'Python (CadQuery)', url: jupyterUrl(JUPYTER_CODES['cad-python-3d']), openLabel: 'Open Python', octaveUrl: OCTAVE_URL },

@@ -69,8 +69,7 @@ const CashierDashboard = React.lazy(() => import('./pages/CashierDashboard'));
 const FinanceOfficerDashboard = React.lazy(() => import('./pages/FinanceOfficerDashboard'));
 const ReceiptVerificationPage = React.lazy(() => import('./pages/ReceiptVerificationPage'));
 const OrbShowcase = React.lazy(() => import('./pages/OrbShowcase'));
-
-
+const CadStudio = React.lazy(() => import('./pages/cad-studio/CadStudio'));
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Route Configuration
@@ -131,7 +130,7 @@ const PAGE_TO_PATH = {
   'visitor-management': '/visitors',
   'student-profile': '/student/profile',
   'director-dashboard': '/director',
-
+  'cad-studio': '/cad-studio',
 };
 
 const ROLE_DASHBOARD = {
@@ -464,6 +463,9 @@ function AppRoutes({ user, onLogin, onLogout }) {
       } />
       <Route path="/preview/:filename" element={
         <ProtectedRoute user={user}><DocumentPreviewPage /></ProtectedRoute>
+      } />
+      <Route path="/cad-studio" element={
+        <ProtectedRoute user={user}><CadStudio /></ProtectedRoute>
       } />
 
       {/* ── Fallback ─────────────────────────────────────────────── */}

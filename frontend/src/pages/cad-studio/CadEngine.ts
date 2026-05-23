@@ -1,7 +1,43 @@
 import * as THREE from 'three';
 import { Evaluator, Brush, ADDITION, SUBTRACTION, INTERSECTION } from 'three-bvh-csg';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
-export type NodeType = 'box' | 'cylinder' | 'sphere' | 'cone' | 'torus' | 'union' | 'subtract' | 'intersect';
+export const GlobalAssetCache = {
+  font: null as any,
+  textures: {} as Record<string, THREE.Texture>,
+  onLoadCallback: null as (() => void) | null,
+};
+
+export const preloadCadAssets = (callback: () => void) => {
+  GlobalAssetCache.onLoadCallback = callback;
+  
+  const fontLoader = new FontLoader();
+  fontLoader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+    GlobalAssetCache.font = font;
+    if (GlobalAssetCache.onLoadCallback) GlobalAssetCache.onLoadCallback();
+  });
+
+  const textureLoader = new THREE.TextureLoader();
+  
+  const loadTex = (url: string, repeat: number = 1) => {
+    const t = textureLoader.load(url, () => {
+      if (GlobalAssetCache.onLoadCallback) GlobalAssetCache.onLoadCallback();
+    });
+    t.wrapS = THREE.RepeatWrapping;
+    t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(repeat, repeat);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  };
+
+  GlobalAssetCache.textures['wood'] = loadTex('https://images.unsplash.com/photo-1520114885542-a841d1df332f?w=512&q=80', 0.1);
+  GlobalAssetCache.textures['carbon'] = loadTex('https://images.unsplash.com/photo-1596434448512-404fb171cd8f?w=512&q=80', 1);
+};
+
+
+export type NodeType = 'box' | 'cylinder' | 'sphere' | 'cone' | 'torus' | 'text' | 'union' | 'subtract' | 'intersect';
 
 export interface CadNode {
   id: string;
@@ -15,6 +51,9 @@ export interface CadNode {
   radius?: number; // for cyl, sphere, cone, torus
   height?: number; // for cyl, cone
   tube?: number; // for torus
+  textValue?: string; // for text
+  cornerRadius?: number; // for box fillets
+  materialType?: 'solid' | 'wood' | 'carbon'; // for textures
   
   // Transform
   position?: [number, number, number];
@@ -31,7 +70,11 @@ const createPrimitiveBrush = (node: CadNode): Brush | null => {
   
   if (node.type === 'box') {
     const s = node.size || [10, 10, 10];
-    geometry = new THREE.BoxGeometry(s[0], s[1], s[2]);
+    if (node.cornerRadius && node.cornerRadius > 0) {
+      geometry = new RoundedBoxGeometry(s[0], s[1], s[2], 4, node.cornerRadius);
+    } else {
+      geometry = new THREE.BoxGeometry(s[0], s[1], s[2]);
+    }
   } else if (node.type === 'cylinder') {
     geometry = new THREE.CylinderGeometry(node.radius || 5, node.radius || 5, node.height || 10, 32);
   } else if (node.type === 'sphere') {
@@ -40,16 +83,34 @@ const createPrimitiveBrush = (node: CadNode): Brush | null => {
     geometry = new THREE.ConeGeometry(node.radius || 5, node.height || 10, 32);
   } else if (node.type === 'torus') {
     geometry = new THREE.TorusGeometry(node.radius || 5, node.tube || 1.5, 16, 64);
+  } else if (node.type === 'text') {
+    if (GlobalAssetCache.font) {
+      geometry = new TextGeometry(node.textValue || 'AcadMix', {
+        font: GlobalAssetCache.font,
+        size: node.radius || 5,
+        depth: node.height || 2,
+        curveSegments: 12,
+        bevelEnabled: false
+      });
+      geometry.center();
+    } else {
+      geometry = new THREE.BoxGeometry(5, 5, 5);
+    }
   } else {
     return null;
   }
 
-  const material = new THREE.MeshStandardMaterial({
+  const matParams: THREE.MeshStandardMaterialParameters = {
     color: node.color || '#3b82f6',
-    metalness: 0.1,
-    roughness: 0.4,
+    metalness: node.materialType === 'carbon' ? 0.8 : 0.1,
+    roughness: node.materialType === 'wood' ? 0.9 : 0.4,
     side: THREE.DoubleSide
-  });
+  };
+  if (node.materialType && node.materialType !== 'solid' && GlobalAssetCache.textures[node.materialType]) {
+    matParams.map = GlobalAssetCache.textures[node.materialType];
+    matParams.color = 0xffffff;
+  }
+  const material = new THREE.MeshStandardMaterial(matParams);
   const brush = new Brush(geometry, material);
   
   if (node.position) {
@@ -76,7 +137,7 @@ export const evaluateFeatureTree = (nodes: CadNode[]): { id: string, mesh: THREE
   for (const node of nodes) {
     let resultBrush: Brush | null = null;
 
-    if (['box', 'cylinder', 'sphere', 'cone', 'torus'].includes(node.type)) {
+    if (['box', 'cylinder', 'sphere', 'cone', 'torus', 'text'].includes(node.type)) {
       resultBrush = createPrimitiveBrush(node);
     } 
     else if (['union', 'subtract', 'intersect'].includes(node.type)) {
