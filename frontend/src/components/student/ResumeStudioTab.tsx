@@ -9,7 +9,8 @@ import {
 import { careerAPI, resumeProfileAPI } from '../../services/api';
 import { toast } from 'sonner';
 import html2pdf from 'html2pdf.js';
-
+import { RenderTemplatePreview } from './resume-templates/LivePreviews';
+import { generateHtmlForPdf } from './resume-templates/PdfGenerators';
 /* ── Animation Variants ─────────────────────────────────── */
 const fadeIn = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
 
@@ -26,194 +27,9 @@ const TEMPLATES = [
 ];
 
 /* ═══════════════════════════════════════════════════════════
-   LIVE PREVIEW — renders the resume as a scaled A4 page
+   LIVE PREVIEW — delegates to specific template modules
    ═══════════════════════════════════════════════════════════ */
-const ResumePreview = ({ data, template }: { data: any; template: string }) => {
-  const personal = data?.personal || {};
-  const education = data?.education_history || [];
-  const skills = data?.skills || {};
-  const projects = data?.projects || [];
-  const experience = data?.experience || [];
-  const certs = data?.certifications || [];
-  const achievements = data?.achievements || [];
-  const summary = data?.summary || '';
-  const currentEdu = personal.current_education;
-
-  const isModern = ['modern', 'developer', 'management'].includes(template);
-  const isCompact = ['compact', 'ats-strict'].includes(template);
-  const accent = template === 'developer' ? '#2563eb' : template === 'core-engineering' ? '#0f766e' : template === 'management' ? '#7c3aed' : '#000000';
-
-  const SectionTitle = ({ children }: any) => (
-    <div className="mt-[8px] mb-[3px] first:mt-0">
-      <h3 className="text-[11px] font-[700] border-b pb-[1px]" style={{ color: accent, borderColor: isModern ? accent : '#000' }}>{children}</h3>
-    </div>
-  );
-  const Bullet = ({ children }: any) => (
-    <p className="text-[8px] text-black leading-[1.45] pl-[10px] relative before:content-['●'] before:absolute before:left-0 before:text-[6px] before:top-[1px]">{children}</p>
-  );
-  const TechLine = ({ tech }: { tech: string }) => (
-    <p className="text-[8px] text-black leading-[1.45] pl-[10px]">
-      <span className="font-[700]">Tech Stack: </span>{tech}
-    </p>
-  );
-
-  const hasSkills = skills.languages?.length || skills.frameworks?.length || skills.tools?.length || skills.databases?.length;
-
-  return (
-    <div className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297', fontFamily: isModern ? "'Inter', 'Arial', sans-serif" : "'Times New Roman', 'Georgia', serif" }}>
-      <div className={`${isCompact ? 'p-4' : 'p-5'} h-full overflow-hidden`}>
-
-        {/* Name */}
-        <h1 className={`text-center font-[700] leading-tight ${isCompact ? 'text-[14px]' : 'text-[16px]'}`} style={{ color: accent }}>
-          {personal.name || <span className="text-slate-300 italic">Your Full Name</span>}
-        </h1>
-
-        {/* Contact */}
-        {(personal.email || personal.phone || personal.location) && (
-          <p className="text-center text-[8px] text-black mt-[2px] leading-snug">
-            {[personal.email, personal.phone, personal.location].filter(Boolean).join('  |  ')}
-          </p>
-        )}
-
-        {/* Links */}
-        {(personal.linkedin || personal.github || personal.portfolio) && (
-          <p className="text-center text-[8px] text-black mt-[1px] leading-snug">
-            {[personal.linkedin, personal.github, personal.portfolio].filter(Boolean).join('  |  ')}
-          </p>
-        )}
-
-        {/* Summary */}
-        {summary.trim() && (
-          <>
-            <SectionTitle>Summary</SectionTitle>
-            <p className="text-[8px] text-black leading-[1.5]">{summary}</p>
-          </>
-        )}
-
-        {/* Education */}
-        <SectionTitle>Education</SectionTitle>
-        {currentEdu && currentEdu.institution && (
-          <div className="mb-[4px]">
-            <div className="flex items-baseline justify-between">
-              <p className="text-[9px] text-black">
-                <span className="font-[700]">{currentEdu.degree || 'B.Tech'}{currentEdu.branch ? ` in ${currentEdu.branch}` : ''}, </span>
-                {currentEdu.institution}
-              </p>
-              {currentEdu.batch && <span className="text-[8px] text-black italic shrink-0 ml-2">{currentEdu.batch}</span>}
-            </div>
-          </div>
-        )}
-        {education.map((edu: any, i: number) => {
-          const degree = edu.degree || edu.level || '';
-          const field = edu.field || edu.board || '';
-          const year = edu.gradYear || edu.year || '';
-          const month = edu.gradMonth || '';
-          const gradDate = month ? `${month} ${year}`.trim() : year;
-          return (
-            <div key={i} className="mb-[4px]">
-              <div className="flex items-baseline justify-between">
-                <p className="text-[9px] text-black">
-                  <span className="font-[700]">{degree}</span>
-                  {edu.school && <span>, {edu.school}</span>}
-                </p>
-                {gradDate && <span className="text-[8px] text-black italic shrink-0 ml-2">{gradDate}</span>}
-              </div>
-              {(field || edu.location || edu.percentage) && (
-                <p className="text-[7.5px] text-black italic">
-                  {[field, edu.location, edu.percentage].filter(Boolean).join('  |  ')}
-                </p>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Skills */}
-        {hasSkills ? (
-          <>
-            <SectionTitle>Technical Skills</SectionTitle>
-            <div className="space-y-[1px]">
-              {([['languages', 'Languages'], ['frameworks', 'Frameworks'], ['tools', 'Tools & Platforms'], ['databases', 'Databases']] as const).map(([key, label]) => {
-                const items = skills[key];
-                if (!items?.length) return null;
-                return (
-                  <p key={key} className="text-[8px] text-black leading-[1.5]">
-                    <span className="font-[700]">{label}: </span>
-                    {items.join(', ')}
-                  </p>
-                );
-              })}
-            </div>
-          </>
-        ) : null}
-
-        {/* Projects */}
-        {projects.length > 0 && (
-          <>
-            <SectionTitle>Projects</SectionTitle>
-            {projects.slice(0, 3).map((p: any, i: number) => (
-              <div key={i} className="mb-[4px]">
-                <p className="text-[9px] font-[700] text-black">{p.title || 'Untitled'}</p>
-                {p.bullets?.filter((b: string) => b.trim()).slice(0, 4).map((b: string, j: number) => (
-                  <Bullet key={j}>{b}</Bullet>
-                ))}
-                {p.tech_stack && <TechLine tech={p.tech_stack} />}
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* Experience */}
-        {experience.length > 0 && (
-          <>
-            <SectionTitle>Experience</SectionTitle>
-            {experience.slice(0, 3).map((e: any, i: number) => (
-              <div key={i} className="mb-[4px]">
-                <p className="text-[9px] text-black">
-                  <span className="font-[700]">{e.role || 'Role'}</span>
-                  {e.company && <span>, {e.company}</span>}
-                </p>
-                {(e.duration || e.location) && (
-                  <p className="text-[8px] text-black italic">
-                    {[e.duration, e.location].filter(Boolean).join('  |  ')}
-                  </p>
-                )}
-                {e.bullets?.filter((b: string) => b.trim()).slice(0, 4).map((b: string, j: number) => (
-                  <Bullet key={j}>{b}</Bullet>
-                ))}
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* Certifications */}
-        {certs.length > 0 && (
-          <>
-            <SectionTitle>Certifications</SectionTitle>
-            {certs.map((c: any, i: number) => (
-              <p key={i} className="text-[8px] text-black leading-[1.5]">
-                <span className="font-[700]">{c.name}</span>
-                {(c.issuer || c.year) && <span> — {[c.issuer, c.year].filter(Boolean).join(', ')}</span>}
-              </p>
-            ))}
-          </>
-        )}
-
-        {/* Achievements */}
-        {achievements.length > 0 && (
-          <>
-            <SectionTitle>Achievements</SectionTitle>
-            {achievements.map((a: any, i: number) => {
-              const text = typeof a === 'string' ? a : a.title || '';
-              return text.trim() ? <Bullet key={i}>{text}</Bullet> : null;
-            })}
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-
+// RenderTemplatePreview is imported from LivePreviews.tsx
 /* ═══════════════════════════════════════════════════════════
    DATA SUMMARY — shows what's filled vs empty
    ═══════════════════════════════════════════════════════════ */
@@ -354,72 +170,8 @@ const ResumeStudioTab = ({ navigate }: any) => {
     if (!profileData) return;
     setDownloading('pdf');
     try {
-      const p = profileData.personal || {};
-      const eduList = profileData.education_history || [];
-      const sk = profileData.skills || {};
-      const proj = profileData.projects || [];
-      const exp = profileData.experience || [];
-      const certsList = profileData.certifications || [];
-      const achv = profileData.achievements || [];
-      const sum = profileData.summary || '';
-      const ce = p.current_education;
-      const studentName = p.name?.replace(/\s+/g, '_') || 'Resume';
-
-      const esc = (s: string) => s?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') || '';
-      const sectionHead = (t: string) => `<div style="margin-top:14px;margin-bottom:4px;border-bottom:1.5px solid #000;padding-bottom:2px"><span style="font-size:13px;font-weight:700">${t}</span></div>`;
-      const bulletPt = (t: string) => `<div style="font-size:11px;padding-left:14px;position:relative;line-height:1.5"><span style="position:absolute;left:0;top:0">&#9679;</span>${esc(t)}</div>`;
-
-      let html = `<div style="font-family:'Times New Roman',Georgia,serif;color:#000;padding:48px 56px;width:794px;min-height:1123px;box-sizing:border-box;background:#fff">`;
-      html += `<h1 style="text-align:center;font-size:22px;font-weight:700;margin:0;line-height:1.3">${esc(p.name || '')}</h1>`;
-      const contact = [p.email, p.phone, p.location].filter(Boolean).map(esc);
-      if (contact.length) html += `<p style="text-align:center;font-size:11px;margin:2px 0 0">${contact.join('  |  ')}</p>`;
-      const links = [p.linkedin, p.github, p.portfolio].filter(Boolean).map(esc);
-      if (links.length) html += `<p style="text-align:center;font-size:11px;margin:2px 0 0">${links.join('  |  ')}</p>`;
-      if (sum.trim()) { html += sectionHead('Summary'); html += `<p style="font-size:11px;line-height:1.6;margin:0">${esc(sum)}</p>`; }
-      html += sectionHead('Education');
-      if (ce?.institution) {
-        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-size:12px"><b>${esc(ce.degree||'B.Tech')}${ce.branch?' in '+esc(ce.branch):''}</b>, ${esc(ce.institution)}</span>${ce.batch?`<span style="font-size:11px;font-style:italic">${esc(ce.batch)}</span>`:''}</div>`;
-      }
-      eduList.forEach((e: any) => {
-        const deg = e.degree||e.level||''; const fld = e.field||e.board||'';
-        const yr = e.gradYear||e.year||''; const mo = e.gradMonth||'';
-        const gd = mo ? `${mo} ${yr}`.trim() : yr;
-        html += `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><span style="font-size:12px"><b>${esc(deg)}</b>${e.school?', '+esc(e.school):''}</span>${gd?`<span style="font-size:11px;font-style:italic">${esc(String(gd))}</span>`:''}</div>`;
-        const sub = [fld, e.location, e.percentage].filter(Boolean).map(esc);
-        if (sub.length) html += `<p style="font-size:10px;font-style:italic;margin:0 0 4px">${sub.join('  |  ')}</p>`;
-      });
-      const skRows = [['languages','Languages'],['frameworks','Frameworks'],['tools','Tools &amp; Platforms'],['databases','Databases']] as const;
-      if (skRows.some(([k]) => sk[k]?.length)) {
-        html += sectionHead('Technical Skills');
-        skRows.forEach(([k, label]) => { if (sk[k]?.length) html += `<p style="font-size:11px;line-height:1.6;margin:0"><b>${label}:</b> ${esc(sk[k].join(', '))}</p>`; });
-      }
-      if (proj.length) {
-        html += sectionHead('Projects');
-        proj.forEach((pr: any) => {
-          html += `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:12px">${esc(pr.title||'')}</b>${pr.duration?`<span style="font-size:11px;font-style:italic">${esc(pr.duration)}</span>`:''}</div>`;
-          pr.bullets?.filter((b: string) => b.trim()).forEach((b: string) => { html += bulletPt(b); });
-          if (pr.tech_stack) html += `<div style="font-size:11px;padding-left:14px;line-height:1.5"><b>Tech Stack:</b> ${esc(pr.tech_stack)}</div>`;
-          html += `</div>`;
-        });
-      }
-      if (exp.length) {
-        html += sectionHead('Experience');
-        exp.forEach((e: any) => {
-          html += `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12px"><b>${esc(e.role||'')}</b>${e.company?', '+esc(e.company):''}</span>${e.duration?`<span style="font-size:11px;font-style:italic">${esc(e.duration)}</span>`:''}</div>`;
-          if (e.location) html += `<p style="font-size:10px;font-style:italic;margin:0">${esc(e.location)}</p>`;
-          e.bullets?.filter((b: string) => b.trim()).forEach((b: string) => { html += bulletPt(b); });
-          html += `</div>`;
-        });
-      }
-      if (certsList.length) {
-        html += sectionHead('Certifications');
-        certsList.forEach((c: any) => { html += `<p style="font-size:11px;line-height:1.6;margin:0"><b>${esc(c.name||'')}</b>${(c.issuer||c.year)?' &mdash; '+[c.issuer,c.year].filter(Boolean).map(esc).join(', '):''}</p>`; });
-      }
-      if (achv.length) {
-        html += sectionHead('Achievements');
-        achv.forEach((a: any) => { const t = typeof a === 'string' ? a : a.title || ''; if (t.trim()) html += bulletPt(t); });
-      }
-      html += `</div>`;
+      const studentName = profileData.personal?.name?.replace(/\s+/g, '_') || 'Resume';
+      const html = generateHtmlForPdf(template, profileData);
 
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;top:-9999px;left:-9999px';
@@ -541,8 +293,8 @@ const ResumeStudioTab = ({ navigate }: any) => {
             <span className="text-[10px] text-slate-400">Scaled to fit — actual document is A4</span>
           </div>
           <div className="soft-card p-4 bg-slate-100 dark:bg-slate-900/50">
-            <div ref={previewRef}>
-              <ResumePreview data={profileData} template={template} />
+            <div ref={previewRef} className="w-full bg-white shadow-2xl shadow-black/10 rounded-sm overflow-hidden" style={{ aspectRatio: '210 / 297' }}>
+              <RenderTemplatePreview data={profileData} template={template} />
             </div>
           </div>
         </div>
