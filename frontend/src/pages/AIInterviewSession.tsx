@@ -16,70 +16,66 @@ const ORB_STATES = {
   evaluating:  { color1: '#8b5cf6', color2: '#ec4899', label: 'Evaluating...', speed: 1 },
 };
 
-// ─── Waveform Avatar Component (Option 1) ────────────────────────────────────
-const WaveformAvatar = ({ state, analyserRef }) => {
-  const barsRef = useRef([]);
-  const canvasRef = useRef(null); // Used for rendering the semicircular bars
-  
+// ─── Premium Animated Orb Avatar ──────────────────────────────────────────────
+const OrbAvatar = ({ state, analyserRef }) => {
+  const glowRef = useRef<HTMLDivElement>(null);
+  const orbRef = useRef<HTMLDivElement>(null);
+  const coreRef = useRef<HTMLDivElement>(null);
+
   // Custom states for inertia based simulation
-  const currentHeightsRef = useRef(new Array(32).fill(10));
-  const targetHeightsRef = useRef(new Array(32).fill(10));
+  const currentScaleRef = useRef(1);
+  const targetScaleRef = useRef(1);
   const frameRef = useRef(0);
 
   useEffect(() => {
-    let animationId;
+    let animationId: number;
 
     const renderLoop = () => {
       frameRef.current++;
-      const bars = barsRef.current;
-      if (!bars || bars.length === 0) return;
-
-      const numBars = 32;
 
       // Logic for LISTENING (Real Audio Analysis)
       if (state === 'listening' && analyserRef?.current) {
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
         analyserRef.current.getByteFrequencyData(dataArray);
 
-        for (let i = 0; i < numBars; i++) {
-          // dataArray has values 0-255. Map roughly to bar height 10 - 100px.
-          const val = dataArray[i] / 255;
-          const height = 10 + val * 90;
-          
-          // Smoothed real audio
-          currentHeightsRef.current[i] += (height - currentHeightsRef.current[i]) * 0.3;
-          if (bars[i]) bars[i].style.height = `${currentHeightsRef.current[i]}px`;
-        }
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const avg = sum / dataArray.length;
+        
+        // Map average volume to scale (1 to 1.3)
+        const val = avg / 255;
+        targetScaleRef.current = 1 + val * 0.4;
       } 
       // Logic for SPEAKING (Simulated Inertia Walk)
       else if (state === 'speaking' || state === 'evaluating') {
-        const volatility = state === 'speaking' ? 0.8 : 0.3;
+        const volatility = state === 'speaking' ? 0.25 : 0.1;
         
-        for (let i = 0; i < numBars; i++) {
-          if (frameRef.current % 5 === 0) {
-            targetHeightsRef.current[i] = 10 + Math.random() * (90 * volatility);
-          }
-          currentHeightsRef.current[i] += (targetHeightsRef.current[i] - currentHeightsRef.current[i]) * 0.15;
-          if (bars[i]) bars[i].style.height = `${currentHeightsRef.current[i]}px`;
+        if (frameRef.current % 5 === 0) {
+          targetScaleRef.current = 1 + Math.random() * volatility;
         }
       }
-      // Logic for THINKING (Sweeping wave)
+      // Logic for THINKING (Breathing pulse)
       else if (state === 'thinking') {
-        for (let i = 0; i < numBars; i++) {
-          // A sweeping sine wave from left to right
-          const wave = Math.sin(frameRef.current * 0.05 + i * 0.2); // -1 to 1
-          const height = 15 + ((wave + 1) / 2) * 40; // 15 to 55px
-          currentHeightsRef.current[i] = height;
-          if (bars[i]) bars[i].style.height = `${height}px`;
-        }
+        const wave = Math.sin(frameRef.current * 0.05); // -1 to 1
+        targetScaleRef.current = 1 + ((wave + 1) / 2) * 0.15; // 1 to 1.15
       }
       // IDLE or INTERRUPTED (Low flat pulse)
       else {
-        const pulse = 10 + Math.sin(frameRef.current * 0.02) * 5; 
-        for (let i = 0; i < numBars; i++) {
-          currentHeightsRef.current[i] += (pulse - currentHeightsRef.current[i]) * 0.1;
-          if (bars[i]) bars[i].style.height = `${currentHeightsRef.current[i]}px`;
-        }
+        const pulse = Math.sin(frameRef.current * 0.02) * 0.05; 
+        targetScaleRef.current = 1 + pulse;
+      }
+
+      currentScaleRef.current += (targetScaleRef.current - currentScaleRef.current) * 0.2;
+      
+      if (orbRef.current) {
+        orbRef.current.style.transform = `scale(${currentScaleRef.current})`;
+      }
+      if (glowRef.current) {
+        glowRef.current.style.transform = `scale(${currentScaleRef.current * 1.2})`;
+        glowRef.current.style.opacity = `${0.3 + (currentScaleRef.current - 1) * 2}`;
+      }
+      if (coreRef.current) {
+        coreRef.current.style.transform = `scale(${1 + (currentScaleRef.current - 1) * 0.5})`;
       }
 
       animationId = requestAnimationFrame(renderLoop);
@@ -90,44 +86,53 @@ const WaveformAvatar = ({ state, analyserRef }) => {
   }, [state, analyserRef]);
 
   const orbColor = ORB_STATES[state]?.color1 || '#14b8a6';
+  const orbColor2 = ORB_STATES[state]?.color2 || '#06b6d4';
 
   return (
-    <div className="relative w-64 h-48 mx-auto flex items-end justify-center overflow-hidden pt-12">
-      {/* 32 bars arranged in a 180 degree semicircle */}
-      <div className="relative w-56 h-28">
-        {[...Array(32)].map((_, i) => {
-          // Angle from 0 (left) to 180 (right)
-          const angleDeg = -90 + (i / 31) * 180;
-          const angleRad = (angleDeg * Math.PI) / 180;
-          
-          // Radius of the bottom face opening
-          const radius = 80;
-          
-          // Calculate X and Y coordinates on the arc
-          // Center is bottom-middle
-          const x = radius * Math.sin(angleRad);
-          const y = -radius * Math.cos(angleRad);
-          
-          return (
-            <div
-              key={i}
-              className="absolute bottom-0 left-1/2 w-1.5 rounded-full origin-bottom"
-              style={{
-                marginLeft: '-3px',
-                backgroundColor: orbColor,
-                transform: `translate(${x}px, ${y}px) rotate(${angleDeg}deg)`,
-                height: '10px',
-                boxShadow: `0 0 10px ${orbColor}80`
-              }}
-              ref={(el) => (barsRef.current[i] = el)}
-            />
-          );
-        })}
+    <div className="relative w-80 h-80 mx-auto flex items-center justify-center">
+      {/* Background ambient glow */}
+      <div 
+        ref={glowRef}
+        className="absolute inset-0 rounded-full blur-[50px] transition-colors duration-700 ease-in-out"
+        style={{ 
+          background: `radial-gradient(circle, ${orbColor} 0%, transparent 70%)`,
+          opacity: 0.4 
+        }}
+      />
+      
+      {/* Main Orb Body */}
+      <div 
+        ref={orbRef}
+        className="relative w-44 h-44 rounded-full transition-colors duration-700 ease-in-out shadow-[0_0_80px_rgba(0,0,0,0.5)]"
+        style={{ 
+          background: `linear-gradient(135deg, ${orbColor}, ${orbColor2})`,
+          boxShadow: `inset 0 0 40px rgba(255,255,255,0.4), inset 10px 0 40px rgba(255,255,255,0.2), 0 0 50px ${orbColor}60` 
+        }}
+      >
+        {/* Inner core / reflection */}
+        <div 
+          ref={coreRef}
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 60%)',
+            mixBlendMode: 'overlay'
+          }}
+        />
+        {/* Dark inner shadow for depth */}
+        <div 
+          className="absolute inset-0 rounded-full"
+          style={{
+            boxShadow: 'inset -15px -15px 40px rgba(0,0,0,0.4)'
+          }}
+        />
       </div>
       
-      {/* State label */}
-      <div className="absolute bottom-0 left-0 right-0 text-center">
-        <span className="text-xs font-bold uppercase tracking-widest drop-shadow-md" style={{ color: orbColor }}>
+      {/* State label below orb */}
+      <div className="absolute -bottom-8 left-0 right-0 text-center">
+        <span 
+          className="text-xs font-black uppercase tracking-[0.2em] transition-colors duration-700 drop-shadow-[0_0_10px_rgba(0,0,0,0.5)]" 
+          style={{ color: orbColor }}
+        >
           {ORB_STATES[state]?.label || 'Ready'}
         </span>
       </div>
@@ -182,9 +187,9 @@ const TypewriterText = ({ text, isSpeaking }) => {
   const isComplete = displayLength >= (text?.length || 0);
 
   return (
-    <p className="text-lg sm:text-xl font-medium text-white/90 leading-relaxed max-w-2xl mx-auto">
+    <p className="text-xl sm:text-2xl font-semibold text-white leading-relaxed max-w-3xl mx-auto drop-shadow-md tracking-wide">
       {text?.slice(0, displayLength)}
-      {!isComplete && <span className="inline-block w-0.5 h-5 bg-teal-400 ml-0.5 animate-pulse" />}
+      {!isComplete && <span className="inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse" />}
     </p>
   );
 };
@@ -1183,35 +1188,44 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
   // ── Active Interview / Ending ──
   return (
-    <div ref={dragConstraintsRef} className="fixed inset-0 bg-gradient-to-b from-slate-900 via-[#0d1321] to-[#0a0f1e] flex flex-col z-[9999] overflow-hidden">
+    <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
+      {/* Premium Ambient Background Glows */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+      </div>
+
       {/* Minimal Header */}
-      <div className="flex items-center justify-between px-4 sm:px-8 py-4">
-        <div className="flex items-center gap-3">
-          <Brain size={20} weight="duotone" className="text-teal-500" />
-          <span className="text-sm font-bold text-slate-400">AcadMix Interview</span>
+      <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6 border-b border-white/[0.03]">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-teal-500/20 flex items-center justify-center border border-white/5 shadow-inner">
+            <Sparkle size={18} weight="fill" className="text-indigo-400" />
+          </div>
+          <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">AcadMix Intelligence</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl">
-            <Clock size={14} className="text-slate-400" />
-            <span className="text-sm font-bold text-slate-300 tabular-nums">{formatTime(elapsed)}</span>
+          <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
+            <Clock size={16} className="text-slate-400" />
+            <span className="text-sm font-bold text-slate-200 tabular-nums">{formatTime(elapsed)}</span>
           </div>
-          <div className="bg-teal-500/15 px-3 py-1.5 rounded-xl">
-            <span className="text-sm font-bold text-teal-400">Q {questionNumber}/{maxQuestions}</span>
+          <div className="flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
+            <span className="text-sm font-bold text-indigo-400">Q {questionNumber}/{maxQuestions}</span>
           </div>
           <button onClick={handleEndInterview} disabled={phase === 'ending'}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-red-500/15 text-red-400 text-sm font-bold hover:bg-red-500/25 transition-colors disabled:opacity-50">
-            <Stop size={14} weight="fill" /> End
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 hover:text-red-300 transition-all disabled:opacity-50 group shadow-sm">
+            <Stop size={14} weight="fill" className="group-hover:scale-110 transition-transform" /> 
+            End Session
           </button>
         </div>
       </div>
 
       {/* Center content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        {/* Waveform Avatar */}
-        <WaveformAvatar state={orbState} analyserRef={analyserRef} />
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 max-w-5xl mx-auto w-full">
+        {/* Premium Orb Avatar */}
+        <OrbAvatar state={orbState} analyserRef={analyserRef} />
 
         {/* Current question (typewriter) */}
-        <div className="mt-16 mb-8 text-center px-4 min-h-[80px]">
+        <div className="mt-20 mb-8 text-center px-4 min-h-[120px] w-full">
           {showTranscript && currentQuestion && <TypewriterText text={currentQuestion} isSpeaking={isSpeaking} />}
         </div>
 
@@ -1219,16 +1233,17 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         <AnimatePresence>
           {transcript && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="max-w-xl w-full bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 px-5 py-4 mb-4"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="absolute bottom-10 max-w-2xl w-full bg-[#111827]/80 backdrop-blur-2xl rounded-3xl border border-white/5 shadow-2xl px-6 py-5"
             >
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                  <ChatCircleDots size={12} className="text-emerald-400" />
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_#34d399]" />
                 </div>
-                <p className="text-sm text-slate-300 leading-relaxed">{transcript}</p>
+                <p className="text-base font-medium text-slate-300 leading-relaxed tracking-wide">{transcript}</p>
               </div>
             </motion.div>
           )}
@@ -1244,7 +1259,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
            dragMomentum={false}
            initial={{ opacity: 0, scale: 0.8 }}
            animate={{ opacity: 1, scale: 1 }}
-           className="absolute right-8 top-1/2 -translate-y-1/2 w-64 h-48 bg-slate-800 rounded-3xl overflow-hidden border border-white/10 shadow-2xl z-50 cursor-move cursor-grab active:cursor-grabbing"
+           className="absolute right-8 top-32 w-72 h-48 bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 cursor-move hover:border-white/10 transition-colors"
            style={{ touchAction: 'none' }}
         >
           <video
@@ -1258,32 +1273,32 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
             muted
             className="w-full h-full object-cover scale-x-[-1] pointer-events-none" 
           />
-          <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2 py-1 rounded-xl border border-white/10 pointer-events-none">
-             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]" />
-             <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Active</span>
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 pointer-events-none shadow-sm">
+             <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]" />
+             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Active</span>
           </div>
         </motion.div>
       )}
 
       {/* Bottom status bar */}
-      <div className="px-8 py-5 flex items-center justify-center gap-6">
-        <div className="flex items-center gap-2">
+      <div className="relative z-10 px-8 py-5 border-t border-white/[0.03] bg-black/20 flex items-center justify-between">
+        <div className="flex items-center gap-3">
           {isListening ? (
-            <>
-              <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-              <Microphone size={18} className="text-emerald-400" />
+            <div className="flex items-center gap-2.5 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+              <Microphone size={16} className="text-emerald-400" />
               <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Listening</span>
-            </>
+            </div>
           ) : isSpeaking ? (
-            <>
-              <div className="w-3 h-3 rounded-full bg-cyan-500 animate-pulse" />
+            <div className="flex items-center gap-2.5 bg-cyan-500/10 px-4 py-2 rounded-full border border-cyan-500/20 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_#06b6d4]" />
               <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">AI Speaking</span>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="w-3 h-3 rounded-full bg-blue-500 animate-pulse" />
+            <div className="flex items-center gap-2.5 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]" />
               <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">{phase === 'ending' ? 'Evaluating' : 'Processing'}</span>
-            </>
+            </div>
           )}
         </div>
         {isListening && (
