@@ -136,23 +136,37 @@ const DraggableNumberInput = ({ label, value, onChange, theme }: { label: string
     setIsDragging(false);
   };
 
+  let shortLabel = label;
+  if (label === 'Width') shortLabel = 'W';
+  if (label === 'Height') shortLabel = 'H';
+  if (label === 'Depth') shortLabel = 'D';
+  if (label === 'Radius') shortLabel = 'R';
+  if (label === 'Tube Radius') shortLabel = 'TR';
+  if (label === 'Corner Radius (Fillet)') shortLabel = 'CR';
+  if (label === 'Pitch') shortLabel = 'P';
+  if (label === 'Yaw') shortLabel = 'Y';
+  if (label === 'Roll') shortLabel = 'R';
+  if (label === 'X' || label === 'Y' || label === 'Z') shortLabel = label;
+
   return (
-    <div className="flex-1">
-      <label 
-        className={`block text-xs mb-1 cursor-ew-resize select-none ${isDragging ? 'text-indigo-500 font-bold' : 'text-slate-500'}`}
+    <div className={`flex-1 relative flex items-stretch border rounded overflow-hidden transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-700 focus-within:border-indigo-500' : 'bg-white border-slate-300 focus-within:border-indigo-500'}`}>
+      <div 
+        className={`flex items-center justify-center px-2 text-xs font-bold cursor-ew-resize select-none transition-colors ${theme === 'dark' ? 'bg-slate-800 text-slate-400 border-r border-slate-700' : 'bg-slate-100 text-slate-500 border-r border-slate-300'} ${isDragging ? '!bg-indigo-500 !text-white' : 'hover:text-indigo-400'}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        title="Drag left/right to adjust"
+        title={`Drag to adjust ${label}`}
+        style={{ minWidth: '32px' }}
       >
-        {label} <span className="opacity-50">↔</span>
-      </label>
+        {shortLabel}
+      </div>
       <input 
         type="number" 
         value={value} 
         onChange={e => onChange(parseFloat(e.target.value) || 0)}
-        className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+        className={`w-full px-2 py-1.5 text-sm outline-none bg-transparent ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}
+        title={label}
       />
     </div>
   );
