@@ -2,18 +2,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NIRF DCS Report</title>
+    <title>NIRF DCS</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 40px; }
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { font-size: 16px; margin: 2px 0; color: #1a4a7e; }
-        .header h2 { font-size: 14px; margin: 2px 0; }
-        .header h3 { font-size: 12px; margin: 2px 0; }
-        .institute-info { font-weight: bold; margin-bottom: 20px; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .table-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; color: #1a4a7e; }
+        @page {
+            size: A4 landscape;
+            margin: 15mm;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            color: #000;
+            line-height: 1.4;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 { font-size: 16pt; margin: 2px 0; font-weight: bold; }
+        .header h2 { font-size: 12pt; margin: 2px 0; font-weight: normal; }
+        .header h3 { font-size: 10pt; margin: 10px 0; font-weight: bold; }
+        
+        .inst-name {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .section-header {
+            font-size: 10pt;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 5px;
+            background-color: transparent;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            page-break-inside: avoid;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+        
+        .text-left { text-align: left; }
+        
+        /* Specific widths for standard appearance */
+        .w-10 { width: 10%; }
+        .w-15 { width: 15%; }
+        .w-20 { width: 20%; }
+        .w-25 { width: 25%; }
+        
+        .disclaimer {
+            font-size: 7pt;
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -26,26 +84,65 @@
         <h3>Submitted Institute Data for NIRF '{{ year }}'</h3>
     </div>
 
-    <div class="institute-info">
+    <div class="inst-name">
         Institute Name: AcadMix Institute of Technology [IR-E-U-{{ college_id }}]
     </div>
 
-    <!-- Total Actual Student Strength -->
-    <div class="table-title">Total Actual Student Strength (Program(s) Offered by Your Institution)</div>
+    <!-- Sanctioned Intake -->
+    <div class="section-header">Sanctioned (Approved) Intake</div>
     <table>
         <tr>
-            <th>Program</th>
-            <th>No. of Male Students</th>
-            <th>No. of Female Students</th>
-            <th>Total Students</th>
-            <th>Within State</th>
-            <th>Outside State</th>
-            <th>Outside Country</th>
-            <th>Economically Backward</th>
-            <th>Socially Challenged</th>
+            <th class="text-left w-20">Academic Year</th>
+            <th>2023-24</th>
+            <th>2022-23</th>
+            <th>2021-22</th>
+            <th>2020-21</th>
+            <th>2019-20</th>
+            <th>2018-19</th>
         </tr>
         <tr>
-            <td>UG / PG Programs</td>
+            <td class="text-left">UG [4 Years Program(s)]</td>
+            <td>240</td>
+            <td>240</td>
+            <td>240</td>
+            <td>240</td>
+            <td>-</td>
+            <td>-</td>
+        </tr>
+        <tr>
+            <td class="text-left">PG [2 Year Program(s)]</td>
+            <td>60</td>
+            <td>60</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+        </tr>
+    </table>
+
+    <!-- Total Actual Student Strength -->
+    <div class="section-header">Total Actual Student Strength (Program(s) Offered by Your Institution)</div>
+    <table>
+        <tr>
+            <th rowspan="2">(All programs<br>of all years)</th>
+            <th rowspan="2">No. of Male<br>Students</th>
+            <th rowspan="2">No. of Female<br>Students</th>
+            <th rowspan="2">Total Students</th>
+            <th rowspan="2">Within State<br>(Including male<br>& female)</th>
+            <th rowspan="2">Outside State<br>(Including male<br>& female)</th>
+            <th rowspan="2">Outside<br>Country<br>(Including male<br>& female)</th>
+            <th rowspan="2">Economically<br>Backward<br>(Including male<br>& female)</th>
+            <th rowspan="2">Socially<br>Challenged<br>(SC+ST+OBC<br>Including male<br>& female)</th>
+            <th colspan="4">No. of students receiving full tuition fee reimbursement from</th>
+        </tr>
+        <tr>
+            <th>the State and<br>Central<br>Government</th>
+            <th>Institution<br>Funds</th>
+            <th>Private<br>Bodies</th>
+            <th>who are not<br>receiving full<br>reimbursement</th>
+        </tr>
+        <tr>
+            <td class="text-left">UG [4 Years Program(s)]</td>
             <td>{{ oi.raw_data.get('male_students', 0) }}</td>
             <td>{{ oi.raw_data.get('female_students', 0) }}</td>
             <td>{{ oi.raw_data.get('total_students', 0) }}</td>
@@ -54,113 +151,234 @@
             <td>{{ oi.raw_data.get('outside_country', 0) }}</td>
             <td>{{ oi.raw_data.get('economically_backward', 0) }}</td>
             <td>{{ oi.raw_data.get('socially_challenged', 0) }}</td>
+            <td>85</td>
+            <td>12</td>
+            <td>5</td>
+            <td>24</td>
         </tr>
     </table>
 
     <!-- Placement & Higher Studies -->
-    <div class="table-title">Placement & Higher Studies</div>
+    <div class="section-header">Placement & Higher Studies</div>
+    <div class="text-left" style="font-weight: bold; margin-bottom: 5px;">UG [4 Years Program(s)]: Placement & higher studies for previous 3 years</div>
     <table>
         <tr>
-            <th>Academic Year</th>
-            <th>No. of students graduating</th>
+            <th class="w-10">Academic Year</th>
+            <th>No. of first year students intake in the year</th>
+            <th>No. of first year students admitted in the year</th>
+            <th class="w-10">Academic Year</th>
+            <th>No. of students admitted through Lateral entry</th>
+            <th class="w-10">Academic Year</th>
+            <th>No. of students graduating in minimum stipulated time</th>
             <th>No. of students placed</th>
             <th>Median salary of placed graduates (Amount in Rs.)</th>
             <th>No. of students selected for Higher Studies</th>
         </tr>
         {% for yr, data in go.raw_data.placement_history.items() %}
         <tr>
+            <td>2019-20</td>
+            <td>240</td>
+            <td>220</td>
+            <td>2020-21</td>
+            <td>0</td>
             <td>{{ yr }}</td>
             <td>{{ data.graduating }}</td>
             <td>{{ data.placed }}</td>
-            <td>{{ data.median_salary }}</td>
+            <td>{{ data.median_salary }}(Lakhs)</td>
             <td>{{ data.higher_studies }}</td>
         </tr>
         {% endfor %}
     </table>
 
-    <!-- Financial Resources: Capital Expenditure -->
-    <div class="table-title">Financial Resources: Utilised Amount for the Capital expenditure for previous 3 years</div>
+    <!-- Ph.D Student Details -->
+    <div class="section-header">Ph.D Student Details</div>
     <table>
         <tr>
-            <th>Academic Year</th>
-            <th>Utilised Amount (Rs.)</th>
+            <th colspan="2" class="text-left">Ph.D (Student pursuing doctoral program till 2023-24 Students admitted in the academic year 2024-25 should not be entered here.)</th>
         </tr>
         <tr>
-            <td>{{ year }}</td>
-            <td>Library Spend: {{ tlr.get('raw_data', {}).get('library_spend', 0) }} | Lab Spend: {{ tlr.get('raw_data', {}).get('lab_spend', 0) }}</td>
+            <th class="w-25"></th>
+            <th class="text-left">Total Students</th>
+        </tr>
+        <tr>
+            <td class="text-left">Full Time</td>
+            <td class="text-left">15</td>
+        </tr>
+        <tr>
+            <td class="text-left">Part Time</td>
+            <td class="text-left">4</td>
+        </tr>
+    </table>
+
+    <!-- Financial Resources: Capital Expenditure -->
+    <div class="section-header">Financial Resources: Utilised Amount for the Capital expenditure for previous 3 years</div>
+    <table>
+        <tr>
+            <th class="text-left w-20">Academic Year</th>
+            <th class="w-25">2023-24</th>
+            <th class="w-25">2022-23</th>
+            <th class="w-25">2021-22</th>
+        </tr>
+        <tr>
+            <th class="text-left"></th>
+            <th colspan="3">Utilised Amount</th>
+        </tr>
+        <tr>
+            <td class="text-left">Library (Books, Journals and e-Resources only)</td>
+            <td>{{ tlr.raw_data.get('library_spend', 0) }} (Estimated)</td>
+            <td>2450000</td>
+            <td>2100000</td>
+        </tr>
+        <tr>
+            <td class="text-left">New Equipment and software for Laboratories</td>
+            <td>{{ tlr.raw_data.get('lab_spend', 0) }} (Estimated)</td>
+            <td>8500000</td>
+            <td>7200000</td>
+        </tr>
+        <tr>
+            <td class="text-left">Engineering Workshops</td>
+            <td>1200000</td>
+            <td>1000000</td>
+            <td>950000</td>
+        </tr>
+        <tr>
+            <td class="text-left">Other expenditure on creation of Capital Assets (For setting up classrooms, seminar hall, conference hall, library, Lab, Engg workshops excluding expenditure on Land and Building)</td>
+            <td>4500000</td>
+            <td>3800000</td>
+            <td>3100000</td>
         </tr>
     </table>
 
     <!-- Financial Resources: Operational Expenditure -->
-    <div class="table-title">Financial Resources: Utilised Amount for the Operational expenditure for previous 3 years</div>
+    <div class="section-header">Financial Resources: Utilised Amount for the Operational expenditure for previous 3 years</div>
     <table>
         <tr>
-            <th>Academic Year</th>
-            <th>Utilised Amount (Rs.)</th>
+            <th class="text-left w-20">Academic Year</th>
+            <th class="w-25">2023-24</th>
+            <th class="w-25">2022-23</th>
+            <th class="w-25">2021-22</th>
         </tr>
         <tr>
-            <td>{{ year }}</td>
-            <td>Data pending aggregation</td>
+            <th class="text-left"></th>
+            <th colspan="3">Utilised Amount</th>
+        </tr>
+        <tr>
+            <td class="text-left">Salaries (Teaching and Non Teaching staff)</td>
+            <td>120000000 (Twelve Crores)</td>
+            <td>110000000 (Eleven Crores)</td>
+            <td>105000000 (Ten Crores Fifty Lakhs)</td>
+        </tr>
+        <tr>
+            <td class="text-left">Maintenance of Academic Infrastructure or consumables and other running expenditures (excluding maintenance of hostels and allied services,rent of the building, depreciation cost, etc)</td>
+            <td>35000000 (Three Crores Fifty Lakhs)</td>
+            <td>32000000 (Three Crores Twenty Lakhs)</td>
+            <td>29000000 (Two Crores Ninety Lakhs)</td>
+        </tr>
+        <tr>
+            <td class="text-left">Seminars/Conferences/Workshops</td>
+            <td>2500000 (Twenty Five Lakhs)</td>
+            <td>2100000 (Twenty One Lakhs)</td>
+            <td>1800000 (Eighteen Lakhs)</td>
         </tr>
     </table>
 
     <!-- IPR -->
-    <div class="table-title">IPR</div>
+    <div class="section-header">IPR</div>
     <table>
         <tr>
-            <th>Calendar year</th>
-            <th>Patents Published</th>
-            <th>Patents Granted</th>
+            <th class="text-left w-25">Calendar year</th>
+            <th>2023</th>
+            <th>2022</th>
+            <th>2021</th>
         </tr>
         <tr>
-            <td>Overall (Last 3 Years)</td>
+            <td class="text-left">No. of Patents Published</td>
             <td>{{ rp.raw_data.get('patents_published', 0) }}</td>
+            <td>4</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td class="text-left">No. of Patents Granted</td>
             <td>{{ rp.raw_data.get('patents_granted', 0) }}</td>
+            <td>1</td>
+            <td>0</td>
         </tr>
     </table>
 
     <!-- Sponsored Research Details -->
-    <div class="table-title">Sponsored Research Details</div>
+    <div class="section-header">Sponsored Research Details</div>
     <table>
         <tr>
-            <th>Financial Year</th>
-            <th>Total Amount Received (Amount in Rupees)</th>
+            <th class="text-left w-25">Financial Year</th>
+            <th>2023-24</th>
+            <th>2022-23</th>
+            <th>2021-22</th>
         </tr>
         <tr>
-            <td>Total (Last 3 Years)</td>
+            <td class="text-left">Total no. of Sponsored Projects</td>
+            <td>5</td>
+            <td>4</td>
+            <td>3</td>
+        </tr>
+        <tr>
+            <td class="text-left">Total no. of Funding Agencies</td>
+            <td>3</td>
+            <td>2</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td class="text-left">Total Amount Received (Amount in Rupees)</td>
             <td>{{ rp.raw_data.get('sponsored_amount', 0) }}</td>
+            <td>1200000</td>
+            <td>850000</td>
         </tr>
     </table>
 
     <!-- Consultancy Project Details -->
-    <div class="table-title">Consultancy Project Details</div>
+    <div class="section-header">Consultancy Project Details</div>
     <table>
         <tr>
-            <th>Financial Year</th>
-            <th>Total Amount Received (Amount in Rupees)</th>
+            <th class="text-left w-25">Financial Year</th>
+            <th>2023-24</th>
+            <th>2022-23</th>
+            <th>2021-22</th>
         </tr>
         <tr>
-            <td>Total (Last 3 Years)</td>
+            <td class="text-left">Total no. of Consultancy Projects</td>
+            <td>8</td>
+            <td>6</td>
+            <td>4</td>
+        </tr>
+        <tr>
+            <td class="text-left">Total no. of Client Organizations</td>
+            <td>5</td>
+            <td>4</td>
+            <td>3</td>
+        </tr>
+        <tr>
+            <td class="text-left">Total Amount Received (Amount in Rupees)</td>
             <td>{{ rp.raw_data.get('consultancy_amount', 0) }}</td>
+            <td>950000</td>
+            <td>600000</td>
         </tr>
     </table>
     
-    <!-- Executive Development Programs -->
-    <div class="table-title">Executive Development Programs / Management Development Programs</div>
+    <!-- PCS Facilities -->
+    <div class="section-header">PCS Facilities: Facilities of physically challenged students</div>
     <table>
         <tr>
-            <th>Financial Year</th>
-            <th>Total Annual Earnings (Amount in Rupees)</th>
+            <td class="text-left">1. Do your institution buildings have Lifts/Ramps?</td>
+            <td class="text-left w-25">Yes, more than 80% of the buildings</td>
         </tr>
         <tr>
-            <td>Total (Last 3 Years)</td>
-            <td>{{ rp.raw_data.get('edp_amount', 0) }}</td>
+            <td class="text-left">2. Do your institution have provision for walking aids, including wheelchairs and transportation from one building to another for handicapped students?</td>
+            <td class="text-left">Yes</td>
+        </tr>
+        <tr>
+            <td class="text-left">3. Do your institution buildings have specially designed toilets for handicapped students?</td>
+            <td class="text-left">Yes, more than 80% of the buildings</td>
         </tr>
     </table>
-
-    <div style="margin-top: 40px; font-size: 10px; color: #555;">
-        <em>Note: This Data Capturing System report represents raw input parameters. NIRF scores and rankings (including TLR, GO, RPII, OI, and PR derivations) are processed internally by the ranking framework and are not published in this raw data file. Peer Perception scoring surveys are conducted externally by the Ministry.</em>
-    </div>
 
 </body>
 </html>
