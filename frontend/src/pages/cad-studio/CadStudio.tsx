@@ -454,37 +454,63 @@ const CadStudio = () => {
                   <label className={`text-sm ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>Visible in Viewport</label>
                 </div>
 
-                {['box', 'cylinder', 'sphere', 'cone', 'torus'].includes(selectedNode.type) && (
-                  <div className="mt-3 flex items-center gap-2">
-                    <input 
-                      type="color" 
-                      value={selectedNode.color || '#3b82f6'} 
-                      onChange={e => updateNode(selectedNode.id, { color: e.target.value })}
-                      className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                    />
-                    <label className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Material Color</label>
-                  </div>
+                {['box', 'cylinder', 'sphere', 'cone', 'torus', 'text'].includes(selectedNode.type) && (
+                  <>
+                    <div className="mt-3 flex items-center gap-2">
+                      <input 
+                        type="color" 
+                        value={selectedNode.color || '#3b82f6'} 
+                        onChange={e => updateNode(selectedNode.id, { color: e.target.value })}
+                        className="w-8 h-8 rounded cursor-pointer border-0 p-0"
+                      />
+                      <label className={`text-xs ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Material Color</label>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className={`text-xs w-20 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>Material</label>
+                      <select value={selectedNode.materialType || 'solid'} onChange={e => updateNode(selectedNode.id, { materialType: e.target.value as any })}
+                        className={`flex-1 border rounded px-2 py-1 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}>
+                        <option value="solid">Solid Color</option>
+                        <option value="wood">Wood</option>
+                        <option value="carbon">Carbon Fiber</option>
+                      </select>
+                    </div>
+                  </>
                 )}
                 
                 <hr className={theme === 'dark' ? 'border-slate-800' : 'border-slate-200'} />
 
                 {/* Parametric Size */}
                 {selectedNode.type === 'box' && (
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-2">Dimensions (W, H, D)</label>
-                    <div className="flex gap-2">
-                      {[0, 1, 2].map(i => (
-                        <input key={i} type="number" value={selectedNode.size?.[i] || 0} onChange={e => {
-                          const newSize = [...(selectedNode.size || [0,0,0])] as [number, number, number];
-                          newSize[i] = parseFloat(e.target.value) || 0;
-                          updateNode(selectedNode.id, { size: newSize });
-                        }} className={`w-full border rounded px-2 py-1 text-sm text-center ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
-                      ))}
+                  <>
+                    <div>
+                      <label className="block text-xs text-slate-500 mb-2">Dimensions (W, H, D)</label>
+                      <div className="flex gap-2">
+                        {[0, 1, 2].map(i => (
+                          <input key={i} type="number" value={selectedNode.size?.[i] || 0} onChange={e => {
+                            const newSize = [...(selectedNode.size || [0,0,0])] as [number, number, number];
+                            newSize[i] = parseFloat(e.target.value) || 0;
+                            updateNode(selectedNode.id, { size: newSize });
+                          }} className={`w-full border rounded px-2 py-1 text-sm text-center ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                        ))}
+                      </div>
                     </div>
+                    <div className="mt-3">
+                      <label className="block text-xs text-slate-500 mb-1">Corner Radius (Fillet)</label>
+                      <input type="number" value={selectedNode.cornerRadius || 0} onChange={e => updateNode(selectedNode.id, { cornerRadius: Math.max(0, parseFloat(e.target.value) || 0) })}
+                        className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                    </div>
+                  </>
+                )}
+
+                {selectedNode.type === 'text' && (
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Text String</label>
+                    <input type="text" value={selectedNode.textValue || ''} onChange={e => updateNode(selectedNode.id, { textValue: e.target.value })}
+                      className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
                   </div>
                 )}
 
-                {['cylinder', 'sphere', 'cone', 'torus'].includes(selectedNode.type) && (
+                {['cylinder', 'sphere', 'cone', 'torus', 'text'].includes(selectedNode.type) && (
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Radius</label>
                     <input type="number" value={selectedNode.radius || 0} onChange={e => updateNode(selectedNode.id, { radius: parseFloat(e.target.value) || 0 })}
@@ -492,7 +518,7 @@ const CadStudio = () => {
                   </div>
                 )}
 
-                {['cylinder', 'cone'].includes(selectedNode.type) && (
+                {['cylinder', 'cone', 'text'].includes(selectedNode.type) && (
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">Height</label>
                     <input type="number" value={selectedNode.height || 0} onChange={e => updateNode(selectedNode.id, { height: parseFloat(e.target.value) || 0 })}
@@ -509,7 +535,7 @@ const CadStudio = () => {
                 )}
 
                 {/* Transform */}
-                {['box', 'cylinder', 'sphere', 'cone', 'torus'].includes(selectedNode.type) && (
+                {['box', 'cylinder', 'sphere', 'cone', 'torus', 'text'].includes(selectedNode.type) && (
                   <>
                     <hr className={theme === 'dark' ? 'border-slate-800' : 'border-slate-200'} />
                     <div>
