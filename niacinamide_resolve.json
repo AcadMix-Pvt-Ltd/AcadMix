@@ -1,0 +1,21 @@
+{
+  "identifiers": {
+    "IdentifierList": {
+      "CID": [
+        936
+      ]
+    }
+  },
+  "properties": {
+    "PropertyTable": {
+      "Properties": [
+        {
+          "CID": 936,
+          "SMILES": "C1=CC(=CN=C1)C(=O)N",
+          "ConnectivitySMILES": "C1=CC(=CN=C1)C(=O)N",
+          "InChIKey": "DFPAKSUCGFBDDF-UHFFFAOYSA-N"
+        }
+      ]
+    }
+  }
+}

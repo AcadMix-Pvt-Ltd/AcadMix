@@ -404,3 +404,64 @@ class HigherEducationRecord(Base, SoftDeleteMixin):
     created_at     = Column(DateTime(timezone=True), server_default=func.now())
 
 
+# ── GAP 13: Infrastructure & Financial Resources ────────────────────────────
+# (InfrastructureExpenditure is defined in app.models.infrastructure)
+
+# ── GAP 14: Research & Professional Practice (RPII) ─────────────────────────
+
+class ResearchOrganization(Base, SoftDeleteMixin):
+    """
+    Tracks Funding Agencies and Client Organizations for Sponsored Research and Consultancy.
+    """
+    __tablename__ = "research_organizations"
+    id             = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id     = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    name           = Column(String, nullable=False)
+    org_type       = Column(String, nullable=False)        # "FUNDING_AGENCY", "CLIENT", "PARTNER"
+    created_at     = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PatentRecord(Base, SoftDeleteMixin):
+    __tablename__ = "patent_records"
+    id             = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id     = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    faculty_id     = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title          = Column(String, nullable=False)
+    calendar_year  = Column(Integer, nullable=False)       # NIRF tracks by Calendar year
+    status         = Column(String, nullable=False)        # "PUBLISHED", "GRANTED"
+    created_at     = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class SponsoredResearchRecord(Base, SoftDeleteMixin):
+    __tablename__ = "sponsored_research_records"
+    id               = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id       = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    faculty_id       = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    org_id           = Column(String, ForeignKey("research_organizations.id", ondelete="CASCADE"), nullable=False)
+    academic_year    = Column(String, nullable=False)
+    title            = Column(String, nullable=False)
+    amount_received  = Column(Float, nullable=False, server_default=text('0.0'))
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ConsultancyRecord(Base, SoftDeleteMixin):
+    __tablename__ = "consultancy_records"
+    id               = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id       = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    faculty_id       = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    org_id           = Column(String, ForeignKey("research_organizations.id", ondelete="CASCADE"), nullable=False)
+    academic_year    = Column(String, nullable=False)
+    title            = Column(String, nullable=False)
+    amount_received  = Column(Float, nullable=False, server_default=text('0.0'))
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ExecutiveDevelopmentProgram(Base, SoftDeleteMixin):
+    __tablename__ = "executive_development_programs"
+    id               = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id       = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    academic_year    = Column(String, nullable=False)
+    title            = Column(String, nullable=False)
+    participants     = Column(Integer, nullable=False, server_default=text('0'))
+    annual_earnings  = Column(Float, nullable=False, server_default=text('0.0'))
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())

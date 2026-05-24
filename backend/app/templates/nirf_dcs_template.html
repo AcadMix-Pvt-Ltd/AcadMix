@@ -72,17 +72,165 @@
 
     <div class="section">
         <h2><span>2. Research and Professional Practice (RPII)</span> <span>{{ rp.total_score }} / 100</span></h2>
-        <p><em>(Pending robust publication API integration)</em></p>
+        
+        <div class="metric-card">
+            <h3>Research Publications & IPR</h3>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Count / Value</th>
+                </tr>
+                <tr>
+                    <td>Patents Published</td>
+                    <td>{{ rp.get('raw_data', {}).get('patents_published', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Patents Granted</td>
+                    <td>{{ rp.get('raw_data', {}).get('patents_granted', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Sponsored Research Amount</td>
+                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('sponsored_amount', 0)) }}</td>
+                </tr>
+                <tr>
+                    <td>Consultancy Amount</td>
+                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('consultancy_amount', 0)) }}</td>
+                </tr>
+                <tr>
+                    <td>Executive Development Program Earnings</td>
+                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('edp_amount', 0)) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Estimated Score</th>
+            </tr>
+            <tr>
+                <td>PU (Publications)</td>
+                <td>{{ rp.get('components', {}).get('PU', 0) }} / 35</td>
+            </tr>
+            <tr>
+                <td>QP (Quality of Publications)</td>
+                <td>{{ rp.get('components', {}).get('QP', 0) }} / 35</td>
+            </tr>
+            <tr>
+                <td>IPR (Patents)</td>
+                <td>{{ rp.get('components', {}).get('IPR', 0) }} / 15</td>
+            </tr>
+            <tr>
+                <td>FPPP (Footprint of Projects and Professional Practice)</td>
+                <td>{{ rp.get('components', {}).get('FPPP', 0) }} / 15</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">
         <h2><span>3. Graduation Outcomes (GO)</span> <span>{{ go.total_score }} / 100</span></h2>
-        <p><em>(Pending placement registry link)</em></p>
+        
+        <div class="metric-card">
+            <h3>Placement & Higher Studies (3-Year History)</h3>
+            <table>
+                <tr>
+                    <th>Academic Year</th>
+                    <th>No. of Students Placed</th>
+                    <th>Median Salary (LPA)</th>
+                    <th>Lowest Salary (LPA)</th>
+                    <th>Highest Salary (LPA)</th>
+                </tr>
+                {% for year, data in go.get('raw_data', {}).get('placement_history', {}).items() %}
+                <tr>
+                    <td>{{ year }}</td>
+                    <td>{{ data.placed_count }}</td>
+                    <td>{{ "%.2f"|format(data.median_salary) }}</td>
+                    <td>{{ "%.2f"|format(data.min_salary) }}</td>
+                    <td>{{ "%.2f"|format(data.max_salary) }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Estimated Score</th>
+            </tr>
+            <tr>
+                <td>GPH (Placement & Higher Studies)</td>
+                <td>{{ go.get('components', {}).get('GPH', 0) }} / 40</td>
+            </tr>
+            <tr>
+                <td>UE (University Examinations)</td>
+                <td>{{ go.get('components', {}).get('UE', 0) }} / 40</td>
+            </tr>
+            <tr>
+                <td>MS (Median Salary)</td>
+                <td>{{ go.get('components', {}).get('MS', 0) }} / 20</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">
         <h2><span>4. Outreach and Inclusivity (OI)</span> <span>{{ oi.total_score }} / 100</span></h2>
-        <p><em>(Pending diversity index compilation)</em></p>
+        
+        <div class="metric-card">
+            <h3>Diversity Demographics</h3>
+            <table>
+                <tr>
+                    <th>Metric</th>
+                    <th>Count</th>
+                </tr>
+                <tr>
+                    <td>Total Students</td>
+                    <td>{{ oi.get('raw_data', {}).get('total_students', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Female Students</td>
+                    <td>{{ oi.get('raw_data', {}).get('female_students', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Outside State</td>
+                    <td>{{ oi.get('raw_data', {}).get('outside_state', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Outside Country</td>
+                    <td>{{ oi.get('raw_data', {}).get('outside_country', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Economically Backward</td>
+                    <td>{{ oi.get('raw_data', {}).get('economically_backward', 0) }}</td>
+                </tr>
+                <tr>
+                    <td>Socially Challenged</td>
+                    <td>{{ oi.get('raw_data', {}).get('socially_challenged', 0) }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Estimated Score</th>
+            </tr>
+            <tr>
+                <td>RD (Regional Diversity)</td>
+                <td>{{ oi.get('components', {}).get('RD', 0) }} / 30</td>
+            </tr>
+            <tr>
+                <td>WD (Women Diversity)</td>
+                <td>{{ oi.get('components', {}).get('WD', 0) }} / 30</td>
+            </tr>
+            <tr>
+                <td>ESCS (Economically and Socially Challenged)</td>
+                <td>{{ oi.get('components', {}).get('ESCS', 0) }} / 20</td>
+            </tr>
+            <tr>
+                <td>PCS (Physically Challenged Facilities)</td>
+                <td>{{ oi.get('components', {}).get('PCS', 0) }} / 20</td>
+            </tr>
+        </table>
     </div>
 
     <div class="section">

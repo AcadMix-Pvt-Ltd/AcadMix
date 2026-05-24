@@ -25,7 +25,8 @@ import {
   Moon,
   Sparkle,
   Download,
-  Sun
+  Sun,
+  ShieldCheck
 } from "@phosphor-icons/react";
 import { facultyAPI, examCellAPI, marksAPI, insightsAPI } from "../services/api";
 import InsightsCanvas from "../components/insights/InsightsCanvas";
@@ -433,6 +434,15 @@ const HodDashboard = ({ navigate, user, onLogout }) => {
           color: "bg-slate-100 dark:bg-slate-500/15 text-slate-500 dark:text-slate-400",
           gradient: "from-slate-500 to-slate-700",
           onClick: () => setActiveTab("activity-log"),
+        },
+        {
+          label: "Accreditation",
+          value: "SSoT",
+          sub: "Command Center",
+          icon: ShieldCheck,
+          color: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-500",
+          gradient: "from-emerald-500 to-teal-500",
+          onClick: () => navigate("/accreditation"),
         },
       ];
 

@@ -20,7 +20,8 @@ import {
   Briefcase,
   Sparkle,
   Trash,
-  Info
+  Info,
+  ShieldCheck
 } from "@phosphor-icons/react";
 import { Toaster, toast } from 'sonner';
 import { principalAPI, authAPI, setAuthToken, insightsAPI, notificationsAPI, accreditationAPI } from "../services/api";
@@ -307,6 +308,14 @@ const PrincipalDashboard = ({ navigate, user, onLogout }) => {
       icon: Buildings,
       color: "bg-rose-50 text-rose-600 dark:bg-rose-500/10",
       onClick: () => setActiveTab("campus"),
+    },
+    {
+      label: "Accreditation",
+      value: "SSoT",
+      sub: "Command Center",
+      icon: ShieldCheck,
+      color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10",
+      onClick: () => navigate("/accreditation"),
     },
   ];
 

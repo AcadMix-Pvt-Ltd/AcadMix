@@ -72,6 +72,192 @@ class NIRFGenerator(BaseAccreditationGenerator):
             }
         }
     
+    async def calculate_go(self) -> dict:
+        """
+        Graduation Outcomes (GO) - Weight: 15% (for colleges)
+        1a. GPH (Combined metric for Placement & Higher Studies) - 40 marks
+        1b. UE (University Examinations) - 40 marks
+        1c. MS (Median Salary) - 20 marks
+        Total: 100
+        """
+        from app.models.accreditation import PlacementRecord
+        from sqlalchemy.future import select
+        from sqlalchemy import func
+        
+        # Calculate trailing 3 years
+        years = [
+            f"{self.report_year-3}-{self.report_year-2}",
+            f"{self.report_year-2}-{self.report_year-1}",
+            f"{self.report_year-1}-{self.report_year}"
+        ]
+        
+        # Note: In a real system, UE depends on exams. We mock UE and focus on GPH & MS.
+        # Fetch Placement Records for the past 3 years
+        placement_data = {}
+        total_salary_points = 0.0
+        
+        for yr in years:
+            stmt = select(PlacementRecord).where(
+                PlacementRecord.college_id == self.college_id,
+                PlacementRecord.academic_year == yr
+            )
+            res = await self.session.execute(stmt)
+            records = res.scalars().all()
+            
+            placed_count = len(records)
+            salaries = sorted([r.package for r in records if r.package])
+            
+            median_salary = 0.0
+            if salaries:
+                mid = len(salaries) // 2
+                median_salary = (salaries[mid] + salaries[~mid]) / 2.0
+                
+            placement_data[yr] = {
+                "placed_count": placed_count,
+                "median_salary": median_salary,
+                "min_salary": salaries[0] if salaries else 0.0,
+                "max_salary": salaries[-1] if salaries else 0.0
+            }
+            
+            # MS is 20 * (Median Salary / Benchmark). Let's say benchmark is 8 LPA for full marks.
+            ms_yr = min(20.0, 20.0 * (median_salary / 8.0))
+            total_salary_points += ms_yr
+            
+        ms_score = total_salary_points / 3.0
+        
+        # GPH relies on (placed + higher studies) / graduated
+        # We will assume a static graduation count and higher studies for this prototype
+        graduated_base = 3000
+        gph_score = 0
+        for yr in years:
+            # 40 marks max per year
+            ratio = min(1.0, placement_data[yr]["placed_count"] / graduated_base)
+            gph_score += 40.0 * ratio
+        gph_score /= 3.0
+        
+        ue_score = 35.0 # Mock UE
+        
+        total_go = gph_score + ue_score + ms_score
+        
+        return {
+            "parameter": "GO",
+            "total_score": round(total_go, 2),
+            "max_score": 100,
+            "components": {
+                "GPH": round(gph_score, 2),
+                "UE": round(ue_score, 2),
+                "MS": round(ms_score, 2)
+            },
+            "raw_data": {
+                "placement_history": placement_data
+            }
+        }
+    
+    async def calculate_rpii(self) -> dict:
+        from app.models.accreditation import PatentRecord, SponsoredResearchRecord, ConsultancyRecord, ExecutiveDevelopmentProgram
+        from sqlalchemy.future import select
+        from sqlalchemy import func
+
+        years = [str(self.report_year - 3), str(self.report_year - 2), str(self.report_year - 1)]
+        
+        # IPR (Patents)
+        stmt_patents = select(PatentRecord).where(
+            PatentRecord.college_id == self.college_id,
+            PatentRecord.calendar_year.in_([int(y) for y in years])
+        )
+        res_patents = await self.session.execute(stmt_patents)
+        patents = res_patents.scalars().all()
+        published = len([p for p in patents if p.status == "PUBLISHED"])
+        granted = len([p for p in patents if p.status == "GRANTED"])
+        
+        ipr_score = min(15.0, (published * 1.0) + (granted * 3.0)) # mock logic
+        
+        # FPPP (Sponsored + Consultancy)
+        stmt_spon = select(func.sum(SponsoredResearchRecord.amount_received)).where(
+            SponsoredResearchRecord.college_id == self.college_id,
+            SponsoredResearchRecord.academic_year.in_(years)
+        )
+        res_spon = await self.session.execute(stmt_spon)
+        sponsored_amount = res_spon.scalar() or 0.0
+
+        stmt_cons = select(func.sum(ConsultancyRecord.amount_received)).where(
+            ConsultancyRecord.college_id == self.college_id,
+            ConsultancyRecord.academic_year.in_(years)
+        )
+        res_cons = await self.session.execute(stmt_cons)
+        consultancy_amount = res_cons.scalar() or 0.0
+        
+        stmt_edp = select(func.sum(ExecutiveDevelopmentProgram.annual_earnings)).where(
+            ExecutiveDevelopmentProgram.college_id == self.college_id,
+            ExecutiveDevelopmentProgram.academic_year.in_(years)
+        )
+        res_edp = await self.session.execute(stmt_edp)
+        edp_amount = res_edp.scalar() or 0.0
+
+        total_earnings = sponsored_amount + consultancy_amount + edp_amount
+        fppp_score = min(15.0, 15.0 * (total_earnings / 50000000.0))
+
+        # Mock PU and QP as we don't have SCOPUS/WebOfScience integration yet
+        pu_score = 25.0
+        qp_score = 20.0
+        
+        total_rpii = pu_score + qp_score + ipr_score + fppp_score
+        
+        return {
+            "parameter": "RPII",
+            "total_score": round(total_rpii, 2),
+            "max_score": 100,
+            "components": {
+                "PU": round(pu_score, 2),
+                "QP": round(qp_score, 2),
+                "IPR": round(ipr_score, 2),
+                "FPPP": round(fppp_score, 2)
+            },
+            "raw_data": {
+                "patents_published": published,
+                "patents_granted": granted,
+                "sponsored_amount": sponsored_amount,
+                "consultancy_amount": consultancy_amount,
+                "edp_amount": edp_amount
+            }
+        }
+
+    async def calculate_oi(self) -> dict:
+        demographics = await self.get_student_demographics()
+        total_students = demographics["total_students"] or 1
+        
+        # RD
+        other_state = demographics.get("outside_state", 0)
+        outside_country = demographics.get("outside_country", 0)
+        rd_score = min(30.0, 30.0 * ((other_state + outside_country) / total_students))
+        
+        # WD
+        female_students = demographics.get("female_students", 0)
+        wd_score = min(30.0, 30.0 * (female_students / (0.5 * total_students)))
+        
+        # ESCS
+        economically_backward = demographics.get("economically_backward", 0)
+        socially_challenged = demographics.get("socially_challenged", 0)
+        escs_score = min(20.0, 20.0 * ((economically_backward + socially_challenged) / (0.5 * total_students)))
+        
+        # PCS
+        pcs_score = 20.0 # Assuming all facilities available
+
+        total_oi = rd_score + wd_score + escs_score + pcs_score
+        
+        return {
+            "parameter": "OI",
+            "total_score": round(total_oi, 2),
+            "max_score": 100,
+            "components": {
+                "RD": round(rd_score, 2),
+                "WD": round(wd_score, 2),
+                "ESCS": round(escs_score, 2),
+                "PCS": round(pcs_score, 2)
+            },
+            "raw_data": demographics
+        }
+    
     async def generate_full_report(self) -> dict:
         """
         Executes all NIRF parameter calculations and compiles the final report JSON.
@@ -79,12 +265,10 @@ class NIRFGenerator(BaseAccreditationGenerator):
         logger.info(f"Generating NIRF Report for College {self.college_id} Year {self.report_year}")
         
         tlr = await self.calculate_tlr()
+        go = await self.calculate_go()
         
-        # TODO: Implement RPII, GO, OI, PR
-        # For now, we mock the remaining to complete the end-to-end pipeline
-        rpii = {"parameter": "RPII", "total_score": 10.0, "max_score": 100}
-        go = {"parameter": "GO", "total_score": 15.0, "max_score": 100}
-        oi = {"parameter": "OI", "total_score": 12.0, "max_score": 100}
+        rpii = await self.calculate_rpii()
+        oi = await self.calculate_oi()
         pr = {"parameter": "PR", "total_score": 5.0, "max_score": 100}
         
         # Colleges weightage: TLR 0.40, RPII 0.20, GO 0.15, OI 0.15, PR 0.10

@@ -527,6 +527,48 @@ class TPOService:
             "offer_url": data.get("offer_url"),
             "is_accepted": False,
         }
+        
+        # ── BRIDGE TO ACCREDITATION ENGINE ──
+        # Automatically create the SSoT PlacementRecord required for NIRF/NAAC
+        from app.models.accreditation import PlacementRecord
+        
+        # Determine the company name from the drive
+        drive_res = await self.db.execute(select(PlacementDrive).where(PlacementDrive.id == drive_id))
+        drive = drive_res.scalar_one_or_none()
+        company_name = "Unknown Company"
+        if drive:
+            comp_res = await self.db.execute(select(Company).where(Company.id == drive.company_id))
+            company = comp_res.scalar_one_or_none()
+            if company:
+                company_name = company.name
+                
+        # Calculate current academic year based on today's date
+        # (Assuming academic year is like "2023-2024")
+        now = datetime.utcnow()
+        year = now.year
+        academic_year = f"{year}-{year+1}" if now.month >= 6 else f"{year-1}-{year}"
+        
+        # Check if record already exists to avoid duplicates
+        existing_pr_stmt = select(PlacementRecord).where(
+            PlacementRecord.college_id == college_id,
+            PlacementRecord.student_id == data["student_id"],
+            PlacementRecord.company_name == company_name,
+            PlacementRecord.academic_year == academic_year
+        )
+        existing_pr = (await self.db.execute(existing_pr_stmt)).scalar_one_or_none()
+        
+        if not existing_pr:
+            pr = PlacementRecord(
+                college_id=college_id,
+                student_id=data["student_id"],
+                academic_year=academic_year,
+                company_name=company_name,
+                package=data.get("ctc") or drive.package_lpa,
+                offer_letter_url=data.get("offer_url"),
+                placed_on=now.date()
+            )
+            self.db.add(pr)
+
         await self.db.commit()
 
     # ── Restrictions (Blacklist) ───────────────────────────────────

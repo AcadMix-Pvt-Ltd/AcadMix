@@ -1,0 +1,2248 @@
+{
+  "Record": {
+    "RecordType": "CID",
+    "RecordNumber": 936,
+    "RecordTitle": "Nicotinamide",
+    "Section": [
+      {
+        "TOCHeading": "Safety and Hazards",
+        "Description": "Information on safety and hazards for this compound, including safety/hazards properties, reactivity, incompatibilities, management techniques, first aid treatments, and more.  For toxicity and related information, please see the Toxicity section.",
+        "Section": [
+          {
+            "TOCHeading": "Hazards Identification",
+            "Description": "This section identifies the hazards of the chemical presented on the safety data sheet (SDS) and the appropriate warning information associated with those hazards.  The information in this section includes, but are not limited to, the hazard classification of the chemical, signal word, pictograms, hazard statements and precautionary statements.",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Section": [
+              {
+                "TOCHeading": "GHS Classification",
+                "Description": "GHS (Globally Harmonized System of Classification and Labelling of Chemicals) is a United Nations system to identify hazardous chemicals and to inform users about these hazards. GHS has been adopted by many countries around the world and is now also used as the basis for international and national transport regulations for dangerous goods. The GHS hazard statements, class categories, pictograms, signal words, and the precautionary statements can be found on the PubChem GHS page.",
+                "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/",
+                "DisplayControls": {
+                  "CreateTable": {
+                    "FromInformationIn": "ThisSection",
+                    "NumberOfColumns": 2,
+                    "ColumnContents": [
+                      "Name",
+                      "Value"
+                    ]
+                  },
+                  "ShowAtMost": 1
+                },
+                "Information": [
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "Note",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "This chemical does not meet GHS hazard criteria for 0.3% (3  of 1154) of reports.",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 81,
+                              "Type": "Italics"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "Pictogram(s)",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "          ",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 1,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS07.svg",
+                              "Type": "Icon",
+                              "Extra": "Irritant"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "Signal",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Warning",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "GHS Hazard Statements",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "H315 (28.6%): Causes skin irritation [Warning Skin corrosion/irritation]",
+                          "Markup": [
+                            {
+                              "Start": 38,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "H319 (99.6%): Causes serious eye irritation [Warning Serious eye damage/eye irritation]",
+                          "Markup": [
+                            {
+                              "Start": 45,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "H335 (28.4%): May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]",
+                          "Markup": [
+                            {
+                              "Start": 48,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "Precautionary Statement Codes",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "P261, P264, P264+P265, P271, P280, P302+P352, P304+P340, P305+P351+P338, P319, P321, P332+P317, P337+P317, P362+P364, P403+P233, P405, and P501",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P261"
+                            },
+                            {
+                              "Start": 6,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P264"
+                            },
+                            {
+                              "Start": 12,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P264+P265"
+                            },
+                            {
+                              "Start": 23,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P271"
+                            },
+                            {
+                              "Start": 29,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P280"
+                            },
+                            {
+                              "Start": 35,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P302+P352"
+                            },
+                            {
+                              "Start": 46,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P304+P340"
+                            },
+                            {
+                              "Start": 57,
+                              "Length": 14,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P305+P351+P338"
+                            },
+                            {
+                              "Start": 73,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P319"
+                            },
+                            {
+                              "Start": 79,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P321"
+                            },
+                            {
+                              "Start": 85,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P332+P317"
+                            },
+                            {
+                              "Start": 96,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P337+P317"
+                            },
+                            {
+                              "Start": 107,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P362+P364"
+                            },
+                            {
+                              "Start": 118,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P403+P233"
+                            },
+                            {
+                              "Start": 129,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P405"
+                            },
+                            {
+                              "Start": 139,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P501"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 41,
+                    "Name": "ECHA C&L Notifications Summary",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Aggregated GHS information provided per 1154 reports by companies from 25 notifications to the ECHA C&L Inventory. Each notification may be associated with multiple companies.",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 179,
+                              "Type": "Italics"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "Reported as not meeting GHS hazard criteria per 3 of 1154 reports by companies.",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 79,
+                              "Type": "Italics"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "There are 23 notifications provided by 1151 of 1154 reports by companies with hazard statement code(s).",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 103,
+                              "Type": "Italics"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "Information may vary between notifications depending on impurities, additives, and other factors. The percentage value in parenthesis indicates the notified classification ratio from companies that provide hazard codes. Only hazard codes with percentage values above 10% are shown. For more detailed information, please visit  ECHA C&L website.",
+                          "Markup": [
+                            {
+                              "Start": 327,
+                              "Length": 20,
+                              "URL": "https://chem.echa.europa.eu/substance-search?searchText=202-713-4"
+                            },
+                            {
+                              "Start": 0,
+                              "Length": 348,
+                              "Type": "Italics"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Name": "Pictogram(s)",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "          ",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 1,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS07.svg",
+                              "Type": "Icon",
+                              "Extra": "Irritant"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Name": "Signal",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Warning",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Name": "GHS Hazard Statements",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "H315: Causes skin irritation [Warning Skin corrosion/irritation]",
+                          "Markup": [
+                            {
+                              "Start": 30,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "H319: Causes serious eye irritation [Warning Serious eye damage/eye irritation]",
+                          "Markup": [
+                            {
+                              "Start": 37,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "H335: May cause respiratory irritation [Warning Specific target organ toxicity, single exposure; Respiratory tract irritation]",
+                          "Markup": [
+                            {
+                              "Start": 40,
+                              "Length": 7,
+                              "Type": "Color",
+                              "Extra": "GHSWarning"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Name": "Precautionary Statement Codes",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "P261, P264, P264+P265, P271, P280, P302+P352, P304+P340, P305+P351+P338, P319, P321, P332+P317, P337+P317, P362+P364, P403+P233, P405, and P501",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P261"
+                            },
+                            {
+                              "Start": 6,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P264"
+                            },
+                            {
+                              "Start": 12,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P264+P265"
+                            },
+                            {
+                              "Start": 23,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P271"
+                            },
+                            {
+                              "Start": 29,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P280"
+                            },
+                            {
+                              "Start": 35,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P302+P352"
+                            },
+                            {
+                              "Start": 46,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P304+P340"
+                            },
+                            {
+                              "Start": 57,
+                              "Length": 14,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P305+P351+P338"
+                            },
+                            {
+                              "Start": 73,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P319"
+                            },
+                            {
+                              "Start": 79,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P321"
+                            },
+                            {
+                              "Start": 85,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P332+P317"
+                            },
+                            {
+                              "Start": 96,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P337+P317"
+                            },
+                            {
+                              "Start": 107,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P362+P364"
+                            },
+                            {
+                              "Start": 118,
+                              "Length": 9,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P403+P233"
+                            },
+                            {
+                              "Start": 129,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P405"
+                            },
+                            {
+                              "Start": 139,
+                              "Length": 4,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/#P501"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Hazard Classes and Categories",
+                "Description": "The Hazard Classes and Categories are aligned with GHS (Globally Harmonized System of Classification and Labelling of Chemicals) hazard statement codes.  The percentage data in the parenthesis from ECHA indicates that the hazard classes and categories information are consolidated from multiple companies.  Also, see the detailed explanation from the above GHS classification section.",
+                "URL": "https://pubchem.ncbi.nlm.nih.gov/ghs/",
+                "DisplayControls": {
+                  "ShowAtMost": 1
+                },
+                "Information": [
+                  {
+                    "ReferenceNumber": 41,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Skin Irrit. 2 (28.6%)"
+                        },
+                        {
+                          "String": "Eye Irrit. 2A (99.6%)"
+                        },
+                        {
+                          "String": "STOT SE 3 (28.4%)"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Fire Hazards",
+                "Description": "Fire hazard means any situation, process, material or condition which may cause a fire or explosion or provide a ready fuel supply to increase the spread or intensity of the fire or explosion and which poses a threat to life or property.  This section provides information on fire hazards involving this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Combustible. Gives off irritating or toxic fumes (or gases) in a fire. Finely dispersed particles form explosive mixtures in air."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Hazards Summary",
+                "Description": "This section provides an overview of the key hazards information of this compound.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 50,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "See Nicotinic acid."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Fire Potential",
+                "Description": "This section describes fire potential of this chemical (e.g., whether it is combustible or flammable).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917",
+                        "Matched": {
+                          "PCLID": 900100644,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "This chemical is a noncombustible solid."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Safety and Hazard Properties",
+            "Description": "This section lists the chemical's safety and hazard characteristics, such as the explosive/flammable limits, critical temperature and pressure, exposure limits, etc.",
+            "Section": [
+              {
+                "TOCHeading": "Protective Action Criteria (PAC)",
+                "Description": "The Protective Action Criteria (PAC) for chemicals are essential components for planning and response to uncontrolled releases of hazardous chemicals. The PACs: PAC-1, PAC-2 and PAC-3 refer to the AEGLs (Acute Exposure Guideline Levels, 60 min), ERPGs (Emergency Response Planning Guidelines), and TEELs (Temporary Emergency Exposure Limits), respectively.",
+                "URL": "https://www.energy.gov/ehss/protective-action-criteria-pac-aegls-erpgs-teels",
+                "Information": [
+                  {
+                    "ReferenceNumber": 178,
+                    "Name": "PAC-1",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "10 [mg/m3]"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 178,
+                    "Name": "PAC-2",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "120 [mg/m3]"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 178,
+                    "Name": "PAC-3",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "690 [mg/m3]"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Physical Dangers",
+                "Description": "The possibility of physical injury or sickness that could result in grave physical harm or death.  An example of physical dangers is fire/explosion due to raw materials.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Dust explosion possible if in powder or granular form, mixed with air."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "First Aid Measures",
+            "Description": "This section describes the initial care that should be given to an individual who has been exposed to the chemical.  The information in this section includes the description of the symptoms or effects of exposure to the chemical, necessary first-aid instructions by relevant routes of exposure (inhalation, skin and eye contact, and ingestion), and recommendations for immediate medical care and special treatment needed, when necessary.",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Information": [
+              {
+                "ReferenceNumber": 74,
+                "Name": "Inhalation First Aid",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Fresh air, rest."
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 74,
+                "Name": "Skin First Aid",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Rinse skin with plenty of water or shower.",
+                      "Markup": [
+                        {
+                          "Start": 26,
+                          "Length": 5,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-962"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 74,
+                "Name": "Eye First Aid",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Rinse with plenty of water (remove contact lenses if easily possible).",
+                      "Markup": [
+                        {
+                          "Start": 21,
+                          "Length": 5,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-962"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 74,
+                "Name": "Ingestion First Aid",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Rinse mouth. Give one or two glasses of water to drink.",
+                      "Markup": [
+                        {
+                          "Start": 40,
+                          "Length": 5,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-962"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Section": [
+              {
+                "TOCHeading": "First Aid",
+                "Description": "First aid measures for exposure to this chemical through various routes (for example, ingestion, inhalation, skin contact, and eye contact).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Reference": [
+                      "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina.",
+                        "Matched": {
+                          "PCLID": 900163266,
+                          "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "EYES: First check the victim for contact lenses and remove if present. Flush victim's eyes with water or normal saline solution for 20 to 30 minutes while simultaneously calling a hospital or poison control center. Do not put any ointments, oils, or medication in the victim's eyes without specific instructions from a physician. IMMEDIATELY transport the victim after flushing eyes to a hospital even if no symptoms (such as redness or irritation) develop.",
+                          "Markup": [
+                            {
+                              "Start": 96,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 105,
+                              "Length": 13,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/normal%20saline",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-5234"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "SKIN: IMMEDIATELY flood affected skin with water while removing and isolating all contaminated clothing. Gently wash all affected skin areas thoroughly with soap and water. If symptoms such as redness or irritation develop, IMMEDIATELY call a physician and be prepared to transport the victim to a hospital for treatment.",
+                          "Markup": [
+                            {
+                              "Start": 43,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 166,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "INHALATION: IMMEDIATELY leave the contaminated area; take deep breaths of fresh air. If symptoms (such as wheezing, coughing, shortness of breath, or burning in the mouth, throat, or chest) develop, call a physician and be prepared to transport the victim to a hospital. Provide proper respiratory protection to rescuers entering an unknown atmosphere. Whenever possible, Self-Contained Breathing Apparatus (SCBA) should be used; if not available, use a level of protection greater than or equal to that advised under Protective Clothing."
+                        },
+                        {
+                          "String": "INGESTION: DO NOT INDUCE VOMITING. If the victim is conscious and not convulsing, give 1 or 2 glasses of water to dilute the chemical and IMMEDIATELY call a hospital or poison control center. Be prepared to transport the victim to a hospital if advised by a physician. If the victim is convulsing or unconscious, do not give anything by mouth, ensure that the victim's airway is open and lay the victim on his/her side with the head lower than the body. DO NOT INDUCE VOMITING. IMMEDIATELY transport the victim to a hospital. (NTP, 1992)",
+                          "Markup": [
+                            {
+                              "Start": 105,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Fire Fighting",
+            "Description": "This section provides fire fighting information, including fire fighting procedures and hazards.",
+            "Information": [
+              {
+                "ReferenceNumber": 74,
+                "Name": "",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Use water spray, foam, powder, carbon dioxide.",
+                      "Markup": [
+                        {
+                          "Start": 4,
+                          "Length": 5,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-962"
+                        },
+                        {
+                          "Start": 31,
+                          "Length": 14,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/carbon%20dioxide",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-280"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Section": [
+              {
+                "TOCHeading": "Fire Fighting Procedures",
+                "Description": "This section provides information on the actions to be taken in the event of a fire emergency involving this chemical, to prevent the spread of and extinguish fires.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Suitable extinguishing media: Use water spray, alcohol-resistant foam, dry chemical or carbon dioxide.",
+                          "Markup": [
+                            {
+                              "Start": 34,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 87,
+                              "Length": 14,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/carbon%20dioxide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-280"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Advice for firefighters: Wear self contained breathing apparatus for fire fighting if necessary."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917",
+                        "Matched": {
+                          "PCLID": 900100644,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "... Use dry chemical, carbon dioxide, water spray, or alcohol foam extinguishers. ... If material of contaminated runoff enters waterways, notify downstream users of potentially contaminated waters.  Notify local health and fire officials and pollution control agencies.  From a secure, explosion-proof location, use water spray to cool exposed containers. If cooling streams are ineffective (venting sound increase in volume and pitch, tank discolors, or shows any signs of deforming), withdraw immediately to a secure position.  If employees are expected to fight fires, they must be trained and equipped in OSHA 1910.156. The only respirators recommended for firefighting are self-contained breathing apparatuses that have full face-pieces and are operated in a pressure-demand or other positive-pressure mode.",
+                          "Markup": [
+                            {
+                              "Start": 22,
+                              "Length": 14,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/carbon%20dioxide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-280"
+                            },
+                            {
+                              "Start": 38,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 317,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Accidental Release Measures",
+            "Description": "This section provides recommendations on the appropriate response to spills, leaks, or releases, including containment and cleanup practices to prevent or minimize exposure to people, properties, or the environment. It may also include recommendations distinguishing between responses for large and small spills where the spill volume has a significant impact on the hazard.",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Section": [
+              {
+                "TOCHeading": "Spillage Disposal",
+                "Description": "Methods for containment and safety measures to protect workers dealing with a spillage of this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Personal protection: particulate filter respirator adapted to the airborne concentration of the substance. Sweep spilled substance into covered containers. If appropriate, moisten first to prevent dusting. Wash away remainder with plenty of water.",
+                          "Markup": [
+                            {
+                              "Start": 241,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Cleanup Methods",
+                "Description": "Procedures for cleanup of chemical spill or hazardous waste",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "ACCIDENTAL RELEASE MEASURES: Personal precautions, protective equipment and emergency procedures: Use personal protective equipment. Avoid dust formation. Avoid breathing vapors, mist or gas. Ensure adequate ventilation. Evacuate personnel to safe areas. Avoid breathing dust. Environmental precautions: Do not let product enter drains. Methods and materials for containment and cleaning up: Pick up and arrange disposal without creating dust. Sweep up and shovel. Keep in suitable, closed containers for disposal."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917",
+                        "Matched": {
+                          "PCLID": 900100644,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Evacuate persons not wearing protective equipment from area of spill or leak until clean up is complete. Remove all ignition sources. Use HEPA vacuum or wet method to reduce dust during cleanup. Do not dry sweep. Collect powdered material in the most convenient and safe manner and deposit in sealed containers.  Ventilate after clean up is complete.  It may be necessary to contain and dispose of this chemical as a hazardous waste.  If material of contaminated runoff enters waterways, notify downstream users of potentially contaminated waters."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Disposal Methods",
+                "Description": "Disposal methods or procedures for this chemical or hazardous waste containing it.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "SRP: Recycle any unused portion of the material for its approved use or return it to the manufacturer or supplier. Ultimate disposal of the chemical must consider: the material's impact on air quality; potential migration in air, soil or water; effects on animal, aquatic and plant life; and conformance with environmental and public health regulations. If it is possible or reasonable use an alternative chemical product with less inherent propensity for occupational harm/injury/toxicity or environmental contamination.",
+                          "Markup": [
+                            {
+                              "Start": 238,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "SRP: Wastewater from contaminant suppression, cleaning of protective clothing/equipment, or contaminated sites should be contained and evaluated for subject chemical or decomposition product concentrations. Concentrations shall be lower than applicable environmental discharge or disposal criteria. Alternatively, pretreatment and/or discharge to a permitted wastewater treatment facility is acceptable only after review by the governing authority and  assurance that \"pass through\" violations will not occur. Due consideration shall be given to  remediation worker exposure (inhalation, dermal and ingestion) as well as fate during treatment, transfer and disposal. If it is not practicable to manage the chemical in this fashion, it must be evaluated in accordance with EPA 40 CFR Part 261, specifically Subpart B, in order to determine the appropriate local, state and federal requirements for disposal."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Product: Offer surplus and non-recyclable solutions to a licensed disposal company. Contact a licensed professional waste disposal service to dispose of this material. Contaminated packaging: Dispose of as unused product."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Preventive Measures",
+                "Description": "Preventive measures to take to avoid suffering negative health effects from this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916",
+                        "Matched": {
+                          "PCLID": 900048165,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "... Employees should wash immediately with soap when skin is wet or contaminated. ..."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "ACCIDENTAL RELEASE MEASURES: Personal precautions, protective equipment and emergency procedures: Use personal protective equipment. Avoid dust formation. Avoid breathing vapors, mist or gas. Ensure adequate ventilation. Evacuate personnel to safe areas. Avoid breathing dust. Environmental precautions: Do not let product enter drains."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Precautions for safe handling: Avoid contact with skin and eyes. Avoid formation of dust and aerosols.Further processing of solid materials may result in the formation of combustible dusts. The potential for combustible dust formation should be taken into consideration before additional processing occurs. Provide appropriate exhaust ventilation at places where dust is formed."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Appropriate engineering controls: Handle in accordance with good industrial hygiene and safety practice. Wash hands before breaks and at the end of workday."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "For more Preventive Measures (Complete) data for Nicotinamide (7 total), please visit the HSDB record page.",
+                          "Markup": [
+                            {
+                              "Start": 90,
+                              "Length": 16,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/source/hsdb/1237#section=Preventive-Measures-(Complete)"
+                            },
+                            {
+                              "Start": 49,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Handling and Storage",
+            "Description": "This section provides guidance on the safe handling practices and storage conditions for this chemical.  The information in this section includes precautions for safe handling, such as recommendations for handling incompatible chemicals, minimizing the release of the chemical into the environment, and providing advice on general hygiene practices (e.g., eating, drinking, and smoking in work areas is prohibited).  In addition, this section provides recommendations on the conditions for safe storage (including any incompatibilities) as well as advice on specific storage requirements (e.g., ventilation requirements).  ",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Section": [
+              {
+                "TOCHeading": "Nonfire Spill Response",
+                "Description": "Emergency response measures to take in the event of a chemical spill (without a fire).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Reference": [
+                      "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina.",
+                        "Matched": {
+                          "PCLID": 900163266,
+                          "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "SMALL SPILLS AND LEAKAGE: If you spill this chemical, you should dampen the solid spill material with water, then transfer the dampened material to a suitable container. Use absorbent paper dampened with water to pick up any remaining material. Seal your contaminated clothing and the absorbent paper in a vapor-tight plastic bag for eventual disposal. Wash all contaminated surfaces with a soap and water solution. Do not reenter the contaminated area until the Safety Officer (or other responsible person) has verified that the area has been properly cleaned.",
+                          "Markup": [
+                            {
+                              "Start": 102,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 204,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 400,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        },
+                        {
+                          "String": "STORAGE PRECAUTIONS: You should store this material in a refrigerator. (NTP, 1992)"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Safe Storage",
+                "Description": "Measures to take for safe storage of this chemical.",
+                "URL": "https://www.ncbi.nlm.nih.gov/books/NBK379129/",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Separated from oxidants."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Storage Conditions",
+                "Description": "Conditions for safe storage of this compound, including any incompatible chemicals and specific storage requirements (e.g., ventilation requirements).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Keep container tightly closed in a dry and well-ventilated place. Keep in a dry place."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Exposure Control and Personal Protection",
+            "Description": "This section provides information on the exposure limits, engineering controls, and personal protective measures that can be used to minimize worker exposure.  The information in this section includes OSHA Permissible Exposure Limits (PELs), American Conference of Governmental Industrial Hygienists (ACGIH) Threshold Limit Values (TLVs), and any other exposure limit used or recommended by the chemical manufacturer, importer, or employer preparing the safety data sheet, where available. In addition, this section contains information on appropriate engineering controls (e.g., use local exhaust ventilation, or use only in an enclosed system) as well as recommendations for personal protective measures to prevent illness or injury from exposure to chemicals, such as personal protective equipment (PPE) (e.g., appropriate types of eye, face, skin or respiratory protection needed based on hazards and potential exposure).",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Section": [
+              {
+                "TOCHeading": "Inhalation Risk",
+                "Description": "Risk of exposure to this chemical through inhalation.  Note that the terms \"risk\" and \"hazard\" have different meanings.  A hazard is something that has the potential to cause harm, while risk is the likelihood of harm taking place, based on exposure to that hazard.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "A nuisance-causing concentration of airborne particles can be reached quickly when dispersed, especially if powdered."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Effects of Short Term Exposure",
+                "Description": "This section provides health effects of short-term exposure to this compound.  The short-term exposure (also called acute exposure) is a short contact with a chemical. It may last a few seconds or a few hours. For example, it might take a few minutes to clean windows with ammonia, use nail polish remover or spray a can of paint. The fumes someone might inhale during these activities are examples of acute exposures.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "The substance is irritating to the eyes."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Allowable Tolerances",
+                "Description": "The tolerances of a chemical (usually a pesticide) are the maximum amount of chemical residues allowed to remain in or on fruits, vegetables, grains, and other foods, as part of the process of regulating pesticides. In some countries tolerances are called maximum residue limits (MRLs).",
+                "URL": "https://www.epa.gov/pesticide-tolerances",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "40 CFR 180.920; U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of March 14, 2007: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "40 CFR 180.920; U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of March 14, 2007: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900033014,
+                          "Citation": "40 CFR 180.920; U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of March 14, 2007: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Residues of nicotinamide are exempted from the requirement of a tolerance when  used as a synergist (limit: maximum of 0.5% of formulation) in accordance with good agricultural practice as inert (or occasionally  active) ingredients in pesticide formulations applied to growing crops only.",
+                          "Markup": [
+                            {
+                              "Start": 12,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Personal Protective Equipment (PPE)",
+                "Description": "Personal protective equipment (PPE) to use when handling this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Reference": [
+                      "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina.",
+                        "Matched": {
+                          "PCLID": 900163266,
+                          "Citation": "National Toxicology Program, Institute of Environmental Health Sciences, National Institutes of Health (NTP). 1992. National Toxicology Program Chemical Repository Database. Research Triangle Park, North Carolina."
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "RECOMMENDED RESPIRATOR: Where the neat test chemical is weighed and diluted, wear a NIOSH-approved half face respirator equipped with an organic vapor/acid gas cartridge (specific for organic vapors, HCl, acid gas and SO2) with a dust/mist filter. (NTP, 1992)"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Eye/face protection: Safety glasses with side-shields conforming to EN166. Use equipment for eye protection tested and approved under appropriate government standards such as NIOSH (US) or EN 166(EU)."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Skin protection: Handle with gloves."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Body Protection: Impervious clothing. The type of protective equipment must be selected according to the concentration and amount of the dangerous substance at the specific workplace."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Respiratory protection: For nuisance exposures use type P95 (US) or type P1 (EU EN 143) particle respirator.For higher level protection use type OV/AG/P99 (US) or type ABEK-P2 (EU EN 143) respirator cartridges. Use respirators and components tested and approved under appropriate government standards such as NIOSH (US) or CEN (EU)."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916",
+                        "Matched": {
+                          "PCLID": 900048165,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1916"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Wear protective gloves and clothing to prevent any reasonable probability of skin contact. ... All protective clothing (suits, gloves, footwear, headgear) should be clean, available each day, and put on before work. ... Wear dust proof chemical goggles and face shield unless full face piece respiratory protection is worn. ... Provide emergency showers and eyewash."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Fire Prevention",
+                "Description": "Precautionary measures to prevent fires from this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Prevent deposition of dust. Closed system, dust explosion-proof electrical equipment and lighting."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Exposure Prevention",
+                "Description": "Prevention measures to avoid exposure to this chemical through various routes (for example, ingestion, inhalation, skin contact, and eye contact).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "PREVENT DISPERSION OF DUST!"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Inhalation Prevention",
+                "Description": "Precautionary measures to avoid inhalation of this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Avoid inhalation of dust."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Skin Prevention",
+                "Description": "Precautionary measures to avoid skin exposure to this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Protective gloves."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Eye Prevention",
+                "Description": "Precautionary measures to avoid eye exposure to this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Wear safety goggles."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Ingestion Prevention",
+                "Description": "Precautionary measures to avoid ingestion of this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 74,
+                    "Name": "",
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Do not eat, drink, or smoke during work."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Stability and Reactivity",
+            "Description": "This section describes the stability and reactivity hazards of the chemical.  For some compounds, related information may also be found in the \"Stability/Shelf Life\" section under Experimental Properties (if available).",
+            "URL": "https://www.osha.gov/sites/default/files/publications/OSHA3514.pdf",
+            "Section": [
+              {
+                "TOCHeading": "Air and Water Reactions",
+                "Description": "Special alerts if this chemical reacts with air, water, or moisture. ",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Water soluble."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Reactive Group",
+                "Description": "List of reactive groups that this chemical belongs to, according to CAMEO Chemicals at the U.S. National Oceanic and Atmospheric Administration (NOAA).",
+                "URL": "https://cameochemicals.noaa.gov/help/reactivity/reactive_groups.htm",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Amides and Imides"
+                        },
+                        {
+                          "String": "Amines, Phosphines, and Pyridines"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Reactivity Profile",
+                "Description": "Description of the chemical's potential reactivity with other chemicals, air, and water. Also it includes any other intrinsic reactive hazards (such as polymerizable or peroxidizable).",
+                "Information": [
+                  {
+                    "ReferenceNumber": 5,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "An amine and amide. Acts as a weak base in solution. Amines are chemical bases. They neutralize acids to form salts plus water. These acid-base reactions are exothermic. The amount of heat that is evolved per mole of amine in a neutralization is largely independent of the strength of the amine as a base. Amines may be incompatible with isocyanates, halogenated organics, peroxides, phenols (acidic), epoxides, anhydrides, and acid halides. Flammable gaseous hydrogen is generated by amines in combination with strong reducing agents, such as hydrides. Organic amides/imides react with azo and diazo compounds to generate toxic gases. Flammable gases are formed by the reaction of organic amides/imides with strong reducing agents. Amides are very weak bases (weaker than water). Imides are less basic yet and in fact react with strong bases to form salts. That is, they can react as acids. Mixing amides with dehydrating agents such as P2O5 or SOCl2 generates the corresponding nitrile. The combustion of these compounds generates mixed oxides of nitrogen (NOx).",
+                          "Markup": [
+                            {
+                              "Start": 121,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            },
+                            {
+                              "Start": 460,
+                              "Length": 8,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/element/Hydrogen",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "Element-Hydrogen"
+                            },
+                            {
+                              "Start": 773,
+                              "Length": 5,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/water",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-962"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Regulatory Information",
+            "Description": "This section lists the regulations related to the safety, health, and environment of the chemical and its associated products. The regulatory information, which may encompass national and/or regional regulations pertaining to the chemical or mixtures, is presented solely for informational purposes. For additional details, please consult the links to the information sources provided under each data entry.",
+            "Information": [
+              {
+                "ReferenceNumber": 2,
+                "Name": "The Australian Inventory of Industrial Chemicals",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Chemical: 3-Pyridinecarboxamide",
+                      "Markup": [
+                        {
+                          "Start": 10,
+                          "Length": 21,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/3-Pyridinecarboxamide",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-936"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 37,
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "3-Pyridinecarboxamide is listed on the EPA's Chemical Data Reporting (CDR) system. Manufacturers and importers of 3-Pyridinecarboxamide are required to report information about their production and use of this chemical to the EPA under the Toxic Substances Control Act (TSCA). (40 eCFR Part 711)",
+                      "Markup": [
+                        {
+                          "Start": 45,
+                          "Length": 29,
+                          "Type": ""
+                        },
+                        {
+                          "Start": 278,
+                          "Length": 16,
+                          "Type": ""
+                        },
+                        {
+                          "Start": 0,
+                          "Length": 21,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/3-Pyridinecarboxamide",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-936"
+                        },
+                        {
+                          "Start": 114,
+                          "Length": 21,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/3-Pyridinecarboxamide",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-936"
+                        },
+                        {
+                          "Start": 270,
+                          "Length": 4,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/TSCA",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-110408"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 42,
+                "Name": "REACH Registered Substance",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Status: Active Update: 25-11-2022 https://echa.europa.eu/registration-dossier/-/registered-dossier/14571",
+                      "Markup": [
+                        {
+                          "Start": 34,
+                          "Length": 70,
+                          "URL": "https://echa.europa.eu/registration-dossier/-/registered-dossier/14571"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "ReferenceNumber": 162,
+                "Name": "New Zealand EPA Inventory of Chemical Status",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Nicotinamide: Does not have an individual approval but may be used under an appropriate group standard",
+                      "Markup": [
+                        {
+                          "Start": 0,
+                          "Length": 12,
+                          "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Nicotinamide",
+                          "Type": "PubChem Internal Link",
+                          "Extra": "CID-936"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ],
+            "Section": [
+              {
+                "TOCHeading": "FIFRA Requirements",
+                "Description": "The Federal Insecticide, Fungicide, and Rodenticide Act (FIFRA) is the Federal statute that governs the registration, distribution, sale, and use of pesticides in the United States.",
+                "URL": "https://www.epa.gov/enforcement/federal-insecticide-fungicide-and-rodenticide-act-fifra-and-federal-facilities",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "40 CFR 180.920 (USEPA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "40 CFR 180.920 (USEPA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900142061,
+                          "Citation": "40 CFR 180.920 (USEPA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Residues of nicotinamide are exempted from the requirement of a tolerance when used in accordance with good agricultural practice as inert (or occasionally active) ingredients in pesticide formulations applied to growing crops only. Use: Synergist. Limit: Maximum of 0.5% of formulation.",
+                          "Markup": [
+                            {
+                              "Start": 12,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "FDA Requirements",
+                "Description": "FDA requirements regarding this chemical and products containing it.  FDA Requirements means any requirements of the Federal Food, Drug and Cosmetic Act (FDCA), as amended, and any rules or regulations promulgated thereunder which are or may be applicable to the manufacture, sale, labeling or distribution of the products regulated by FDA (e.g., drugs, biologics, dietary supplements, foods, cosmetics, tobacco products, etc.).",
+                "URL": "https://www.fda.gov/regulatory-information/laws-enforced-fda/federal-food-drug-and-cosmetic-act-fdc-act",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "21 CFR 172.315 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "21 CFR 172.315 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900012088,
+                          "Citation": "21 CFR 172.315 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Nicotinamide-ascorbic acid complex may be safely used in accordance with the following prescribed conditions:  (a) The additive is the product of the controlled reaction between ascorbic acid and nicotinamide, melting in the range 141 \u00b0C to 145 \u00b0C.  (b) It is used as a source of ascorbic acid and nicotinamide in multivitamin preparations. /Nicotinamide-Ascorbic Acid Complex/",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            },
+                            {
+                              "Start": 13,
+                              "Length": 13,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/ascorbic%20acid",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-155903693"
+                            },
+                            {
+                              "Start": 178,
+                              "Length": 13,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/ascorbic%20acid",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-155903693"
+                            },
+                            {
+                              "Start": 196,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            },
+                            {
+                              "Start": 280,
+                              "Length": 13,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/ascorbic%20acid",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-155903693"
+                            },
+                            {
+                              "Start": 298,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            },
+                            {
+                              "Start": 342,
+                              "Length": 12,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Nicotinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            },
+                            {
+                              "Start": 355,
+                              "Length": 13,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Ascorbic%20Acid",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-155903693"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "21 CFR 184.1535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "21 CFR 184.1535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900153057,
+                          "Citation": "21 CFR 184.1535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Substance added directly to human food affirmed as generally recognized as safe (GRAS)."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "21 CFR 310.545 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "21 CFR 310.545 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900038741,
+                          "Citation": "21 CFR 310.545 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Drug products containing certain active ingredients offered over-the-counter (OTC) for certain uses. A number of active ingredients have been present in OTC drug products for various uses ... . However, based on evidence currently available, there are inadequate data to establish general recognition of the safety and effectiveness of these ingredients for the specified uses: niacinamide is included in orally administered menstrual drug products and weight control drug products.",
+                          "Markup": [
+                            {
+                              "Start": 378,
+                              "Length": 11,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/niacinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "21 CFR 582.5535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "21 CFR 582.5535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov",
+                        "Matched": {
+                          "PCLID": 900142885,
+                          "Citation": "21 CFR 582.5535 (USFDA); U.S. National Archives and Records Administration's Electronic Code of Federal Regulations. Available from, as of June 1, 2018: https://www.ecfr.gov"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Niacinamide used as a nutrient and/or dietary supplement in animal drugs, feeds, and related products is generally recognized as safe when used in accordance with good manufacturing or feeding practice.",
+                          "Markup": [
+                            {
+                              "Start": 0,
+                              "Length": 11,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Niacinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "TOCHeading": "Other Safety Information",
+            "Description": "Miscellaneous safety information for this chemical that is not shown in other sections, such as history, incidents, special reports, and so on.",
+            "Information": [
+              {
+                "ReferenceNumber": 1,
+                "Name": "Chemical Assessment",
+                "Value": {
+                  "StringWithMarkup": [
+                    {
+                      "String": "Evaluation - Chemicals that are unlikely to require further regulation to manage risks to human health"
+                    },
+                    {
+                      "String": "Evaluation - Chemicals that are unlikely to require further regulation to manage risks to environment"
+                    }
+                  ]
+                }
+              }
+            ],
+            "Section": [
+              {
+                "TOCHeading": "Toxic Combustion Products",
+                "Description": "Toxic products (e.g., gases and vapors) produced from the combustion of this chemical.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917",
+                        "Matched": {
+                          "PCLID": 900100644,
+                          "Citation": "Pohanish, R.P. (ed). Sittig's Handbook of Toxic and  Hazardous Chemical Carcinogens 6th Edition Volume 1:  A-K,Volume 2: L-Z. William Andrew, Waltham, MA 2012, p. 1917"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "... Poisonous gases are produced in a fire. ..."
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "ReferenceNumber": 51,
+                    "Description": "PEER REVIEWED",
+                    "Reference": [
+                      "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                    ],
+                    "ExtendedReference": [
+                      {
+                        "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html",
+                        "Matched": {
+                          "PCLID": 906285452,
+                          "Citation": "Sigma-Aldrich; Safety Data Sheet for Nicotinamide. Product Number: N3376, Version 4.4 (Revision Date 01/16/2015). Available from, as of June 18, 2018: https://www.sigmaaldrich.com/safety-center.html"
+                        }
+                      }
+                    ],
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Special hazards arising from the substance or mixture: Carbon oxides, nitrogen oxides (NOx)."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "TOCHeading": "Special Reports",
+                "Description": "Special reports on the safety and hazard of this chemical.  Most of them are government documents and review articles.",
+                "Information": [
+                  {
+                    "ReferenceNumber": 51,
+                    "Value": {
+                      "StringWithMarkup": [
+                        {
+                          "String": "Cosmetic Ingredient Review (CIR) Expert Panel; Final Report of the Safety Assessment of Niacinamide and Niacin; Intl J of Toxicology 24 (Suppl 5): 1-31 (2005)",
+                          "Markup": [
+                            {
+                              "Start": 88,
+                              "Length": 11,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Niacinamide",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-936"
+                            },
+                            {
+                              "Start": 104,
+                              "Length": 6,
+                              "URL": "https://pubchem.ncbi.nlm.nih.gov/compound/Niacin",
+                              "Type": "PubChem Internal Link",
+                              "Extra": "CID-938"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "Reference": [
+      {
+        "ReferenceNumber": 1,
+        "SourceName": "Australian Industrial Chemicals Introduction Scheme (AICIS)",
+        "SourceID": "as_2262",
+        "Name": "3-Pyridinecarboxamide",
+        "Description": "The Australian Industrial Chemicals Introduction Scheme (AICIS) helps protect the environment by finding out the risks of industrial chemicals and recommending ways to promote their safer use. They regulate chemicals (including polymers) that are manufactured or imported into Australia for an industrial use, such as in inks, paints, adhesives, solvents, cosmetics and personal care products, cleaning products, as well as in manufacturing, construction and mining applications.",
+        "URL": "https://services.industrialchemicals.gov.au/search-assessments/",
+        "LicenseURL": "https://www.industrialchemicals.gov.au/copyright",
+        "ANID": 39348280
+      },
+      {
+        "ReferenceNumber": 2,
+        "SourceName": "Australian Industrial Chemicals Introduction Scheme (AICIS)",
+        "SourceID": "inv_2262",
+        "Name": "3-Pyridinecarboxamide",
+        "Description": "The Australian Industrial Chemicals Introduction Scheme (AICIS) helps protect the environment by finding out the risks of industrial chemicals and recommending ways to promote their safer use. They regulate chemicals (including polymers) that are manufactured or imported into Australia for an industrial use, such as in inks, paints, adhesives, solvents, cosmetics and personal care products, cleaning products, as well as in manufacturing, construction and mining applications.",
+        "URL": "https://services.industrialchemicals.gov.au/search-inventory/",
+        "LicenseURL": "https://www.industrialchemicals.gov.au/copyright",
+        "ANID": 39396052
+      },
+      {
+        "ReferenceNumber": 37,
+        "SourceName": "EPA Chemical Data Reporting (CDR)",
+        "SourceID": "d22ad891dc9dd013d4408223f3a85641",
+        "Name": "3-Pyridinecarboxamide",
+        "Description": "The non-confidential content of the EPA Chemical Data Reporting.",
+        "URL": "https://www.epa.gov/chemical-data-reporting",
+        "LicenseNote": "The U.S. Government retains a nonexclusive, royalty-free license to publish or reproduce these documents, or allow others to do so, for U.S. Government purposes. These documents may be freely distributed and used for non-commercial, scientific and educational purposes.",
+        "LicenseURL": "https://www.epa.gov/web-policies-and-procedures/epa-disclaimers#copyright",
+        "ANID": 38382141
+      },
+      {
+        "ReferenceNumber": 42,
+        "SourceName": "European Chemicals Agency (ECHA)",
+        "SourceID": "202-713-4",
+        "Name": "Nicotinamide",
+        "Description": "The European Chemicals Agency (ECHA) is an agency of the European Union which is the driving force among regulatory authorities in implementing the EU's groundbreaking chemicals legislation for the benefit of human health and the environment as well as for innovation and competitiveness.",
+        "URL": "https://chem.echa.europa.eu/100.002.467",
+        "LicenseNote": "Use of the information, documents and data from the ECHA website is subject to the terms and conditions of this Legal Notice, and subject to other binding limitations provided for under applicable law, the information, documents and data made available on the ECHA website may be reproduced, distributed and/or used, totally or in part, for non-commercial purposes provided that ECHA is acknowledged as the source: \"Source: European Chemicals Agency, http://echa.europa.eu/\". Such acknowledgement must be included in each copy of the material. ECHA permits and encourages organisations and individuals to create links to the ECHA website under the following cumulative conditions: Links can only be made to webpages that provide a link to the Legal Notice page.",
+        "LicenseURL": "https://echa.europa.eu/web/guest/legal-notice",
+        "ANID": 1977774
+      },
+      {
+        "ReferenceNumber": 162,
+        "SourceName": "New Zealand Environmental Protection Authority (EPA)",
+        "SourceID": "e3540adb55b884cd8f00a108427b0c56",
+        "Name": "Nicotinamide",
+        "Description": "The New Zealand Environmental Protection Authority is a government agency for regulating activities that affect Aotearoa New Zealand's environment.",
+        "URL": "https://www.epa.govt.nz/industry-areas/hazardous-substances/guidance-for-importers-and-manufacturers/hazardous-substances-databases/",
+        "LicenseNote": "This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International licence.",
+        "LicenseURL": "https://www.epa.govt.nz/about-this-site/general-copyright-statement/",
+        "ANID": 37166850
+      },
+      {
+        "ReferenceNumber": 5,
+        "SourceName": "CAMEO Chemicals",
+        "SourceID": "20736",
+        "Name": "NICOTINAMIDE",
+        "Description": "CAMEO Chemicals is a chemical database designed for people who are involved in hazardous material incident response and planning. CAMEO Chemicals contains a library with thousands of datasheets containing response-related information and recommendations for hazardous materials that are commonly transported, used, or stored in the United States. CAMEO Chemicals was developed by the National Oceanic and Atmospheric Administration's Office of Response and Restoration in partnership with the Environmental Protection Agency's Office of Emergency Management.",
+        "URL": "https://cameochemicals.noaa.gov/chemical/20736",
+        "LicenseNote": "CAMEO Chemicals and all other CAMEO products are available at no charge to those organizations and individuals (recipients) responsible for the safe handling of chemicals. However, some of the chemical data itself is subject to the copyright restrictions of the companies or organizations that provided the data.",
+        "LicenseURL": "https://cameochemicals.noaa.gov/help/reference/terms_and_conditions.htm?d_f=false",
+        "ANID": 759801
+      },
+      {
+        "ReferenceNumber": 51,
+        "SourceName": "Hazardous Substances Data Bank (HSDB)",
+        "SourceID": "1237",
+        "Name": "Nicotinamide",
+        "Description": "The Hazardous Substances Data Bank (HSDB) is a toxicology database that focuses on the toxicology of potentially hazardous chemicals. It provides information on human exposure, industrial hygiene, emergency handling procedures, environmental fate, regulatory requirements, nanomaterials, and related areas. The information in HSDB has been assessed by a Scientific Review Panel.",
+        "URL": "https://pubchem.ncbi.nlm.nih.gov/source/hsdb/1237",
+        "LicenseURL": "https://www.nlm.nih.gov/web_policies.html",
+        "IsToxnet": true,
+        "ANID": 1131
+      },
+      {
+        "ReferenceNumber": 41,
+        "SourceName": "European Chemicals Agency (ECHA)",
+        "SourceID": "118523",
+        "Name": "Nicotinamide (EC: 202-713-4)",
+        "Description": "The information provided here is aggregated from the \"Notified classification and labelling\" from ECHA's C&L Inventory. Read more: https://echa.europa.eu/information-on-chemicals/cl-inventory-database",
+        "URL": "https://chem.echa.europa.eu/substance-search?searchText=202-713-4",
+        "LicenseNote": "Use of the information, documents and data from the ECHA website is subject to the terms and conditions of this Legal Notice, and subject to other binding limitations provided for under applicable law, the information, documents and data made available on the ECHA website may be reproduced, distributed and/or used, totally or in part, for non-commercial purposes provided that ECHA is acknowledged as the source: \"Source: European Chemicals Agency, http://echa.europa.eu/\". Such acknowledgement must be included in each copy of the material. ECHA permits and encourages organisations and individuals to create links to the ECHA website under the following cumulative conditions: Links can only be made to webpages that provide a link to the Legal Notice page.",
+        "LicenseURL": "https://echa.europa.eu/web/guest/legal-notice",
+        "ANID": 1885897,
+        "SortOrder": 4154
+      },
+      {
+        "ReferenceNumber": 50,
+        "SourceName": "Haz-Map, Information on Hazardous Chemicals and Occupational Diseases",
+        "SourceID": "hz15948",
+        "Name": "Nicotinamide",
+        "Description": "Haz-Map\u00ae is an occupational health database designed for health and safety professionals and for consumers seeking information about the adverse effects of workplace exposures to chemical and biological agents.",
+        "URL": "https://haz-map.com/Agents/15948",
+        "LicenseNote": "Copyright (c) 2022 Haz-Map(R). All rights reserved.\nUnless otherwise indicated, all materials from Haz-Map are copyrighted by Haz-Map(R). No part of these materials, either text or image may be used for any purpose other than for personal use. Therefore, reproduction, modification, storage in a retrieval system or retransmission, in any form or by any means, electronic, mechanical or otherwise, for reasons other than personal use, is strictly prohibited without prior written permission.",
+        "LicenseURL": "https://haz-map.com/About",
+        "ANID": 17284214
+      },
+      {
+        "ReferenceNumber": 74,
+        "SourceName": "ILO-WHO International Chemical Safety Cards (ICSCs)",
+        "SourceID": "1703",
+        "Name": "NICOTINAMIDE",
+        "Description": "The International Chemical Safety Cards (ICSCs) are data sheets intended to provide essential safety and health information on chemicals in a clear and concise way. The primary aim of the Cards is to promote the safe use of chemicals in the workplace.",
+        "URL": "https://chemicalsafety.ilo.org/dyn/icsc/showcard.display?p_card_id=1703",
+        "LicenseNote": "Creative Commons CC BY 4.0",
+        "LicenseURL": "https://www.ilo.org/global/copyright/lang--en/index.htm",
+        "ANID": 2261494
+      },
+      {
+        "ReferenceNumber": 178,
+        "SourceName": "PAC Chemical Database, U.S. Department of Energy",
+        "SourceID": "98-92-0",
+        "Name": "Nicotinamide",
+        "Description": "",
+        "URL": "https://emhub1.energy.gov/pacteel/search#98-92-0",
+        "LicenseURL": "https://www.energy.gov/web-policies",
+        "ANID": 56700472
+      }
+    ]
+  }
+}

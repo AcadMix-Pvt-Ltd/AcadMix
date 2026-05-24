@@ -470,7 +470,7 @@ function AppRoutes({ user, onLogin, onLogout }) {
         <ProtectedRoute user={user}><CadStudio /></ProtectedRoute>
       } />
       <Route path="/accreditation" element={
-        <ProtectedRoute user={user} allowedRoles={['nodal_officer', 'principal', 'admin']}>
+        <ProtectedRoute user={user} allowedRoles={['nodal_officer', 'principal', 'admin', 'hod']}>
           <ReportDashboard user={user} />
         </ProtectedRoute>
       } />

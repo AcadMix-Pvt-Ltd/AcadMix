@@ -84,19 +84,19 @@ async def _generate_pdf_bytes_async(html_out: str) -> bytes:
     # Return a minimal valid PDF byte string
     return b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>\nendobj\n4 0 obj\n<< /Length 53 >>\nstream\nBT\n/F1 24 Tf\n100 700 Td\n(Mock PDF - GTK Missing) Tj\nET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000288 00000 n \ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n390\n%%EOF"
 
-def _build_and_upload_zip(job, pdf_bytes, evidence_records, is_nba=False, excel_data=None):
+def _build_and_upload_zip(job, pdf_bytes, evidence_records, report_prefix="NAAC_SSR", excel_data=None):
     """Blocking call to build zip and upload to S3"""
     zip_buffer = io.BytesIO()
     missing_evidence = []
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         # Add PDF
-        pdf_name = "NBA_SAR_Report.pdf" if is_nba else "NAAC_SSR_Report.pdf"
+        pdf_name = f"{report_prefix}_Report.pdf"
         zip_file.writestr(pdf_name, pdf_bytes)
         
         # Add Excel Data Templates
         if excel_data:
-            excel_name = "NBA_Data_Templates.xlsx" if is_nba else "NAAC_QnM_Templates.xlsx"
+            excel_name = f"{report_prefix}_Data_Templates.xlsx"
             zip_file.writestr(excel_name, excel_data)
         
         for ev in evidence_records:
@@ -116,10 +116,10 @@ def _build_and_upload_zip(job, pdf_bytes, evidence_records, is_nba=False, excel_
     zip_buffer.seek(0)
     
     # 6. Upload Zip to R2/S3
-    if is_nba:
-        output_s3_key = f"exports/{job.college_id}/NBA_SAR_{getattr(job, 'department_id', 'ALL')}_{job.academic_year}_v{job.version}.zip"
+    if report_prefix == "NBA_SAR":
+        output_s3_key = f"exports/{job.college_id}/{report_prefix}_{getattr(job, 'department_id', 'ALL')}_{job.academic_year}_v{job.version}.zip"
     else:
-        output_s3_key = f"exports/{job.college_id}/NAAC_SSR_{job.academic_year}_v{job.version}.zip"
+        output_s3_key = f"exports/{job.college_id}/{report_prefix}_{job.academic_year}_v{job.version}.zip"
         
     try:
         zip_bytes = zip_buffer.getvalue()
@@ -137,7 +137,7 @@ def _build_and_upload_zip(job, pdf_bytes, evidence_records, is_nba=False, excel_
         # Local fallback for demo/development
         public_dir = os.path.join("C:\\", "AcadMix", "frontend", "public", "exports")
         os.makedirs(public_dir, exist_ok=True)
-        local_filename = f"NAAC_SSR_{job.academic_year}_v{job.version}.zip" if not is_nba else f"NBA_SAR_{job.academic_year}_v{job.version}.zip"
+        local_filename = f"{report_prefix}_{job.academic_year}_v{job.version}.zip"
         local_path = os.path.join(public_dir, local_filename)
         
         with open(local_path, "wb") as f:
@@ -190,7 +190,7 @@ async def generate_naac_ssr_task(ctx, job_id: str):
             evidence_records = ev_result.scalars().all()
             
             # 7. Build DVV Zip & Upload (Blocking)
-            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, evidence_records, False, excel_data)
+            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, evidence_records, "NAAC_SSR", excel_data)
             
             # 7. Update Job Status
             job.status = "COMPLETED"
@@ -255,7 +255,7 @@ async def generate_nba_sar_task(ctx, job_id: str):
             evidence_records = ev_result.scalars().all()
             
             # 6. Build DVV Zip & Upload (Blocking)
-            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, evidence_records, True, excel_data)
+            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, evidence_records, "NBA_SAR", excel_data)
             
             # 7. Update Job Status
             job.status = "COMPLETED"
@@ -304,10 +304,7 @@ async def generate_nirf_dcs_task(ctx, job_id: str):
             excel_data = await engine.get_nirf_excel_templates(job.college_id, job.academic_year)
             
             # No evidence for NIRF DCS natively built in this version
-            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, [], False, excel_data)
-            # rename for local fallback if needed
-            if presigned_url.startswith("/exports/"):
-                presigned_url = presigned_url.replace("NAAC_SSR_", "NIRF_DCS_")
+            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, [], "NIRF_DCS", excel_data)
             
             job.status = "COMPLETED"
             job.presigned_url = presigned_url
@@ -361,9 +358,7 @@ async def generate_nep_compliance_task(ctx, job_id: str):
             
             pdf_bytes = await _generate_pdf_bytes_async(html_out)
             
-            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, [], False, None)
-            if presigned_url.startswith("/exports/"):
-                presigned_url = presigned_url.replace("NAAC_SSR_", "NEP_Compliance_")
+            presigned_url = await asyncio.to_thread(_build_and_upload_zip, job, pdf_bytes, [], "NEP_Compliance", None)
             
             job.status = "COMPLETED"
             job.presigned_url = presigned_url

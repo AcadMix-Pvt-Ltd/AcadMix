@@ -78,6 +78,7 @@ export default function ReportDashboard({ user }: { user: any }) {
                 href={downloadUrl}
                 target="_blank"
                 rel="noreferrer"
+                download
                 className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl font-medium transition-colors"
               >
                 <Download size={18} />
