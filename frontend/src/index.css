@@ -115,6 +115,15 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.12);
   }
 
+  .cad-number-input::-webkit-inner-spin-button, 
+  .cad-number-input::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+  }
+  .cad-number-input {
+    -moz-appearance: textfield;
+  }
+
   /* ══════════════════════════════════════════════
      BADGES
      ══════════════════════════════════════════════ */

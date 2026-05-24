@@ -165,9 +165,39 @@ const DraggableNumberInput = ({ label, value, onChange, theme }: { label: string
         type="number" 
         value={value} 
         onChange={e => onChange(parseFloat(e.target.value) || 0)}
-        className={`w-full px-2 py-1.5 text-sm outline-none bg-transparent ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}
+        className={`w-full px-2 py-1.5 text-sm outline-none bg-transparent cad-number-input ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}
         title={label}
       />
+    </div>
+  );
+};
+
+const RotationSlider = ({ label, value, onChange, theme }: { label: string, value: number, onChange: (val: number) => void, theme: string }) => {
+  return (
+    <div className="mb-3 last:mb-0">
+      <div className="flex justify-between items-center mb-1.5">
+        <label className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{label}</label>
+      </div>
+      <div className="flex gap-3 items-center">
+        <input 
+          type="range" 
+          min="-180" 
+          max="180" 
+          step="1"
+          value={value} 
+          onChange={e => onChange(parseFloat(e.target.value))}
+          className="flex-1 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-indigo-500"
+        />
+        <div className={`relative flex items-center border rounded overflow-hidden w-20 shrink-0 transition-colors ${theme === 'dark' ? 'bg-slate-900 border-slate-700 focus-within:border-indigo-500' : 'bg-white border-slate-300 focus-within:border-indigo-500'}`}>
+          <input 
+            type="number" 
+            value={value}
+            onChange={e => onChange(parseFloat(e.target.value) || 0)}
+            className={`w-full pl-2 pr-1 py-1 text-sm outline-none bg-transparent cad-number-input text-right ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}
+          />
+          <span className={`text-xs pr-2 select-none ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`}>°</span>
+        </div>
+      </div>
     </div>
   );
 };
@@ -694,12 +724,12 @@ const CadStudio = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-xs text-slate-500 mb-2 mt-3">Rotation (X, Y, Z)</label>
-                      <div className="flex gap-2">
+                      <label className="block text-xs text-slate-500 mb-3 mt-5 border-b pb-1 border-slate-200 dark:border-slate-800">Rotation</label>
+                      <div className="flex flex-col">
                         {[0, 1, 2].map(i => (
-                          <DraggableNumberInput 
+                          <RotationSlider 
                             key={i} 
-                            label={['Pitch', 'Yaw', 'Roll'][i]} 
+                            label={['Pitch (X-Axis)', 'Yaw (Y-Axis)', 'Roll (Z-Axis)'][i]} 
                             value={selectedNode.rotation?.[i] || 0} 
                             onChange={val => {
                               const newRot = [...(selectedNode.rotation || [0,0,0])] as [number, number, number];
