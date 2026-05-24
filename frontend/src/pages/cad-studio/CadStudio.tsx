@@ -144,7 +144,7 @@ const CadStudio = () => {
     }
   }, [nodes]);
 
-  const addPrimitive = (type: 'box' | 'cylinder' | 'sphere' | 'cone' | 'torus') => {
+  const addPrimitive = (type: 'box' | 'cylinder' | 'sphere' | 'cone' | 'torus' | 'text') => {
     const newNode: CadNode = {
       id: uuidv4(),
       name: `New ${type}`,
@@ -156,7 +156,8 @@ const CadStudio = () => {
       ...(type === 'cylinder' ? { radius: 5, height: 10 } : {}),
       ...(type === 'sphere' ? { radius: 5 } : {}),
       ...(type === 'cone' ? { radius: 5, height: 10 } : {}),
-      ...(type === 'torus' ? { radius: 5, tube: 1.5 } : {})
+      ...(type === 'torus' ? { radius: 5, tube: 1.5 } : {}),
+      ...(type === 'text' ? { textValue: 'AcadMix', radius: 5, height: 2 } : {})
     };
     setNodes([...nodes, newNode]);
     setSelectedId(newNode.id);
