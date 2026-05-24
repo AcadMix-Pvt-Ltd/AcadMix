@@ -54,6 +54,7 @@ const CadStudio = () => {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
   const [isSnapEnabled, setIsSnapEnabled] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -355,7 +356,9 @@ const CadStudio = () => {
                           mode={transformMode}
                           translationSnap={isSnapEnabled ? 1 : null}
                           rotationSnap={isSnapEnabled ? Math.PI / 12 : null}
+                          onMouseDown={() => setIsDragging(true)}
                           onMouseUp={(e) => {
+                            setIsDragging(false);
                             if (transformMode === 'scale') {
                               const sx = mesh.scale.x;
                               const sy = mesh.scale.y;
@@ -408,7 +411,15 @@ const CadStudio = () => {
 
                 {/* Grid */}
                 <Grid infiniteGrid fadeDistance={5000} sectionSize={10} cellSize={1} sectionColor={theme === 'dark' ? "#334155" : "#cbd5e1"} cellColor={theme === 'dark' ? "#1e293b" : "#e2e8f0"} position={[0, 0, 0]} />
-                <OrbitControls makeDefault />
+                <OrbitControls 
+                  makeDefault 
+                  enabled={!isDragging} 
+                  mouseButtons={{
+                    LEFT: THREE.MOUSE.PAN,
+                    MIDDLE: THREE.MOUSE.DOLLY,
+                    RIGHT: THREE.MOUSE.ROTATE
+                  }}
+                />
 
                 <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
                   <group scale={0.65}>
