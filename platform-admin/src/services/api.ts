@@ -87,4 +87,14 @@ export const superadminAPI = {
   billingOverview: () => api.get('/superadmin/billing/overview'),
 };
 
+// Accreditation
+export const accreditationAPI = {
+  getNirfPreview: (collegeId: string, academicYear: string) => 
+    api.get(`/reports/nirf-preview/${collegeId}?academic_year=${academicYear}`),
+  generateReport: (data: { report_type: string, academic_year: string, department_id?: string, college_id?: string }) =>
+    api.post('/reports/generate', data),
+  getReportStatus: (jobId: string) => 
+    api.get(`/reports/status/${jobId}`)
+};
+
 export default api;

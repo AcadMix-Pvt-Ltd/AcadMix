@@ -10,7 +10,7 @@ AcadMix is a B2B multi-tenant academic SaaS platform. The monorepo contains a Py
 
 - `backend/` — FastAPI API (port 8000). PostgreSQL + Redis + ARQ workers. In local dev the backend is often exposed via ngrok.
 - `frontend/` — React + Vite (port 3000). College tenant dashboard for students/faculty. Served per-college as `<college>.acadmix.org` (prod) or `<college>.localhost:3000` (dev). Also builds the Capacitor Android app.
-- `frontend-admin/` — React + Vite + Tailwind v4 (port 5174). AcadMix platform admin panel.
+- `platform-admin/` — React + Vite + Tailwind v4 (port 5174). AcadMix platform admin panel.
 - `website/` — React + Vite marketing/landing page for `acadmix.org`.
 - `acadmix-opus-hub/` — TanStack Start full-stack SSR app targeting Cloudflare Workers.
 - `code-runner/` — Separate FastAPI sandbox for executing student code (Python, C/C++, Java, Go, Node, C#, Octave, etc.) with cgroups/iptables isolation.
@@ -36,11 +36,11 @@ AcadMix is a B2B multi-tenant academic SaaS platform. The monorepo contains a Py
 - Dev: `cd frontend && npm run dev` (port 3000, proxies `/api` → `127.0.0.1:8000`). In production each college accesses this at `<college>.acadmix.org`.
 - Build: `cd frontend && npm run build`
 
-### Frontend-Admin
+### Platform-Admin
 
-- Dev: `cd frontend-admin && npm run dev` (port 5174, proxies `/api` → `localhost:8000`)
-- Build: `cd frontend-admin && npm run build`
-- Lint: `cd frontend-admin && npm run lint`
+- Dev: `cd platform-admin && npm run dev` (port 5174, proxies `/api` → `localhost:8000`)
+- Build: `cd platform-admin && npm run build`
+- Lint: `cd platform-admin && npm run lint`
 
 ### Website
 
@@ -110,7 +110,7 @@ Production uses **Vertex AI** (`VERTEX_PROJECT_ID`, `VERTEX_LOCATION`). Groq/Gem
 ### Frontend
 
 - `frontend/` is migrating from JSX to TypeScript. `tsconfig.json` has `allowJs: true` and `strict: true`. When touching any `.jsx` file in `frontend/`, convert it to `.tsx`.
-- `frontend-admin/` uses Tailwind CSS v4 and the new `@tailwindcss/vite` plugin.
+- `platform-admin/` uses Tailwind CSS v4 and the new `@tailwindcss/vite` plugin.
 - Do not use generic `window.alert`. Use the project's existing alert/popup components.
 
 ## Environment

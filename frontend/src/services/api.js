@@ -815,4 +815,6 @@ export const accreditationAPI = {
   calculateDepartmentAttainment: (departmentId, academicYear) => api.post(`/accreditation/calculate/department/${departmentId}`, null, { params: { academic_year: academicYear } }),
   generateReport: (payload) => api.post('/accreditation/reports/generate', payload),
   getReportStatus: (jobId) => api.get(`/accreditation/reports/status/${jobId}`),
+  getNirfPreview: (collegeId, academicYear) => api.get(`/accreditation/reports/nirf-preview/${collegeId}`, { params: { academic_year: academicYear } }),
 };
+

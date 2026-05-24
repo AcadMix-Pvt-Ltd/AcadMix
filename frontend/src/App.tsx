@@ -70,6 +70,7 @@ const FinanceOfficerDashboard = React.lazy(() => import('./pages/FinanceOfficerD
 const ReceiptVerificationPage = React.lazy(() => import('./pages/ReceiptVerificationPage'));
 const OrbShowcase = React.lazy(() => import('./pages/OrbShowcase'));
 const CadStudio = React.lazy(() => import('./pages/cad-studio/CadStudio'));
+const ReportDashboard = React.lazy(() => import('./pages/ReportDashboard'));
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Route Configuration
@@ -131,6 +132,7 @@ const PAGE_TO_PATH = {
   'student-profile': '/student/profile',
   'director-dashboard': '/director',
   'cad-studio': '/cad-studio',
+  'accreditation': '/accreditation',
 };
 
 const ROLE_DASHBOARD = {
@@ -466,6 +468,11 @@ function AppRoutes({ user, onLogin, onLogout }) {
       } />
       <Route path="/cad-studio" element={
         <ProtectedRoute user={user}><CadStudio /></ProtectedRoute>
+      } />
+      <Route path="/accreditation" element={
+        <ProtectedRoute user={user} allowedRoles={['nodal_officer', 'principal', 'admin']}>
+          <ReportDashboard user={user} />
+        </ProtectedRoute>
       } />
 
       {/* ── Fallback ─────────────────────────────────────────────── */}

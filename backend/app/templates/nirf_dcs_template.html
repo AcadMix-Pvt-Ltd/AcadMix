@@ -8,8 +8,10 @@
         .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
         .header h1 { color: #1e3a8a; margin: 0 0 10px 0; font-size: 24px; }
         .header p { margin: 5px 0; color: #64748b; }
+        .score-banner { background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+        .score-banner h2 { margin: 0; font-size: 28px; }
         .section { margin-bottom: 30px; page-break-inside: avoid; }
-        .section h2 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; }
+        .section h2 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; display: flex; justify-content: space-between;}
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
         th { background-color: #f8fafc; font-weight: bold; }
@@ -20,115 +22,73 @@
 </head>
 <body>
     <div class="header">
-        <h1>NIRF Data Capturing System (DCS)</h1>
+        <h1>NIRF Data Capturing System (DCS) & Estimated Score</h1>
         <p><strong>Institution:</strong> {{ college.name }}</p>
         <p><strong>Category:</strong> {{ category }} | <strong>Academic Year:</strong> {{ academic_year }}</p>
         <p>Generated on: {{ generated_at }}</p>
     </div>
 
+    <div class="score-banner">
+        <p>Estimated NIRF 2024 Score</p>
+        <h2>{{ final_score }} / 100</h2>
+    </div>
+
     <div class="section">
-        <h2>1. Teaching, Learning & Resources (TLR)</h2>
+        <h2><span>1. Teaching, Learning & Resources (TLR)</span> <span>{{ tlr.total_score }} / 100</span></h2>
+        
         <div class="metric-card">
-            <h3>Student Strength</h3>
-            <p class="value">{{ tlr.student_strength }}</p>
+            <h3>Raw Data (SSoT)</h3>
+            <p>Total Faculty (F): <strong>{{ tlr.raw_data.faculty_count }}</strong></p>
+            <p>Total Students (N): <strong>{{ tlr.raw_data.student_count }}</strong></p>
+            <p>Ph.D. Percentage: <strong>{{ "%.2f"|format(tlr.raw_data.phd_percentage) }}%</strong></p>
+            <p>Avg Faculty Experience: <strong>{{ "%.2f"|format(tlr.raw_data.avg_experience) }} Years</strong></p>
+            <p>Library Expenditure: <strong>₹ {{ tlr.raw_data.library_spend }}</strong></p>
+            <p>Lab Expenditure: <strong>₹ {{ tlr.raw_data.lab_spend }}</strong></p>
         </div>
-        <div class="metric-card">
-            <h3>Faculty Information</h3>
-            <p>Total Faculty: <strong>{{ tlr.faculty_metrics.total_faculty }}</strong></p>
-            <p>Ph.D. Faculty: <strong>{{ tlr.faculty_metrics.phd_count }}</strong></p>
-        </div>
-    </div>
 
-    <div class="section">
-        <h2>2. Research and Professional Practice (RP)</h2>
         <table>
             <tr>
-                <th>Metric</th>
-                <th>Value</th>
+                <th>Component</th>
+                <th>Estimated Score</th>
             </tr>
             <tr>
-                <td>Total Publications</td>
-                <td>{{ rp.publications }}</td>
+                <td>FSR (Faculty-Student Ratio)</td>
+                <td>{{ tlr.components.FSR }} / 30</td>
             </tr>
             <tr>
-                <td>Total Citations</td>
-                <td>{{ rp.citations }}</td>
+                <td>FQE (Faculty Qualification & Experience)</td>
+                <td>{{ tlr.components.FQE }} / 30</td>
             </tr>
             <tr>
-                <td>Patents Published / Granted</td>
-                <td>{{ rp.patents_published }} / {{ rp.patents_granted }}</td>
+                <td>LL (Library & Lab Facilities)</td>
+                <td>{{ tlr.components.LL }} / 30</td>
             </tr>
             <tr>
-                <td>Sponsored Research Funding</td>
-                <td>₹ {{ rp.sponsored_research_funding }}</td>
-            </tr>
-            <tr>
-                <td>Consultancy Funding</td>
-                <td>₹ {{ rp.consultancy_funding }}</td>
+                <td>SEC (Sports & Extracurricular)</td>
+                <td>{{ tlr.components.SEC }} / 10</td>
             </tr>
         </table>
     </div>
 
     <div class="section">
-        <h2>3. Graduation Outcomes (GO)</h2>
-        <table>
-            <tr>
-                <th>Metric</th>
-                <th>Value</th>
-            </tr>
-            <tr>
-                <td>Placement Rate</td>
-                <td>{{ go.placement_rate }}%</td>
-            </tr>
-            <tr>
-                <td>Median Salary</td>
-                <td>₹ {{ go.median_salary }}</td>
-            </tr>
-            <tr>
-                <td>Higher Studies Rate</td>
-                <td>{{ go.higher_studies_rate }}%</td>
-            </tr>
-        </table>
+        <h2><span>2. Research and Professional Practice (RPII)</span> <span>{{ rp.total_score }} / 100</span></h2>
+        <p><em>(Pending robust publication API integration)</em></p>
     </div>
 
     <div class="section">
-        <h2>4. Outreach and Inclusivity (OI)</h2>
-        <table>
-            <tr>
-                <th>Metric</th>
-                <th>Percentage</th>
-            </tr>
-            <tr>
-                <td>Women Diversity</td>
-                <td>{{ oi.women_diversity_pct }}%</td>
-            </tr>
-            <tr>
-                <td>Other States Students</td>
-                <td>{{ oi.other_states_students_pct }}%</td>
-            </tr>
-            <tr>
-                <td>Economically Challenged</td>
-                <td>{{ oi.economically_challenged_pct }}%</td>
-            </tr>
-        </table>
+        <h2><span>3. Graduation Outcomes (GO)</span> <span>{{ go.total_score }} / 100</span></h2>
+        <p><em>(Pending placement registry link)</em></p>
     </div>
 
     <div class="section">
-        <h2>5. Peer Perception (PR)</h2>
-        <table>
-            <tr>
-                <th>Metric</th>
-                <th>Score (Out of 5)</th>
-            </tr>
-            <tr>
-                <td>Employer Feedback</td>
-                <td>{{ pr.employer_feedback_score }}</td>
-            </tr>
-            <tr>
-                <td>Academic Peer Review</td>
-                <td>{{ pr.academic_peer_score }}</td>
-            </tr>
-        </table>
+        <h2><span>4. Outreach and Inclusivity (OI)</span> <span>{{ oi.total_score }} / 100</span></h2>
+        <p><em>(Pending diversity index compilation)</em></p>
     </div>
+
+    <div class="section">
+        <h2><span>5. Peer Perception (PR)</span> <span>{{ pr.total_score }} / 100</span></h2>
+        <p><em>(Pending peer survey network)</em></p>
+    </div>
+
 </body>
 </html>

@@ -480,19 +480,20 @@ class ReportGenerateReq(BaseModel):
     report_type: str        # "NAAC", "NBA"
     academic_year: str
     department_id: Optional[str] = None
+    college_id: Optional[str] = None
 
 @router.post("/reports/generate")
 async def generate_accreditation_report(
     req: ReportGenerateReq,
     request: Request,
-    user: dict = Depends(require_role("nodal", "principal", "admin")),
+    user: dict = Depends(require_role("nodal", "principal", "admin", "super_admin")),
     session: AsyncSession = Depends(get_db)
 ):
     """
     Creates an AccreditationReportJob in DB and pushes it to the ARQ Redis queue.
     Returns the job ID instantly for the frontend to poll status.
     """
-    college_id = getattr(request.state, "tenant_id", user.get("college_id", "AITS"))
+    college_id = req.college_id or getattr(request.state, "tenant_id", user.get("college_id", "AITS"))
     
     # 1. Check if a pending/processing job already exists for this cycle
     stmt = select(AccreditationReportJob).where(
@@ -584,22 +585,38 @@ async def generate_accreditation_report(
             from sqlalchemy import update
             await session.execute(update(AccreditationReportJob).where(AccreditationReportJob.id == job_id_str).values(status="FAILED"))
             await session.commit()
-        except:
+        except Exception:
             pass
         return {"status": "error", "message": tb}
+
+@router.get("/reports/nirf-preview/{college_id}")
+async def get_nirf_preview(
+    college_id: str,
+    academic_year: str = Query(..., description="e.g., 2024-2025"),
+    user: dict = Depends(require_role("nodal", "principal", "admin", "super_admin")),
+    session: AsyncSession = Depends(get_db)
+):
+    """
+    Provides a real-time preview of the NIRF DCS payload without triggering a full report generation.
+    Useful for checking data readiness before locking the report.
+    """
+    from app.services.report_engine import ReportEngineService
+    svc = ReportEngineService(session)
+    data = await svc.aggregate_nirf_payload(college_id, academic_year)
+    return {"status": "success", "preview": data}
+
 @router.get("/reports/status/{job_id}")
 async def get_report_status(
     job_id: str,
-    user: dict = Depends(require_role("nodal", "principal", "admin")),
+    user: dict = Depends(require_role("nodal", "principal", "admin", "super_admin")),
     session: AsyncSession = Depends(get_db)
 ):
     """
     Returns the current status of an async report generation job.
     """
-    stmt = select(AccreditationReportJob).where(
-        AccreditationReportJob.id == job_id,
-        AccreditationReportJob.college_id == user.get("college_id", "AITS")
-    )
+    stmt = select(AccreditationReportJob).where(AccreditationReportJob.id == job_id)
+    if user.get("role") not in ["admin", "super_admin"]:
+        stmt = stmt.where(AccreditationReportJob.college_id == user.get("college_id", "AITS"))
     job = (await session.execute(stmt)).scalars().first()
     
     if not job:

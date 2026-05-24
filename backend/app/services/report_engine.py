@@ -628,62 +628,36 @@ class ReportEngineService:
 
     async def aggregate_nirf_payload(self, college_id: str, academic_year: str, category: str = "Overall") -> dict:
         """
-        Aggregates data for the NIRF DCS report.
+        Aggregates data for the NIRF DCS report using the robust NIRFGenerator SSoT service.
         """
         college_info = await self._fetch_college_info(college_id)
         
-        # 1. TLR (Teaching, Learning & Resources)
-        student_metrics = await self._calculate_student_metrics(college_id, academic_year)
-        # Pass None as department_id for overall college faculty metrics
-        faculty_metrics = await self._calculate_faculty_metrics(college_id, None)
+        # Use the unified NIRFGenerator SSoT service
+        from app.services.accreditation.nirf_generator import NIRFGenerator
+        try:
+            report_year = int(academic_year.split('-')[0])
+        except ValueError:
+            report_year = 2024
+            
+        generator = NIRFGenerator(self.session, college_id, report_year)
+        nirf_report = await generator.generate_full_report()
         
-        # 2. RP (Research and Professional Practice)
-        # Mocking for now as we don't have a ResearchPublications table yet
-        rp_metrics = {
-            "publications": 45,
-            "citations": 120,
-            "patents_published": 5,
-            "patents_granted": 2,
-            "sponsored_research_funding": 5000000, # 50 Lakhs
-            "consultancy_funding": 1200000 # 12 Lakhs
-        }
+        # The NIRFGenerator handles all TLR, RPII, GO, OI, PR calculations based on raw SSoT
         
-        # 3. GO (Graduation Outcomes)
-        # using student_metrics.api and success rates
-        go_metrics = {
-            "placement_rate": student_metrics.get("success_without_backlog", 75.0),
-            "median_salary": 450000, # 4.5 LPA
-            "higher_studies_rate": 15.0
-        }
-        
-        # 4. OI (Outreach and Inclusivity)
-        oi_metrics = {
-            "women_diversity_pct": 35.0,
-            "other_states_students_pct": 20.0,
-            "economically_challenged_pct": 10.0
-        }
-        
-        # 5. PR (Peer Perception)
-        pr_metrics = {
-            "employer_feedback_score": 4.2,
-            "academic_peer_score": 4.0
-        }
-
         return {
             "college": college_info,
             "academic_year": academic_year,
             "category": category,
             "report_type": "NIRF DCS",
             "generated_at": datetime.utcnow().isoformat(),
-            "tlr": {
-                "student_strength": faculty_metrics.get("total_faculty", 100) * 15, # Approx based on 1:15 SFR
-                "faculty_metrics": faculty_metrics
-            },
-            "rp": rp_metrics,
-            "go": go_metrics,
-            "oi": oi_metrics,
-            "pr": pr_metrics
+            "final_score": nirf_report["final_score"],
+            "tlr": nirf_report["parameters"]["TLR"],
+            "rp": nirf_report["parameters"]["RPII"],
+            "go": nirf_report["parameters"]["GO"],
+            "oi": nirf_report["parameters"]["OI"],
+            "pr": nirf_report["parameters"]["PR"]
         }
+
 
     async def get_nirf_excel_templates(self, college_id: str, academic_year: str) -> bytes:
         """
