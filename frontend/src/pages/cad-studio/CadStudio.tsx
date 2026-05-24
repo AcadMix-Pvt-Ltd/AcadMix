@@ -4,9 +4,8 @@ import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Env
 import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, ArrowsOutCardinal, ArrowsClockwise, DownloadSimple, UploadSimple, Magnet, ArrowsIn, Eye, EyeClosed, TextT } from '@phosphor-icons/react';
 import { v4 as uuidv4 } from 'uuid';
 import * as THREE from 'three';
-import { v4 as uuidv4 } from 'uuid';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
-import { CadNode, evaluateFeatureTree } from './CadEngine';
+import { CadNode, NodeType, evaluateFeatureTree, preloadCadAssets } from './CadEngine';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 const initialNodes: CadNode[] = [
