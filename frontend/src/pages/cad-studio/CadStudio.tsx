@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PivotControls, Grid, GizmoHelper, GizmoViewport, Environment } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
+import { OrbitControls, Grid, GizmoHelper, GizmoViewport, Environment } from '@react-three/drei';
 import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, DownloadSimple, UploadSimple, Magnet, Eye, EyeClosed, TextT } from '@phosphor-icons/react';
 import { v4 as uuidv4 } from 'uuid';
 import * as THREE from 'three';
@@ -14,83 +14,147 @@ const initialNodes: CadNode[] = [
   { id: '3', name: 'Cut Operation', type: 'subtract', targetId: '1', toolId: '2', visible: true }
 ];
 
-const PivotWrapper = ({ mesh, id, setIsDragging, nodes, updateNode }: { mesh: THREE.Mesh, id: string, setIsDragging: (v: boolean) => void, nodes: CadNode[], updateNode: (id: string, updates: Partial<CadNode>) => void }) => {
-  const pivotRef = useRef(new THREE.Matrix4());
-  
-  const pos = [mesh.position.x, mesh.position.y, mesh.position.z] as [number, number, number];
-  const rot = [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z] as [number, number, number];
-  
+const DragWrapper = ({ mesh, id, setIsDragging, updateNode }: { mesh: THREE.Mesh, id: string, setIsDragging: (v: boolean) => void, updateNode: (id: string, updates: Partial<CadNode>) => void }) => {
+  const [isDown, setIsDown] = useState(false);
+  const groupRef = useRef<THREE.Group>(null);
+  const dragPlane = useMemo(() => new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), []);
+  const offset = useRef(new THREE.Vector3());
+  const isShiftRef = useRef(false);
+  const initialPos = useRef(new THREE.Vector3());
+
+  const pos = [mesh.position.x, mesh.position.y, mesh.position.z];
+  const rot = [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z];
+
   mesh.position.set(0, 0, 0);
   mesh.rotation.set(0, 0, 0);
   mesh.updateMatrixWorld();
 
+  const handlePointerDown = (e: any) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    setIsDown(true);
+    e.target.setPointerCapture(e.pointerId);
+    isShiftRef.current = e.shiftKey;
+    initialPos.current.set(...pos);
+
+    if (e.shiftKey) {
+       const camDir = new THREE.Vector3();
+       e.camera.getWorldDirection(camDir);
+       camDir.y = 0;
+       camDir.normalize();
+       dragPlane.setFromNormalAndCoplanarPoint(camDir, initialPos.current);
+       
+       const intersect = new THREE.Vector3();
+       e.ray.intersectPlane(dragPlane, intersect);
+       if (intersect) {
+         offset.current.copy(intersect).sub(initialPos.current);
+       }
+    } else {
+       dragPlane.setComponents(0, 1, 0, -pos[1]); 
+       const intersect = new THREE.Vector3();
+       e.ray.intersectPlane(dragPlane, intersect);
+       if (intersect) {
+         offset.current.copy(intersect).sub(initialPos.current);
+       }
+    }
+  };
+
+  const handlePointerMove = (e: any) => {
+    if (!isDown || !groupRef.current) return;
+    e.stopPropagation();
+
+    const intersect = new THREE.Vector3();
+    e.ray.intersectPlane(dragPlane, intersect);
+    if (intersect) {
+      if (isShiftRef.current) {
+        const newY = intersect.y - offset.current.y;
+        groupRef.current.position.y = newY;
+      } else {
+        const newX = intersect.x - offset.current.x;
+        const newZ = intersect.z - offset.current.z;
+        groupRef.current.position.x = newX;
+        groupRef.current.position.z = newZ;
+      }
+    }
+  };
+
+  const handlePointerUp = (e: any) => {
+    if (!isDown) return;
+    e.stopPropagation();
+    setIsDragging(false);
+    setIsDown(false);
+    e.target.releasePointerCapture(e.pointerId);
+    
+    if (groupRef.current) {
+      const p = groupRef.current.position;
+      const cleanPos = [p.x, p.y, p.z].map(v => Math.round(v * 100) / 100) as [number, number, number];
+      updateNode(id, { position: cleanPos });
+    }
+  };
+
   return (
-    <PivotControls
-      position={pos}
-      rotation={rot}
-      scale={75}
-      depthTest={false}
-      fixed={true}
-      onDragStart={() => setIsDragging(true)}
-      onDrag={(local) => {
-        pivotRef.current.copy(local);
-      }}
-      onDragEnd={() => {
-        setIsDragging(false);
-        const position = new THREE.Vector3();
-        const quaternion = new THREE.Quaternion();
-        const scale = new THREE.Vector3();
-        pivotRef.current.decompose(position, quaternion, scale);
-        
-        const rotEuler = new THREE.Euler().setFromQuaternion(quaternion);
-
-        const cleanPos = [position.x, position.y, position.z].map(p => Math.round(p * 100) / 100) as [number, number, number];
-        const cleanRot = [
-          THREE.MathUtils.radToDeg(rotEuler.x), 
-          THREE.MathUtils.radToDeg(rotEuler.y), 
-          THREE.MathUtils.radToDeg(rotEuler.z)
-        ].map(r => Math.round(r * 10) / 10) as [number, number, number];
-
-        const sx = scale.x;
-        const sy = scale.y;
-        const sz = scale.z;
-
-        const targetNode = nodes.find(n => n.id === id);
-        if (!targetNode) return;
-
-        let newSize = targetNode.size;
-        let newRadius = targetNode.radius;
-        let newHeight = targetNode.height;
-        let newTube = targetNode.tube;
-
-        if (Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01 || Math.abs(sz - 1) > 0.01) {
-          if (targetNode.type === 'box' && targetNode.size) {
-            newSize = [
-              Math.max(0.1, Math.abs(targetNode.size[0] * sx)),
-              Math.max(0.1, Math.abs(targetNode.size[1] * sy)),
-              Math.max(0.1, Math.abs(targetNode.size[2] * sz))
-            ];
-          }
-          else if (targetNode.radius) {
-            const s = Math.abs(Math.max(sx, sz));
-            newRadius = Math.max(0.1, Math.abs(targetNode.radius * s));
-            if (targetNode.height) newHeight = Math.max(0.1, Math.abs(targetNode.height * sy));
-            if (targetNode.tube) newTube = Math.max(0.1, Math.abs(targetNode.tube * s));
-          }
-        }
-
-        updateNode(id, { 
-          position: cleanPos, 
-          rotation: cleanRot,
-          ...(newSize !== targetNode.size ? { size: newSize } : {}),
-          ...(newRadius !== targetNode.radius ? { radius: newRadius } : {}),
-          ...(newHeight !== targetNode.height ? { height: newHeight } : {}),
-          ...(newTube !== targetNode.tube ? { tube: newTube } : {})
-        });
-      }}
+    <group 
+      ref={groupRef}
+      position={pos as [number, number, number]} 
+      rotation={rot as [number, number, number]}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
       <primitive object={mesh} />
-    </PivotControls>
+    </group>
+  );
+};
+
+const DraggableNumberInput = ({ label, value, onChange, theme }: { label: string, value: number, onChange: (val: number) => void, theme: string }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const startX = useRef(0);
+  const startVal = useRef(0);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    startX.current = e.clientX;
+    startVal.current = value;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const delta = e.clientX - startX.current;
+    
+    let step = 1;
+    if (e.shiftKey) step = 10;
+    if (e.ctrlKey || e.metaKey) step = 0.1;
+    
+    let newValue = startVal.current + (delta * 0.5 * step);
+    onChange(Math.round(newValue * 100) / 100);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    setIsDragging(false);
+  };
+
+  return (
+    <div className="flex-1">
+      <label 
+        className={`block text-xs mb-1 cursor-ew-resize select-none ${isDragging ? 'text-indigo-500 font-bold' : 'text-slate-500'}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        title="Drag left/right to adjust"
+      >
+        {label} <span className="opacity-50">↔</span>
+      </label>
+      <input 
+        type="number" 
+        value={value} 
+        onChange={e => onChange(parseFloat(e.target.value) || 0)}
+        className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`}
+      />
+    </div>
   );
 };
 
@@ -425,12 +489,11 @@ const CadStudio = () => {
 
                   if (isSelected && isPrimitive) {
                     return (
-                      <PivotWrapper 
+                      <DragWrapper 
                         key={id} 
                         mesh={mesh} 
                         id={id} 
                         setIsDragging={setIsDragging} 
-                        nodes={nodes} 
                         updateNode={updateNode} 
                       />
                     );
@@ -527,18 +590,27 @@ const CadStudio = () => {
                       <label className="block text-xs text-slate-500 mb-2">Dimensions (W, H, D)</label>
                       <div className="flex gap-2">
                         {[0, 1, 2].map(i => (
-                          <input key={i} type="number" value={selectedNode.size?.[i] || 0} onChange={e => {
-                            const newSize = [...(selectedNode.size || [0,0,0])] as [number, number, number];
-                            newSize[i] = parseFloat(e.target.value) || 0;
-                            updateNode(selectedNode.id, { size: newSize });
-                          }} className={`w-full border rounded px-2 py-1 text-sm text-center ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                          <DraggableNumberInput 
+                            key={i} 
+                            label={['Width', 'Height', 'Depth'][i]} 
+                            value={selectedNode.size?.[i] || 0} 
+                            onChange={val => {
+                              const newSize = [...(selectedNode.size || [0,0,0])] as [number, number, number];
+                              newSize[i] = Math.max(0.1, val);
+                              updateNode(selectedNode.id, { size: newSize });
+                            }} 
+                            theme={theme} 
+                          />
                         ))}
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-xs text-slate-500 mb-1">Corner Radius (Fillet)</label>
-                      <input type="number" value={selectedNode.cornerRadius || 0} onChange={e => updateNode(selectedNode.id, { cornerRadius: Math.max(0, parseFloat(e.target.value) || 0) })}
-                        className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                      <DraggableNumberInput 
+                        label="Corner Radius (Fillet)" 
+                        value={selectedNode.cornerRadius || 0} 
+                        onChange={val => updateNode(selectedNode.id, { cornerRadius: Math.max(0, val) })} 
+                        theme={theme} 
+                      />
                     </div>
                   </>
                 )}
@@ -552,26 +624,35 @@ const CadStudio = () => {
                 )}
 
                 {['cylinder', 'sphere', 'cone', 'torus', 'text'].includes(selectedNode.type) && (
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Radius</label>
-                    <input type="number" value={selectedNode.radius || 0} onChange={e => updateNode(selectedNode.id, { radius: parseFloat(e.target.value) || 0 })}
-                      className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                  <div className="mt-2">
+                    <DraggableNumberInput 
+                      label="Radius" 
+                      value={selectedNode.radius || 0} 
+                      onChange={val => updateNode(selectedNode.id, { radius: Math.max(0.1, val) })} 
+                      theme={theme} 
+                    />
                   </div>
                 )}
 
                 {['cylinder', 'cone', 'text'].includes(selectedNode.type) && (
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Height</label>
-                    <input type="number" value={selectedNode.height || 0} onChange={e => updateNode(selectedNode.id, { height: parseFloat(e.target.value) || 0 })}
-                      className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                  <div className="mt-2">
+                    <DraggableNumberInput 
+                      label="Height" 
+                      value={selectedNode.height || 0} 
+                      onChange={val => updateNode(selectedNode.id, { height: Math.max(0.1, val) })} 
+                      theme={theme} 
+                    />
                   </div>
                 )}
 
                 {selectedNode.type === 'torus' && (
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Tube Radius</label>
-                    <input type="number" value={selectedNode.tube || 0} onChange={e => updateNode(selectedNode.id, { tube: parseFloat(e.target.value) || 0 })}
-                      className={`w-full border rounded px-2 py-1.5 text-sm ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                  <div className="mt-2">
+                    <DraggableNumberInput 
+                      label="Tube Radius" 
+                      value={selectedNode.tube || 0} 
+                      onChange={val => updateNode(selectedNode.id, { tube: Math.max(0.1, val) })} 
+                      theme={theme} 
+                    />
                   </div>
                 )}
 
@@ -580,14 +661,20 @@ const CadStudio = () => {
                   <>
                     <hr className={theme === 'dark' ? 'border-slate-800' : 'border-slate-200'} />
                     <div>
-                      <label className="block text-xs text-slate-500 mb-2">Position (X, Y, Z)</label>
+                      <label className="block text-xs text-slate-500 mb-2 mt-4">Position (X, Y, Z)</label>
                       <div className="flex gap-2">
                         {[0, 1, 2].map(i => (
-                          <input key={i} type="number" value={selectedNode.position?.[i] || 0} onChange={e => {
-                            const newPos = [...(selectedNode.position || [0,0,0])] as [number, number, number];
-                            newPos[i] = parseFloat(e.target.value) || 0;
-                            updateNode(selectedNode.id, { position: newPos });
-                          }} className={`w-full border rounded px-2 py-1 text-sm text-center ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                          <DraggableNumberInput 
+                            key={i} 
+                            label={['X', 'Y', 'Z'][i]} 
+                            value={selectedNode.position?.[i] || 0} 
+                            onChange={val => {
+                              const newPos = [...(selectedNode.position || [0,0,0])] as [number, number, number];
+                              newPos[i] = val;
+                              updateNode(selectedNode.id, { position: newPos });
+                            }} 
+                            theme={theme} 
+                          />
                         ))}
                       </div>
                     </div>
@@ -596,11 +683,17 @@ const CadStudio = () => {
                       <label className="block text-xs text-slate-500 mb-2 mt-3">Rotation (X, Y, Z)</label>
                       <div className="flex gap-2">
                         {[0, 1, 2].map(i => (
-                          <input key={i} type="number" value={selectedNode.rotation?.[i] || 0} onChange={e => {
-                            const newRot = [...(selectedNode.rotation || [0,0,0])] as [number, number, number];
-                            newRot[i] = parseFloat(e.target.value) || 0;
-                            updateNode(selectedNode.id, { rotation: newRot });
-                          }} className={`w-full border rounded px-2 py-1 text-sm text-center ${theme === 'dark' ? 'bg-slate-950 border-slate-700 text-white' : 'bg-slate-50 border-slate-300 text-slate-900'}`} />
+                          <DraggableNumberInput 
+                            key={i} 
+                            label={['Pitch', 'Yaw', 'Roll'][i]} 
+                            value={selectedNode.rotation?.[i] || 0} 
+                            onChange={val => {
+                              const newRot = [...(selectedNode.rotation || [0,0,0])] as [number, number, number];
+                              newRot[i] = val;
+                              updateNode(selectedNode.id, { rotation: newRot });
+                            }} 
+                            theme={theme} 
+                          />
                         ))}
                       </div>
                     </div>
