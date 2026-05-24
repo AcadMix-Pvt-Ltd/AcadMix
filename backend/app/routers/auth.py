@@ -59,7 +59,7 @@ async def login(req: LoginRequest, request: Request, response: Response, session
     svc = AuthService(session)
     result = await svc.login(req.college_id, req.password, tenant_college_id)
 
-    response.set_cookie("access_token", result["access_token"], httponly=True, secure=True, samesite="lax", max_age=1800)
+    response.set_cookie("access_token", result["access_token"], httponly=True, secure=True, samesite="lax", max_age=7200)
     response.set_cookie("refresh_token", result.pop("_refresh_token"), httponly=True, secure=True, samesite="lax", max_age=604800, path="/api/auth")
     return result
 
@@ -91,7 +91,7 @@ async def logout(request: Request, response: Response, session: AsyncSession = D
 async def refresh_access_token(request: Request, response: Response, session: AsyncSession = Depends(get_db)):
     svc = AuthService(session)
     result = await svc.refresh(request.cookies.get("refresh_token"))
-    response.set_cookie("access_token", result["access_token"], httponly=True, secure=True, samesite="lax", max_age=1800)
+    response.set_cookie("access_token", result["access_token"], httponly=True, secure=True, samesite="lax", max_age=7200)
     return result
 
 
@@ -144,7 +144,7 @@ async def heartbeat(request: Request, user: dict = Depends(get_current_user)):
             if not is_throttled:
                 return {"status": "skipped_throttle"}
                 
-            await redis_client.expire(f"session:active:{user_id}:{session_id}", 1800)
+            await redis_client.expire(f"session:active:{user_id}:{session_id}", 7200)
     except Exception:
         pass 
         

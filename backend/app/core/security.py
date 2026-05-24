@@ -29,7 +29,7 @@ redis_client = aioredis.from_url(redis_url, socket_connect_timeout=0.2, socket_t
 
 class TokenBlacklistConfig:
     USE_BLACKLIST = os.getenv("USE_TOKEN_BLACKLIST", "true").lower() == "true"
-    ACCESS_TOKEN_TTL_MINUTES = 30   # 30 min — frontend refresh interceptor handles renewal
+    ACCESS_TOKEN_TTL_MINUTES = 120   # 120 min — frontend refresh interceptor handles renewal
     REFRESH_TOKEN_TTL_DAYS = 7
     BLACKLIST_CHECK_REDIS = True
 

@@ -141,7 +141,7 @@ class AuthService:
         
         if redis_client:
             try:
-                await redis_client.setex(f"session:active:{user.id}:{session_id}", 1800, "1")
+                await redis_client.setex(f"session:active:{user.id}:{session_id}", 7200, "1")
             except Exception as e:
                 import logging
                 logging.getLogger("acadmix.security").error(f"Failed to set active session tracking: {e}")
