@@ -1,7 +1,7 @@
 import React, { useState, useMemo, Suspense, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, TransformControls, Grid, GizmoHelper, GizmoViewport, Environment } from '@react-three/drei';
-import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, ArrowsOutCardinal, ArrowsClockwise, DownloadSimple, UploadSimple, Magnet, ArrowsIn, Eye, EyeClosed, TextT } from '@phosphor-icons/react';
+import { OrbitControls, PivotControls, Grid, GizmoHelper, GizmoViewport, Environment } from '@react-three/drei';
+import { Plus, Minus, Intersect, Cube, Cylinder, Sphere as SphereIcon, Trash, Copy, CaretUp, Circle, Sun, Moon, DownloadSimple, UploadSimple, Magnet, Eye, EyeClosed, TextT } from '@phosphor-icons/react';
 import { v4 as uuidv4 } from 'uuid';
 import * as THREE from 'three';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
@@ -13,6 +13,86 @@ const initialNodes: CadNode[] = [
   { id: '2', name: 'Hole Cutter', type: 'cylinder', radius: 4, height: 10, position: [0, 2.5, 0], rotation: [0, 0, 0], visible: false },
   { id: '3', name: 'Cut Operation', type: 'subtract', targetId: '1', toolId: '2', visible: true }
 ];
+
+const PivotWrapper = ({ mesh, id, setIsDragging, nodes, updateNode }: { mesh: THREE.Mesh, id: string, setIsDragging: (v: boolean) => void, nodes: CadNode[], updateNode: (id: string, updates: Partial<CadNode>) => void }) => {
+  const pivotRef = useRef(new THREE.Matrix4());
+  
+  const pos = [mesh.position.x, mesh.position.y, mesh.position.z] as [number, number, number];
+  const rot = [mesh.rotation.x, mesh.rotation.y, mesh.rotation.z] as [number, number, number];
+  
+  mesh.position.set(0, 0, 0);
+  mesh.rotation.set(0, 0, 0);
+  mesh.updateMatrixWorld();
+
+  return (
+    <PivotControls
+      position={pos}
+      rotation={rot}
+      scale={75}
+      depthTest={false}
+      fixed={true}
+      onDragStart={() => setIsDragging(true)}
+      onDrag={(local) => {
+        pivotRef.current.copy(local);
+      }}
+      onDragEnd={() => {
+        setIsDragging(false);
+        const position = new THREE.Vector3();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        pivotRef.current.decompose(position, quaternion, scale);
+        
+        const rotEuler = new THREE.Euler().setFromQuaternion(quaternion);
+
+        const cleanPos = [position.x, position.y, position.z].map(p => Math.round(p * 100) / 100) as [number, number, number];
+        const cleanRot = [
+          THREE.MathUtils.radToDeg(rotEuler.x), 
+          THREE.MathUtils.radToDeg(rotEuler.y), 
+          THREE.MathUtils.radToDeg(rotEuler.z)
+        ].map(r => Math.round(r * 10) / 10) as [number, number, number];
+
+        const sx = scale.x;
+        const sy = scale.y;
+        const sz = scale.z;
+
+        const targetNode = nodes.find(n => n.id === id);
+        if (!targetNode) return;
+
+        let newSize = targetNode.size;
+        let newRadius = targetNode.radius;
+        let newHeight = targetNode.height;
+        let newTube = targetNode.tube;
+
+        if (Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01 || Math.abs(sz - 1) > 0.01) {
+          if (targetNode.type === 'box' && targetNode.size) {
+            newSize = [
+              Math.max(0.1, Math.abs(targetNode.size[0] * sx)),
+              Math.max(0.1, Math.abs(targetNode.size[1] * sy)),
+              Math.max(0.1, Math.abs(targetNode.size[2] * sz))
+            ];
+          }
+          else if (targetNode.radius) {
+            const s = Math.abs(Math.max(sx, sz));
+            newRadius = Math.max(0.1, Math.abs(targetNode.radius * s));
+            if (targetNode.height) newHeight = Math.max(0.1, Math.abs(targetNode.height * sy));
+            if (targetNode.tube) newTube = Math.max(0.1, Math.abs(targetNode.tube * s));
+          }
+        }
+
+        updateNode(id, { 
+          position: cleanPos, 
+          rotation: cleanRot,
+          ...(newSize !== targetNode.size ? { size: newSize } : {}),
+          ...(newRadius !== targetNode.radius ? { radius: newRadius } : {}),
+          ...(newHeight !== targetNode.height ? { height: newHeight } : {}),
+          ...(newTube !== targetNode.tube ? { tube: newTube } : {})
+        });
+      }}
+    >
+      <primitive object={mesh} />
+    </PivotControls>
+  );
+};
 
 const CadStudio = () => {
   useEffect(() => {
@@ -52,7 +132,6 @@ const CadStudio = () => {
   const [engineError, setEngineError] = useState<string | null>(null);
   
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
   const [isSnapEnabled, setIsSnapEnabled] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -248,10 +327,6 @@ const CadStudio = () => {
           </div>
 
           <div className={`flex items-center gap-1 p-1 rounded-lg border transition-colors duration-200 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-slate-100 border-slate-200'}`}>
-            <button onClick={() => setTransformMode('translate')} className={`p-2 rounded transition-colors ${transformMode === 'translate' ? (theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-700') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200')}`} title="Translate (Move)"><ArrowsOutCardinal size={18} /></button>
-            <button onClick={() => setTransformMode('rotate')} className={`p-2 rounded transition-colors ${transformMode === 'rotate' ? (theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-700') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200')}`} title="Rotate"><ArrowsClockwise size={18} /></button>
-            <button onClick={() => setTransformMode('scale')} className={`p-2 rounded transition-colors ${transformMode === 'scale' ? (theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-700') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200')}`} title="Scale (Resize)"><ArrowsIn size={18} /></button>
-            <div className={`w-px h-6 mx-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
             <button onClick={() => setIsSnapEnabled(!isSnapEnabled)} className={`p-2 rounded transition-colors ${isSnapEnabled ? (theme === 'dark' ? 'bg-indigo-500/20 text-indigo-400' : 'bg-indigo-200 text-indigo-700') : (theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200')}`} title="Toggle Snap to Grid"><Magnet size={18} /></button>
             <div className={`w-px h-6 mx-1 ${theme === 'dark' ? 'bg-slate-700' : 'bg-slate-300'}`}></div>
             <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className={`p-2 rounded transition-colors ${theme === 'dark' ? 'text-slate-400 hover:text-white hover:bg-slate-700' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-200'}`} title="Toggle Theme">
@@ -350,59 +425,14 @@ const CadStudio = () => {
 
                   if (isSelected && isPrimitive) {
                     return (
-                      <React.Fragment key={id}>
-                        <TransformControls 
-                          object={mesh}
-                          mode={transformMode}
-                          translationSnap={isSnapEnabled ? 1 : null}
-                          rotationSnap={isSnapEnabled ? Math.PI / 12 : null}
-                          onMouseDown={() => setIsDragging(true)}
-                          onMouseUp={(e) => {
-                            setIsDragging(false);
-                            if (transformMode === 'scale') {
-                              const sx = mesh.scale.x;
-                              const sy = mesh.scale.y;
-                              const sz = mesh.scale.z;
-                              
-                              setNodes(prev => prev.map(n => {
-                                if (n.id !== id) return n;
-                                const n2 = { ...n };
-                                if (n.type === 'box' && n.size) {
-                                  n2.size = [
-                                    Math.max(0.1, Math.abs(n.size[0] * sx)),
-                                    Math.max(0.1, Math.abs(n.size[1] * sy)),
-                                    Math.max(0.1, Math.abs(n.size[2] * sz))
-                                  ];
-                                }
-                                else if (n.radius) {
-                                  const s = Math.abs(Math.max(sx, sz));
-                                  n2.radius = Math.max(0.1, Math.abs(n.radius * s));
-                                  if (n.height) n2.height = Math.max(0.1, Math.abs(n.height * sy));
-                                  if (n.tube) n2.tube = Math.max(0.1, Math.abs(n.tube * s));
-                                }
-                                return n2;
-                              }));
-                              
-                              mesh.scale.set(1, 1, 1);
-                              mesh.updateMatrixWorld();
-                              return;
-                            }
-                            const pos = [mesh.position.x, mesh.position.y, mesh.position.z] as [number, number, number];
-                            const rot = [
-                              THREE.MathUtils.radToDeg(mesh.rotation.x), 
-                              THREE.MathUtils.radToDeg(mesh.rotation.y), 
-                              THREE.MathUtils.radToDeg(mesh.rotation.z)
-                            ] as [number, number, number];
-                            
-                            // To avoid floating point noise from tiny transform drags
-                            const cleanPos = pos.map(p => Math.round(p * 100) / 100) as [number, number, number];
-                            const cleanRot = rot.map(r => Math.round(r * 10) / 10) as [number, number, number];
-
-                            updateNode(id, { position: cleanPos, rotation: cleanRot });
-                          }}
-                        />
-                        <primitive object={mesh} />
-                      </React.Fragment>
+                      <PivotWrapper 
+                        key={id} 
+                        mesh={mesh} 
+                        id={id} 
+                        setIsDragging={setIsDragging} 
+                        nodes={nodes} 
+                        updateNode={updateNode} 
+                      />
                     );
                   }
 
