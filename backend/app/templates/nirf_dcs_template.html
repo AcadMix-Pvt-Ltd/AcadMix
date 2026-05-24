@@ -2,243 +2,164 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ report_type }}</title>
+    <title>NIRF DCS Report</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { color: #1e3a8a; margin: 0 0 10px 0; font-size: 24px; }
-        .header p { margin: 5px 0; color: #64748b; }
-        .score-banner { background: #dbeafe; color: #1e40af; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
-        .score-banner h2 { margin: 0; font-size: 28px; }
-        .section { margin-bottom: 30px; page-break-inside: avoid; }
-        .section h2 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; display: flex; justify-content: space-between;}
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
-        th { background-color: #f8fafc; font-weight: bold; }
-        .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .metric-card h3 { margin-top: 0; color: #334155; font-size: 16px; }
-        .value { font-size: 20px; font-weight: bold; color: #1e3a8a; }
+        body { font-family: Arial, sans-serif; font-size: 11px; color: #000; margin: 40px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 16px; margin: 2px 0; color: #1a4a7e; }
+        .header h2 { font-size: 14px; margin: 2px 0; }
+        .header h3 { font-size: 12px; margin: 2px 0; }
+        .institute-info { font-weight: bold; margin-bottom: 20px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        .table-title { font-weight: bold; font-size: 12px; margin-bottom: 5px; color: #1a4a7e; }
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h1>NIRF Data Capturing System (DCS) & Estimated Score</h1>
-        <p><strong>Institution:</strong> {{ college.name }}</p>
-        <p><strong>Category:</strong> {{ category }} | <strong>Academic Year:</strong> {{ academic_year }}</p>
-        <p>Generated on: {{ generated_at }}</p>
+        <h1>National Institutional Ranking Framework</h1>
+        <h2>Ministry of Education</h2>
+        <h2>Government of India</h2>
+        <h3>Welcome to Data Capturing System: ENGINEERING</h3>
+        <h3>Submitted Institute Data for NIRF '{{ year }}'</h3>
     </div>
 
-    <div class="score-banner">
-        <p>Estimated NIRF 2024 Score</p>
-        <h2>{{ final_score }} / 100</h2>
+    <div class="institute-info">
+        Institute Name: AcadMix Institute of Technology [IR-E-U-{{ college_id }}]
     </div>
 
-    <div class="section">
-        <h2><span>1. Teaching, Learning & Resources (TLR)</span> <span>{{ tlr.total_score }} / 100</span></h2>
-        
-        <div class="metric-card">
-            <h3>Raw Data (SSoT)</h3>
-            <p>Total Faculty (F): <strong>{{ tlr.raw_data.faculty_count }}</strong></p>
-            <p>Total Students (N): <strong>{{ tlr.raw_data.student_count }}</strong></p>
-            <p>Ph.D. Percentage: <strong>{{ "%.2f"|format(tlr.raw_data.phd_percentage) }}%</strong></p>
-            <p>Avg Faculty Experience: <strong>{{ "%.2f"|format(tlr.raw_data.avg_experience) }} Years</strong></p>
-            <p>Library Expenditure: <strong>₹ {{ tlr.raw_data.library_spend }}</strong></p>
-            <p>Lab Expenditure: <strong>₹ {{ tlr.raw_data.lab_spend }}</strong></p>
-        </div>
+    <!-- Total Actual Student Strength -->
+    <div class="table-title">Total Actual Student Strength (Program(s) Offered by Your Institution)</div>
+    <table>
+        <tr>
+            <th>Program</th>
+            <th>No. of Male Students</th>
+            <th>No. of Female Students</th>
+            <th>Total Students</th>
+            <th>Within State</th>
+            <th>Outside State</th>
+            <th>Outside Country</th>
+            <th>Economically Backward</th>
+            <th>Socially Challenged</th>
+        </tr>
+        <tr>
+            <td>UG / PG Programs</td>
+            <td>{{ oi.raw_data.get('male_students', 0) }}</td>
+            <td>{{ oi.raw_data.get('female_students', 0) }}</td>
+            <td>{{ oi.raw_data.get('total_students', 0) }}</td>
+            <td>{{ oi.raw_data.get('total_students', 0) - oi.raw_data.get('outside_state', 0) - oi.raw_data.get('outside_country', 0) }}</td>
+            <td>{{ oi.raw_data.get('outside_state', 0) }}</td>
+            <td>{{ oi.raw_data.get('outside_country', 0) }}</td>
+            <td>{{ oi.raw_data.get('economically_backward', 0) }}</td>
+            <td>{{ oi.raw_data.get('socially_challenged', 0) }}</td>
+        </tr>
+    </table>
 
-        <table>
-            <tr>
-                <th>Component</th>
-                <th>Estimated Score</th>
-            </tr>
-            <tr>
-                <td>FSR (Faculty-Student Ratio)</td>
-                <td>{{ tlr.components.FSR }} / 30</td>
-            </tr>
-            <tr>
-                <td>FQE (Faculty Qualification & Experience)</td>
-                <td>{{ tlr.components.FQE }} / 30</td>
-            </tr>
-            <tr>
-                <td>LL (Library & Lab Facilities)</td>
-                <td>{{ tlr.components.LL }} / 30</td>
-            </tr>
-            <tr>
-                <td>SEC (Sports & Extracurricular)</td>
-                <td>{{ tlr.components.SEC }} / 10</td>
-            </tr>
-        </table>
-    </div>
+    <!-- Placement & Higher Studies -->
+    <div class="table-title">Placement & Higher Studies</div>
+    <table>
+        <tr>
+            <th>Academic Year</th>
+            <th>No. of students graduating</th>
+            <th>No. of students placed</th>
+            <th>Median salary of placed graduates (Amount in Rs.)</th>
+            <th>No. of students selected for Higher Studies</th>
+        </tr>
+        {% for yr, data in go.raw_data.placement_history.items() %}
+        <tr>
+            <td>{{ yr }}</td>
+            <td>{{ data.graduating }}</td>
+            <td>{{ data.placed }}</td>
+            <td>{{ data.median_salary }}</td>
+            <td>{{ data.higher_studies }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-    <div class="section">
-        <h2><span>2. Research and Professional Practice (RPII)</span> <span>{{ rp.total_score }} / 100</span></h2>
-        
-        <div class="metric-card">
-            <h3>Research Publications & IPR</h3>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Count / Value</th>
-                </tr>
-                <tr>
-                    <td>Patents Published</td>
-                    <td>{{ rp.get('raw_data', {}).get('patents_published', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Patents Granted</td>
-                    <td>{{ rp.get('raw_data', {}).get('patents_granted', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Sponsored Research Amount</td>
-                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('sponsored_amount', 0)) }}</td>
-                </tr>
-                <tr>
-                    <td>Consultancy Amount</td>
-                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('consultancy_amount', 0)) }}</td>
-                </tr>
-                <tr>
-                    <td>Executive Development Program Earnings</td>
-                    <td>₹ {{ "%.2f"|format(rp.get('raw_data', {}).get('edp_amount', 0)) }}</td>
-                </tr>
-            </table>
-        </div>
+    <!-- Financial Resources: Capital Expenditure -->
+    <div class="table-title">Financial Resources: Utilised Amount for the Capital expenditure for previous 3 years</div>
+    <table>
+        <tr>
+            <th>Academic Year</th>
+            <th>Utilised Amount (Rs.)</th>
+        </tr>
+        <tr>
+            <td>{{ year }}</td>
+            <td>Library Spend: {{ tlr.get('raw_data', {}).get('library_spend', 0) }} | Lab Spend: {{ tlr.get('raw_data', {}).get('lab_spend', 0) }}</td>
+        </tr>
+    </table>
 
-        <table>
-            <tr>
-                <th>Component</th>
-                <th>Estimated Score</th>
-            </tr>
-            <tr>
-                <td>PU (Publications)</td>
-                <td>{{ rp.get('components', {}).get('PU', 0) }} / 35</td>
-            </tr>
-            <tr>
-                <td>QP (Quality of Publications)</td>
-                <td>{{ rp.get('components', {}).get('QP', 0) }} / 35</td>
-            </tr>
-            <tr>
-                <td>IPR (Patents)</td>
-                <td>{{ rp.get('components', {}).get('IPR', 0) }} / 15</td>
-            </tr>
-            <tr>
-                <td>FPPP (Footprint of Projects and Professional Practice)</td>
-                <td>{{ rp.get('components', {}).get('FPPP', 0) }} / 15</td>
-            </tr>
-        </table>
-    </div>
+    <!-- Financial Resources: Operational Expenditure -->
+    <div class="table-title">Financial Resources: Utilised Amount for the Operational expenditure for previous 3 years</div>
+    <table>
+        <tr>
+            <th>Academic Year</th>
+            <th>Utilised Amount (Rs.)</th>
+        </tr>
+        <tr>
+            <td>{{ year }}</td>
+            <td>Data pending aggregation</td>
+        </tr>
+    </table>
 
-    <div class="section">
-        <h2><span>3. Graduation Outcomes (GO)</span> <span>{{ go.total_score }} / 100</span></h2>
-        
-        <div class="metric-card">
-            <h3>Placement & Higher Studies (3-Year History)</h3>
-            <table>
-                <tr>
-                    <th>Academic Year</th>
-                    <th>No. of Students Placed</th>
-                    <th>Median Salary (LPA)</th>
-                    <th>Lowest Salary (LPA)</th>
-                    <th>Highest Salary (LPA)</th>
-                </tr>
-                {% for year, data in go.get('raw_data', {}).get('placement_history', {}).items() %}
-                <tr>
-                    <td>{{ year }}</td>
-                    <td>{{ data.placed_count }}</td>
-                    <td>{{ "%.2f"|format(data.median_salary) }}</td>
-                    <td>{{ "%.2f"|format(data.min_salary) }}</td>
-                    <td>{{ "%.2f"|format(data.max_salary) }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-        
-        <table>
-            <tr>
-                <th>Component</th>
-                <th>Estimated Score</th>
-            </tr>
-            <tr>
-                <td>GPH (Placement & Higher Studies)</td>
-                <td>{{ go.get('components', {}).get('GPH', 0) }} / 40</td>
-            </tr>
-            <tr>
-                <td>UE (University Examinations)</td>
-                <td>{{ go.get('components', {}).get('UE', 0) }} / 40</td>
-            </tr>
-            <tr>
-                <td>MS (Median Salary)</td>
-                <td>{{ go.get('components', {}).get('MS', 0) }} / 20</td>
-            </tr>
-        </table>
-    </div>
+    <!-- IPR -->
+    <div class="table-title">IPR</div>
+    <table>
+        <tr>
+            <th>Calendar year</th>
+            <th>Patents Published</th>
+            <th>Patents Granted</th>
+        </tr>
+        <tr>
+            <td>Overall (Last 3 Years)</td>
+            <td>{{ rp.raw_data.get('patents_published', 0) }}</td>
+            <td>{{ rp.raw_data.get('patents_granted', 0) }}</td>
+        </tr>
+    </table>
 
-    <div class="section">
-        <h2><span>4. Outreach and Inclusivity (OI)</span> <span>{{ oi.total_score }} / 100</span></h2>
-        
-        <div class="metric-card">
-            <h3>Diversity Demographics</h3>
-            <table>
-                <tr>
-                    <th>Metric</th>
-                    <th>Count</th>
-                </tr>
-                <tr>
-                    <td>Total Students</td>
-                    <td>{{ oi.get('raw_data', {}).get('total_students', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Female Students</td>
-                    <td>{{ oi.get('raw_data', {}).get('female_students', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Outside State</td>
-                    <td>{{ oi.get('raw_data', {}).get('outside_state', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Outside Country</td>
-                    <td>{{ oi.get('raw_data', {}).get('outside_country', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Economically Backward</td>
-                    <td>{{ oi.get('raw_data', {}).get('economically_backward', 0) }}</td>
-                </tr>
-                <tr>
-                    <td>Socially Challenged</td>
-                    <td>{{ oi.get('raw_data', {}).get('socially_challenged', 0) }}</td>
-                </tr>
-            </table>
-        </div>
+    <!-- Sponsored Research Details -->
+    <div class="table-title">Sponsored Research Details</div>
+    <table>
+        <tr>
+            <th>Financial Year</th>
+            <th>Total Amount Received (Amount in Rupees)</th>
+        </tr>
+        <tr>
+            <td>Total (Last 3 Years)</td>
+            <td>{{ rp.raw_data.get('sponsored_amount', 0) }}</td>
+        </tr>
+    </table>
 
-        <table>
-            <tr>
-                <th>Component</th>
-                <th>Estimated Score</th>
-            </tr>
-            <tr>
-                <td>RD (Regional Diversity)</td>
-                <td>{{ oi.get('components', {}).get('RD', 0) }} / 30</td>
-            </tr>
-            <tr>
-                <td>WD (Women Diversity)</td>
-                <td>{{ oi.get('components', {}).get('WD', 0) }} / 30</td>
-            </tr>
-            <tr>
-                <td>ESCS (Economically and Socially Challenged)</td>
-                <td>{{ oi.get('components', {}).get('ESCS', 0) }} / 20</td>
-            </tr>
-            <tr>
-                <td>PCS (Physically Challenged Facilities)</td>
-                <td>{{ oi.get('components', {}).get('PCS', 0) }} / 20</td>
-            </tr>
-        </table>
-    </div>
+    <!-- Consultancy Project Details -->
+    <div class="table-title">Consultancy Project Details</div>
+    <table>
+        <tr>
+            <th>Financial Year</th>
+            <th>Total Amount Received (Amount in Rupees)</th>
+        </tr>
+        <tr>
+            <td>Total (Last 3 Years)</td>
+            <td>{{ rp.raw_data.get('consultancy_amount', 0) }}</td>
+        </tr>
+    </table>
+    
+    <!-- Executive Development Programs -->
+    <div class="table-title">Executive Development Programs / Management Development Programs</div>
+    <table>
+        <tr>
+            <th>Financial Year</th>
+            <th>Total Annual Earnings (Amount in Rupees)</th>
+        </tr>
+        <tr>
+            <td>Total (Last 3 Years)</td>
+            <td>{{ rp.raw_data.get('edp_amount', 0) }}</td>
+        </tr>
+    </table>
 
-    <div class="section">
-        <h2><span>5. Peer Perception (PR)</span> <span>{{ pr.total_score }} / 100</span></h2>
-        <div class="metric-card">
-            <h3>AI Extrapolated Score</h3>
-            <p>Peer perception scores are typically derived externally by NIRF via employer and academic surveys. This simulated score has been generated using AI extrapolation based on the institution's Research (RPII), Financial Resources (TLR) and Graduation Outcome (GO) metrics.</p>
-        </div>
+    <div style="margin-top: 40px; font-size: 10px; color: #555;">
+        <em>Note: This Data Capturing System report represents raw input parameters. NIRF scores and rankings (including TLR, GO, RPII, OI, and PR derivations) are processed internally by the ranking framework and are not published in this raw data file. Peer Perception scoring surveys are conducted externally by the Ministry.</em>
     </div>
 
 </body>
