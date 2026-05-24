@@ -258,6 +258,55 @@ class NIRFGenerator(BaseAccreditationGenerator):
             "raw_data": demographics
         }
     
+    async def calculate_pr(self, tlr: dict, rpii: dict, go: dict, oi: dict) -> dict:
+        from app.services.llm_gateway import gateway
+        import json
+        
+        context = {
+            "TLR_Score": tlr.get("total_score"),
+            "RPII_Score": rpii.get("total_score"),
+            "GO_Score": go.get("total_score"),
+            "OI_Score": oi.get("total_score")
+        }
+        
+        prompt = f"""
+        You are an expert AI estimating the NIRF Peer Perception score (PR) for an institution.
+        The maximum PR score is 100.
+        Based on the following computed metrics for the institution, extrapolate a realistic PR score.
+        Institutions with high research (RPII) and graduation outcomes (GO) generally command higher peer perception.
+        
+        Computed Metrics:
+        {json.dumps(context, indent=2)}
+        
+        Respond ONLY with a raw JSON object in this exact format:
+        {{"total_score": float}}
+        """
+        
+        try:
+            result = await gateway.complete(
+                "nirf_perception", 
+                messages=[{"role": "user", "content": prompt}],
+                json_mode=True
+            )
+            import re
+            cleaned_result = re.sub(r"^```(?:json)?\s*", "", result.strip(), flags=re.IGNORECASE)
+            cleaned_result = re.sub(r"\s*```$", "", cleaned_result, flags=re.IGNORECASE)
+            
+            try:
+                data = json.loads(cleaned_result)
+                score = float(data.get("total_score", 50.0))
+            except json.JSONDecodeError:
+                # Fallback extraction
+                match = re.search(r"(\d+(?:\.\d+)?)", cleaned_result)
+                score = float(match.group(1)) if match else 50.0
+                
+            score = min(100.0, max(0.0, score))
+        except Exception as e:
+            logger.error(f"LLM PR prediction failed: {e}")
+            score = 50.0 # fallback
+            
+        return {"parameter": "PR", "total_score": round(score, 2), "max_score": 100}
+
     async def generate_full_report(self) -> dict:
         """
         Executes all NIRF parameter calculations and compiles the final report JSON.
@@ -269,7 +318,7 @@ class NIRFGenerator(BaseAccreditationGenerator):
         
         rpii = await self.calculate_rpii()
         oi = await self.calculate_oi()
-        pr = {"parameter": "PR", "total_score": 5.0, "max_score": 100}
+        pr = await self.calculate_pr(tlr, rpii, go, oi)
         
         # Colleges weightage: TLR 0.40, RPII 0.20, GO 0.15, OI 0.15, PR 0.10
         final_score = (

@@ -167,6 +167,16 @@ ROUTES: Dict[str, Dict[str, Any]] = {
         "timeout": 45.0,
         "description": "Structured JSON assessment generation mapped to CO/PO matrices",
     },
+
+    # ── NIRF Perception Estimator: Gemini 2.5 Flash via Vertex AI ─────────
+    "nirf_perception": {
+        "provider": "vertex",
+        "model": None,
+        "temperature": 0.3,
+        "max_tokens": 500,
+        "timeout": 30.0,
+        "description": "Predicts NIRF Peer Perception score based on other institutional metrics",
+    },
 }
 
 
@@ -182,6 +192,7 @@ def _resolve_models():
     ROUTES["erp_last_resort"]["model"] = getattr(settings, "VERTEX_MODEL_FALLBACK", "claude-sonnet-4-6")
     ROUTES["erp_summary"]["model"] = getattr(settings, "VERTEX_MODEL_LITE", "gemini-2.0-flash-lite")
     ROUTES["assessment_gen"]["model"] = getattr(settings, "VERTEX_MODEL_FLASH", "gemini-2.0-flash-001")
+    ROUTES["nirf_perception"]["model"] = getattr(settings, "VERTEX_MODEL_FLASH", "gemini-2.5-flash-preview-04-17")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
