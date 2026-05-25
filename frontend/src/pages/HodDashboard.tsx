@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -536,88 +537,12 @@ const HodDashboard = ({ navigate, user, onLogout }) => {
         )}
       </AnimatePresence>
 
-      <header className="glass-header border-b border-white/10">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <PresentationChart
-                size={22}
-                weight="duotone"
-                className="text-white"
-              />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                AcadMix
-              </h1>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                HOD Workspace
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={isDark ? "dark" : "light"}
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {isDark ? (
-                    <Sun size={20} weight="duotone" />
-                  ) : (
-                    <Moon size={20} weight="duotone" />
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
-            {/* Notification Bell */}
-            <button
-              data-testid="notification-bell"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 text-slate-500 dark:text-slate-400 transition-colors relative"
-            >
-              <Bell size={20} weight={showNotifications ? "fill" : "duotone"} />
-              {!notifRead && recentActivity.length > 0 && (
-                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                  {Math.min(recentActivity.length, 9)}
-                </div>
-              )}
-            </button>
-            <div className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-4 py-2">
-              <GraduationCap
-                size={18}
-                weight="duotone"
-                className="text-amber-500"
-              />
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  {user?.name}
-                </p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  {user?.designation || "Head of Department"}
-                </p>
-              </div>
-            </div>
-            <button
-              data-testid="logout-button"
-              onClick={onLogout}
-              className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-500 transition-colors"
-              aria-label="Sign out"
-            >
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Hod Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ── Hero Greeting ───────────────────────── */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, NotePencil, ChartLine, Users, Eye, SignOut, Clipboard, Calendar, CalendarDots, PencilLine, Bell, GraduationCap, ArrowRight, Exam, Fire, Sun, Moon, Notebook, UserCircle, Sparkle, Trash, MapPin } from '@phosphor-icons/react';
@@ -197,59 +198,12 @@ const TeacherDashboard = ({ navigate, user, onLogout }) => {
         )}
       </AnimatePresence>
 
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-              <BookOpen size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Faculty</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={isDark ? 'dark' : 'light'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                  {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
-            {/* Notification Bell */}
-            <button
-              data-testid="notification-bell"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 text-slate-500 dark:text-slate-400 transition-colors relative"
-            >
-              <Bell size={20} weight={showNotifications ? 'fill' : 'duotone'} />
-              {!notifRead && recentActivity.length > 0 && (
-                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                  {Math.min(recentActivity.length, 9)}
-                </div>
-              )}
-            </button>
-            <button onClick={() => navigate('faculty-profile')} className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors cursor-pointer text-left border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <GraduationCap size={18} weight="duotone" className="text-emerald-500" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{user?.name}</p>
-                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-400 leading-tight mt-0.5">{user?.designation || 'Assistant Professor'}</p>
-              </div>
-            </button>
-            <button data-testid="logout-button" onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-500 transition-colors" aria-label="Sign out">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Teacher Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ── Hero Greeting ───────────────────────── */}

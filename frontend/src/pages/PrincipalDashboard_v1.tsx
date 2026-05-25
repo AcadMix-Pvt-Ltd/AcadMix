@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bank,
@@ -325,105 +326,12 @@ const PrincipalDashboard = ({ navigate, user, onLogout }) => {
         />
       )}
 
-      <header className="glass-header z-40 relative">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <Bank size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                AcadMix
-              </h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-                Principal Dashboard
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Notification Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell size={20} weight={showNotifications ? "fill" : "duotone"} />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </div>
-                )}
-              </button>
-            </div>
-            <AnimatePresence>
-              {showNotifications && (
-                <>
-                  <div className="fixed inset-0 z-[60]" onClick={() => setShowNotifications(false)}></div>
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                    className="fixed top-16 right-4 sm:right-8 z-[61] w-80 sm:w-96 bg-white dark:bg-[#1A202C] rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden"
-                  >
-                    <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                      <h4 className="font-extrabold text-slate-800 dark:text-slate-100">Notifications</h4>
-                      <button onClick={handleMarkAllRead} className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors">Mark all as read</button>
-                    </div>
-                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800/50">
-                      {notifications.length === 0 ? (
-                        <div className="px-5 py-8 text-center text-sm text-slate-400">No notifications yet</div>
-                      ) : notifications.map((item) => (
-                        <div key={item.id} className={`flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${!item.is_read ? 'bg-indigo-50/30 dark:bg-indigo-500/5' : ''}`}>
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${item.type === 'alert' ? 'bg-rose-50 dark:bg-rose-500/15' : 'bg-indigo-50 dark:bg-indigo-500/15'}`}>
-                            <Info size={14} weight="duotone" className={item.type === 'alert' ? 'text-rose-500' : 'text-indigo-500'} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{item.title}</p>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">{item.message}</p>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-1.5 block">{formatTime(item.created_at)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-            >
-              {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-            </motion.button>
-            <button
-               onClick={() => setShowProfile(true)}
-               className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-2xl px-4 py-2 cursor-pointer"
-             >
-               <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                 <Bank size={14} weight="bold" className="text-indigo-600" />
-               </div>
-               <div className="text-right">
-                 <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name}</p>
-                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.designation || "Principal"}</p>
-               </div>
-             </button>
-             <button
-                onClick={() => setShowProfile(true)}
-                className="sm:hidden p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 text-indigo-500 transition-colors"
-                aria-label="Profile Menu"
-             >
-                <Bank size={20} weight="duotone" />
-             </button>
-             <button onClick={onLogout} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-colors" title="Sign Out">
-               <SignOut size={20} weight="duotone" />
-             </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="PrincipalDashboard_v1 Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <motion.div

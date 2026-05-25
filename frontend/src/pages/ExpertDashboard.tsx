@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Buildings, BookOpen, Users, GraduationCap, 
@@ -99,57 +100,12 @@ const ExpertDashboard = ({ navigate, user, onLogout }) => {
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
       
       {/* ── Header ───────────────────────── */}
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center">
-              <CircleHalfTilt size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Expert</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={isDark ? 'dark' : 'light'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                  {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-700/50 text-slate-500 dark:text-slate-400 transition-colors relative"
-            >
-              <Bell size={20} weight="duotone" />
-              {stats?.pending_question_papers > 0 && (
-                <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                  {stats.pending_question_papers}
-                </div>
-              )}
-            </button>
-            <div className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl px-4 py-2 border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-                <GraduationCap size={18} weight="duotone" className="text-amber-500" />
-              </div>
-              <div className="flex flex-col justify-center text-left">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{user?.name || 'Subject Expert'}</p>
-                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-400 leading-tight mt-0.5">DHTE Expert</p>
-              </div>
-            </div>
-            <button onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 transition-colors" aria-label="Sign out">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Expert Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={() => {}} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         

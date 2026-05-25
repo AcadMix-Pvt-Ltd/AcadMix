@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import { motion } from 'framer-motion';
 import { Buildings, SignOut, Sun, Moon, MapPin, Users, ChartLine, Bell } from '@phosphor-icons/react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -17,37 +18,12 @@ const DirectorDashboard = ({ navigate, user, onLogout }: any) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
       {/* Header */}
-      <header className="glass-header border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Buildings size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Director</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors">
-              {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-            </motion.button>
-            <div className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-2 border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
-                <Buildings size={18} weight="duotone" className="text-violet-500" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{user?.email}</p>
-              </div>
-            </div>
-            <button onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 transition-colors">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Director Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={() => {}} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">

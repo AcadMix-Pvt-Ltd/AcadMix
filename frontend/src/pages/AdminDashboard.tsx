@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Users, ChartBar, GraduationCap, SignOut, Database, Sun, Moon, Bell, Info, UserCircle, Sparkle, Trash, MapPin, Buildings } from '@phosphor-icons/react';
@@ -284,97 +285,12 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
       <Toaster position="top-right" richColors />
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center"><BookOpen size={22} weight="duotone" className="text-white" /></div>
-              <div><h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1><p className="text-xs font-bold uppercase tracking-widest text-slate-400">Admin</p></div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)} 
-                className="relative p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                aria-label="Notifications"
-                data-testid="notification-bell"
-              >
-                <Bell size={20} weight={showNotifications ? "fill" : "duotone"} />
-                {!notifRead && (
-                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                    {notifications.length}
-                  </div>
-                )}
-              </button>
-                      {activeTab === 'experts' && (
-          <motion.div data-testid="experts-content" variants={containerVariants} initial="hidden" animate="show">
-            <motion.div variants={itemVariants}>
-              <AdminExpertManagement />
-            </motion.div>
-          </motion.div>
-        )}
-        <AnimatePresence>
-                {showNotifications && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="fixed inset-0 z-[60]"
-                      onClick={() => setShowNotifications(false)}
-                    ></motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                      className="absolute top-20 right-4 sm:right-8 z-[61] w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 dark:bg-[#1A202C] dark:border-white/[0.06] overflow-hidden"
-                    >
-                      <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex flex-col items-start gap-2">
-                        <div className="flex w-full items-center justify-between">
-                          <h4 className="font-extrabold text-slate-800 dark:text-slate-100">System Notifications</h4>
-                          <button onClick={() => { setNotifRead(true); setShowNotifications(false); }} className="text-xs font-bold text-amber-500 hover:text-amber-600 transition-colors">Mark all as read</button>
-                        </div>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-50 dark:divide-slate-800">
-                        {notifications.map((item, i) => (
-                          <div key={i} className="flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 dark:bg-slate-800/50 transition-colors cursor-pointer text-left">
-                            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 bg-amber-50">
-                              <Info size={14} weight="duotone" className="text-amber-500" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{item.title}</p>
-                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{item.desc}</p>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-2 block">{item.time}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleTheme}
-                className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                aria-label="Toggle theme"
-              >
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div key={isDark ? 'dark' : 'light'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                    {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-                  </motion.div>
-                </AnimatePresence>
-              </motion.button>
-              <button onClick={() => setShowProfile(true)} className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer text-left border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center shrink-0">
-                <UserCircle size={18} weight="duotone" className="text-indigo-500" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{user?.name}</p>
-                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-500 leading-tight mt-0.5">{user?.department || 'Admin'} • {user?.role === 'admin' ? 'Administrator' : user?.role}</p>
-              </div>
-            </button>
-              <button data-testid="logout-button" onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 transition-colors" aria-label="Sign out"><SignOut size={20} weight="duotone" /></button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Admin Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="mb-8">

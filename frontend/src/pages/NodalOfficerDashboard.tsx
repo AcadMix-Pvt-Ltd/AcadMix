@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Storefront, Checks, FileText, MagnifyingGlass, Megaphone, ShieldCheck, Sun, Moon, SignOut, UserCircle, Bell, Briefcase, Info, Sparkle, Trash } from '@phosphor-icons/react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -276,38 +277,12 @@ const NodalOfficerDashboard = ({ navigate, user, onLogout }) => {
       <Toaster position="top-right" richColors />
       
       {/* Header */}
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <ShieldCheck size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">DHTE Nodal Officer</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Notification Bell */}
-            <NotifBell />
-            <button onClick={toggleTheme} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 text-slate-500">
-              {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-            </button>
-            <button className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-2 border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex flex-col items-center justify-center shrink-0">
-                <UserCircle size={18} weight="duotone" className="text-indigo-500" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name}</p>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{user?.role}</p>
-              </div>
-            </button>
-            <button onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="NodalOfficer Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={() => {}} 
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Navigation Tabs */}

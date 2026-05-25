@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
@@ -100,58 +101,12 @@ export default function IndustryDashboard({ navigate, user, onLogout }) {
       </AnimatePresence>
 
       {/* ── Header ──────────────────────────── */}
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Buildings weight="duotone" className="text-white text-2xl" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800 dark:text-white">Industry Portal</h1>
-              <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                {user.profile_data?.company_name || 'Partner Company'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Notification Bell */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors relative"
-                aria-label="Notifications"
-              >
-                <Bell size={20} weight={showNotifications ? 'fill' : 'duotone'} />
-                {unreadCount > 0 && (
-                  <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                    {Math.min(unreadCount, 9)}
-                  </div>
-                )}
-              </button>
-            </div>
-
-            {/* Theme Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
-            >
-              {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-            </motion.button>
-            {/* Logout */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onLogout}
-              className="p-2.5 rounded-full bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 transition-colors"
-            >
-              <SignOut size={20} weight="duotone" />
-            </motion.button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Industry Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       {/* ── Main Layout ─────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

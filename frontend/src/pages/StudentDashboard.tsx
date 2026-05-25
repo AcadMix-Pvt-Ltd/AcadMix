@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import { useQuery } from '@tanstack/react-query';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -263,63 +264,12 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
       </AnimatePresence>
 
       {/* ── Header ──────────────────────────── */}
-      <header className="glass-header border-b border-slate-200/50 dark:border-slate-800/50">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center">
-              <BookOpen size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Student</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Theme Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={isDark ? 'dark' : 'light'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                  {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
-
-            <div className="relative">
-                <button
-                  data-testid="notification-bell"
-                  onClick={handleBellClick}
-                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors relative"
-                  aria-label="Notifications"
-                >
-                  <Bell size={20} weight={showNotifications ? 'fill' : 'duotone'} />
-                  {unreadCount > 0 && (
-                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                      {Math.min(unreadCount, 9)}
-                    </div>
-                  )}
-                </button>
-              </div>
-            <button onClick={() => navigate('student-profile')} className="hidden sm:flex items-center gap-3 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-2 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer text-left border border-slate-100 dark:border-white/5">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center shrink-0">
-                <GraduationCap size={18} weight="duotone" className="text-indigo-500" />
-              </div>
-              <div className="flex flex-col justify-center">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{user?.name}</p>
-                <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-500 leading-tight mt-0.5">{user?.roll_number || user?.email} • {user?.department} • {user?.section}</p>
-              </div>
-            </button>
-            <button data-testid="logout-button" onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 transition-colors" aria-label="Sign out">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Student Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={() => {}} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ── Hero Greeting + CGPA ───────────────────────── */}

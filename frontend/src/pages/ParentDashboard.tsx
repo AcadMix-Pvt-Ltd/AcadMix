@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, GraduationCap, ChartBar, CalendarDots, ClockCountdown, Chalkboard, SignOut, Sun, Moon, FileText, ChatCircleDots, CaretDown, Warning, CheckCircle, XCircle, Clock, BookOpen, UserCircle, Download, Bell, MapPin } from '@phosphor-icons/react';
@@ -212,106 +213,12 @@ const ParentDashboard = ({ navigate, user, onLogout }) => {
       </AnimatePresence>
 
       {/* ── Header ──────────────────────────── */}
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-cyan-500 rounded-xl flex items-center justify-center">
-              <Users size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Parent</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Child Selector */}
-            {children.length > 1 && (
-              <div className="relative">
-                <button
-                  onClick={() => setChildDropdown(!childDropdown)}
-                  className="flex items-center gap-2 bg-slate-50 dark:bg-white/5 rounded-xl px-3 py-2 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-sm font-bold text-slate-700 dark:text-slate-200"
-                >
-                  <GraduationCap size={16} weight="duotone" className="text-cyan-500" />
-                  {currentChild?.name?.split(' ')[0] || 'Select'}
-                  <CaretDown size={14} weight="bold" className="text-slate-400" />
-                </button>
-                <AnimatePresence>
-                  {childDropdown && (
-                    <>
-                      <div className="fixed inset-0 z-[60]" onClick={() => setChildDropdown(false)} />
-                      <motion.div
-                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                        className="absolute right-0 top-full mt-2 z-[61] w-56 bg-white dark:bg-[#1A202C] rounded-xl shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden"
-                      >
-                        {children.map(c => (
-                          <button
-                            key={c.student_id}
-                            onClick={() => { setSelectedChild(c.student_id); setChildDropdown(false); }}
-                            className={`w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${
-                              selectedChild === c.student_id ? 'bg-cyan-50 dark:bg-cyan-500/10' : ''
-                            }`}
-                          >
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{c.name}</p>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 capitalize">{c.relationship} • {c.profile?.department || ''}</p>
-                          </button>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-
-            {/* Notification Bell */}
-            <div className="relative">
-              <button
-                  onClick={handleBellClick}
-                  className="p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors relative"
-                  aria-label="Notifications"
-                >
-                  <Bell size={20} weight={showNotifications ? 'fill' : 'duotone'} />
-                  {unreadCount > 0 && (
-                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
-                      {Math.min(unreadCount, 9)}
-                    </div>
-                  )}
-                </button>
-              </div>
-
-            {/* Theme Toggle */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2.5 rounded-full bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-500 dark:text-slate-400 transition-colors"
-              aria-label="Toggle theme"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div key={isDark ? 'dark' : 'light'} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                  {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-                </motion.div>
-              </AnimatePresence>
-            </motion.button>
-
-            {/* User Pill */}
-            <div className="hidden sm:flex items-center gap-2 bg-slate-50 dark:bg-white/5 rounded-2xl px-4 py-2">
-              <UserCircle size={18} weight="duotone" className="text-cyan-500" />
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{user?.name}</p>
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Parent</p>
-              </div>
-            </div>
-
-            {/* Logout */}
-            <button onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-500 transition-colors" aria-label="Sign out">
-              <SignOut size={20} weight="duotone" />
-            </button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Parent Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ── Hero: Child Info ────────────────────── */}

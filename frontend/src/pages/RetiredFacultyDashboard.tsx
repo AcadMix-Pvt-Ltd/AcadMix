@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UserCircle,
@@ -472,35 +473,12 @@ const RetiredFacultyDashboard = ({ navigate, user, onLogout }) => {
         />
       )}
 
-      <header className="glass-header z-40 relative">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center">
-              <Medal size={22} weight="duotone" className="text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">AcadMix</h1>
-              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Retired Faculty Dashboard</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button onClick={toggleTheme} className="icon-btn" title="Toggle theme">
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button className="icon-btn relative" title="Notifications"><Bell size={20} /></button>
-            <button onClick={() => setShowProfile(true)} className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-              <div className="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-500/20 flex items-center justify-center">
-                <UserCircle size={20} className="text-teal-600 dark:text-teal-300" weight="duotone" />
-              </div>
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{user?.name}</p>
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Retired Faculty</p>
-              </div>
-            </button>
-            <button onClick={handleLogout} className="icon-btn text-rose-500" title="Sign Out"><SignOut size={20} /></button>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="RetiredFaculty Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
         {/* Greeting */}

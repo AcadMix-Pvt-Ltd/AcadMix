@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardHeader from '../components/DashboardHeader';
 import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Briefcase, GraduationCap, CalendarBlank, SignOut, Sun, Moon, Bell, Info, Medal, ChatDots, MapPin, LinkedinLogo, CheckCircle, UserCircle } from '@phosphor-icons/react';
@@ -308,43 +309,12 @@ const AlumniDashboard = ({ navigate, user, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
-      <header className="glass-header">
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center"><GraduationCap size={22} weight="fill" className="text-white" /></div>
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">AcadMix</h1>
-                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Alumni Network</p>
-              </div>
-            </div>
-            
-            {/* Right side controls matching styling from other dashboards */}
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 rounded-full bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                aria-label="Notifications"
-              >
-                <Bell size={20} weight={showNotifications ? "fill" : "duotone"} />
-              </button>
-              
-              <button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
-              </button>
-              
-              <span className="btn-ghost !px-4 !py-2 text-sm">{profileData?.name || 'Alumni'}</span>
-              <button onClick={onLogout} className="p-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 transition-colors" aria-label="Sign out">
-                <SignOut size={20} weight="duotone" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardHeader 
+        user={user} 
+        title="Alumni Dashboard" 
+        onLogout={onLogout} 
+        setShowProfile={setShowProfile} 
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="mb-8">
