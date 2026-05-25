@@ -1,0 +1,250 @@
+ 
+ 
+ 
+ 
+ 
+INDIA RANKINGS  
+ 
+INDIA RANKINGS 202 5 
+ 
+NATIONAL INSTITUTIONAL RANKING FRAMEWORK  
+Methodology for Ranking of Academic Institutions in India  
+(RANKING METRICS FOR INNOVATION RANKINGS ) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Ministry of Education  
+ 
+ 
+Summary of Ranking Parameters and Weightages - 2025 
+(Innovation Ranking)  
+ 
+  Sr. 
+No. Parameter  Marks  Weightage  
+1 Financial Support for Innovation (FSI)  100 0.25 
+2 Innovation Achievements  (IA) 100 0.15 
+3 Research and Innovation Output  (RIO)  100 0.30 
+4 Pre-Incubation and Incubation (PI I) 100 0.10 
+5 Adoption Level of Innovation and 
+Entrepreneurship (I&E) Policy in HEIs  (AIE)  100 0.10 
+6 Perception  (PR)  100 0.10 
+ Innovation  
+  S. No. Parameters  Marks  
+1. Financial Support for Innovation (FSI)  
+Ranking weight: 0. 25 100 
+ A. Metrics for Ventures / Start ups recognized by DPIIT/ Startup India  (SU) :20 
+marks  
+B. Metrics for  Ventures/ Startups received VC Investment (VCI) : 20 marks  
+C. Metric for Seed Funding received from Government Organizations  (SF): 
+20 marks  
+D. Metrics for FDI investment in Ventures / Startups (FDII) : 20 marks  
+E. Metric for Innovation Grant received from Government Organizations  
+(IG): 20 marks   
+2. Innovation Achievements  (IA) 
+Ranking weight:  0.15 100 
+ A. Combined Metrics for  Innovations at various stages of Technology 
+Readiness Level  (ITRL) : 40 Marks  
+B. Combined  Metrics for Vent ures/ Startups with a  turnover of 50 lacs 
+(NVS) : 40 Marks  
+C. Alumni Founders of Forbes /Fortune  500 companies  (AFF) : 20 marks   
+3. Research and Innovation Output in SCI  (RIO)  
+Ranking weight:  0.30 100 
+ A. Combined metric for  Publications in SCI  (PU) : 25 marks  
+B. Combined metrics for Quality of Publication in SCI (CI): 25 marks  
+C. IPR & Patents:  Published & Granted (IPR) :40 marks  
+D. Patent Commercialization & Technology Transfer:  10 marks   
+4. Pre-Incubation and Incubation (PII)  
+Ranking weight: 0.10  100 
+ A. Combined Metric for Pre-Incubation (PI)  30 marks  
+B. Combined Metric for Incubation  (IIE) : 30 marks  
+C. Combined Metric for FDP in Innovation: 20 marks  
+D. Combined Metric for Credit Courses in Innovation offered by the HEI: 
+20 marks   
+5. Adoption Level of Innovation and Entrepreneurship (I&E) Policy in HEIs  
+(AIE)   
+Ranking weight:0. 10 100 
+ A. Registered in the NISP portal for I&E Policy Adoption  (NISP) : 20 Marks  
+B. Annual performance of Institution's Innovation Councils (IICs): 30 
+Marks  
+C. Participation in KAPILA Portal  (KAPILA) : 20 Marks  
+D. Participation in Smart India Hackathon  (SIH) : 30 Marks   
+6. Perception (PR)  
+Ranking weight: 0.10  100 
+ A. Peer Perception: Academic Peers and Employers (PR): 100 marks   
+1. Financial Support for Innovation (FSI ): 100 Marks  
+• Ranking weight: 0. 25 
+• Overall Assessment Metric:  
+ FSI = SU (20) +VCI (2 0) + SF (20) + FDII (20) + IG ( 20) 
+• The component metrics are explained on the following pages.  
+A. Metric  for Ventures / Startups recognized by DPIIT/Startup India (SU)  
+B. Metric for Ventures/ Startups received VC Investment (VCI)  
+C. Metric for Seed Funding received from Government Organizations  (SF) 
+D. Metric for FDI investment in Ventures/ Startups (FDII)  
+E. Metric for Innovation Grant received from Government Organizations (IG)   
+A. Metric for Ventures / Startups recognized by DPIIT/Startup India (SU) : 20 Marks  
+• SU = 20 × f (N vsp) 
+• Nvsp: Number of ventures/ startups  recognized by DPIIT/Startup India in the previous 
+three years.   
+B. Metric for Ventures/ Startups received VC Investment (VCI): 2 0 Marks  
+• VCI = 2 0 × f (VC/N su) 
+• VC: Average VC investment received by the startup  of the institute in the previous three 
+years.  
+• Nsu: No of startups that have received VC investment.  
+  
+C. Metric for Seed Funding received from Government Organizations  (SF): 20 Marks  
+• SF = 20 × f (SF/Nsuf) 
+• SF: Average Seed Funding by the institut e in the previous three years . 
+• Nsuf: No of startups that have received Seed Funding . 
+  
+D. Metric for FDI investment in Ventures/ Startups (FDII) : 20 Marks  
+• FDII = 20 × f (FDI/N suf) 
+• FDI: Average Foreign Direct Investment received by the startups  of the institute  in the 
+previous three years . 
+• Nsuf: No of startups that have received FDI.  
+  
+E. Metric for Innovation Grant received from Government Organizations (IG) : 20 
+Marks  
+• IG = F × 30 f(IGR)  
+• IGR: Average innovation grant received by the institutions from the government 
+organization in the previous three years.  
+ 
+  
+2. Innovation Achievements (IA ): 100 Marks  
+• Ranking weight: 0.15  
+• Overall Assessment Metric:  
+ IA = ITRL ( 40) + NVS ( 40) + AFF ( 20) 
+• The component metrics are explained on the following pages.  
+A. Combined Metrics for Innovations at various stages of Technology 
+Readiness Level : ITRL  
+B. Combined Metrics for Ventures/Startups with a turnover of 50 lacs : 
+NVS  
+C. Alumni Founders  of Forbes /Fortune  500 companies: AFF  
+  
+A. Combined Metrics for Innovations at various stages of Technology Readiness 
+Level (ITRL) : 40 Marks  
+• ITRL = 40 × f (NTRL)  
+• NTRL = No. of innovations at various technology readiness levels    
+B. Combined Metrics for Ventures/Startups with a turnover of 50 lacs : 40 Marks  
+(NVS)  
+• NVS = 40 × f (VS50/VS)  
+• VS50: No of ventures/ startups  grown to a turnover of 50 lacs  
+• VS: Total no of ventures/ startups  in the institutions.  
+  
+C. Alumni Founders of Forbes /Fortune  500 companies: (AFF) : 20 Marks  
+• AFF = 20 × f (AF500)  
+• AF500 = No of alumni who are founders of Forbes /Fortune  500 companies.  
+  
+3. Research and Innovation Output in SCI (RIO): 100 Marks  
+• Ranking weight: 0.30 
+• Overall Assessment Metric:  
+ RIO  = PU (25) + CI (25) + IPR ( 40) + PCTT (10)  
+• The component metrics are explained on the following pages.  
+A. Combined metric for Publications in SCI:  PU 
+B. Combined metrics for Quality of Publication in SCI : CI 
+C. IPR & Patents: Published & Granted : IPR 
+D. Patent Commercialization & Technology Transfer: PCTT  
+  
+A. Combined metric for Publications in SCI (PU):  25 marks  
+PU = 25 × f(P/FRQ)  
+• P is the weighted number of publications as ascertained  from suitable third -party  
+sources.  
+• FRQ  is the maximum  of the nominal  number of faculty members as calculated 
+based on  a required FSR of 1:15 or the available faculty in the institution.  
+• Sources: Third -party  sources.   
+B. Combined metrics for Quality of Publication in SCI (CI) : 25 marks  
+CI = 25 × f(CC/ FRQ )  
+• Here , CC is the Total Citation Count over the previous three years.  
+• FRQ is the same as in  PU.  
+• Sources: Third -party  sources.   
+C. IPR & Patents: Published & Granted (IPR) : 40 marks  
+ 
+• IPR = IPG + IPP  
+• IPP = 15 × f (PP)  
+PP: No. of patents published over the previous three years.  
+• IPG = 25 × f (PG)  
+PG is the number of patents granted over the previous three years.  
+Sources : Third Party Sources.  
+  
+D. Patent Commercialization & Technology Transfer (PCTT): 10 marks  
+PCTT = 10 × f(CTT)  
+CTT: Patent Commercialized and Technology Transferred in the previous 
+three years.  
+4. Pre-Incubation and Incubation (PII): 100 marks  
+• Ranking weight: 0.10  
+• Overall Assessment Metric:  
+PII = PI ( 30) + IIE (30) + FDP (20) + CCI (20)  
+• Component metrics based on:  
+A. Combined Metric for Pre-incubation:  PI 
+B. Combined Metric for Incubation : IIE 
+C. Combined Metric for FDP in Innovation: FDP  
+D. Combined Metric for Credit Courses in Innovation offered by the HEI: 
+CCI 
+  
+A. Combined Metric for Pre -incubation : (PI): 30 Marks  
+• PI= 30 × f (PIE /NPart) 
+• The functions f (PIE//NPart) are functions to be determined by NIRF.  
+• PIE:  Average expenditure for pre -incubation activities in the previous three years . 
+• NPart: No. of Participations in Pre -incubation  Activities 
+ 
+  
+B. Combined Metric for Incubation (IIE): 30 marks  
+ 
+• IIE = 15 × f (IE) + 15 × f(II)  
+• The functions f (IE) & f (II)  are functions to be determined by NIRF.  
+• IE: Average expenditure on incubation activities in the previous three years . 
+• II: Average income from incubation activities in the previous three years . 
+ 
+C. Combined Metric for FDP in Innovation ( CFDP): 20 marks  
+ 
+• CFDP  = 20 × f (FDP ) 
+• FDP : Faculty Development Programs in Innovation, Entrepreneurship , and IPR  in 
+the previous three years.  
+ 
+ 
+  
+D. Combined Metric for Credit Courses in Innovation offered by the HEI (CCCI): 20 
+marks  
+• CCCI  = 20 × f (CCI) 
+• CCI: Credit Courses offered in Innovation  in the previous three years.  
+ 
+ 
+  
+5. Adoption Level of Innovation and Entrepreneurship (I&E) Policy in 
+HEIs  (AIE) : 100 Marks  
+• Ranking weight:  0.10 
+• Overall Assessment Metric:  
+AIE = NISP ( 20) + IICs ( 30) + KAPILA ( 20) + SIH ( 30) 
+• The component metrics are explained on the following pages.  
+A. Registered in the NISP portal f or I&E Policy Adoption (NISP)  
+B. Annual performance of Institution's Inno vation Councils (IICs)  
+C. Particip ation in KAPILA Portal (KAPILA)  
+D. Participation in  Smart India Hackathon (SIH)  
+  
+A. Registered in the NISP portal for I&E Policy Adoption (NISP): 20 Marks  
+ 
+NISP = Institution is registered with the portal for I&E policy.   
+B. Annual performance of Institution's Innovation Councils (IICs) : 30 Marks  
+IICs = A nnual performance of the Institution's Innovation Councils  
+  
+C. Participation in KAPILA Portal (KAPILA) : 20 Marks  
+KAPILA = Institution’s participation in KAPILA Portal   
+D. Participation in Smart India Hackathon (SIH ): 30 Marks  
+SIH = Institution  participati ng in Smart India Hackathon  
+  
+6. Perception (PR) – 100 marks  
+• Ranking weight: 0.1  
+• Overall Assessment Metric: PR = PR ( 100) 
+• Component metrics are explained in the following pages:  
+A. Peer Perception: Employers & Academic Peer: (PR)  
+  
+A. Peer Perception:  Employers & Academic Peer (PR): 100 marks  
+• This is to be done through a survey conducted over a large category of Employers, 
+Professionals from Reputed Organizations , and a large category of academics to ascertain 
+their preference for graduates of differen t institutions.  
+• A comprehensive  list will be prepared considering  various sectors, regions, etc.  
+• Lists to be updated periodically.  

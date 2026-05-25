@@ -1,0 +1,239 @@
+ 
+ 
+ 
+ 
+ 
+ 
+INDIA RANKINGS 202 5 
+ 
+ 
+ 
+NATIONAL INSTITUTIONAL RANKING FRAMEWORK  
+Methodology for Ranking of Academic Institutions in India  
+(RANKING METRICS FOR RESEARCH INSTITUTIONS ) 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Ministry of Education  
+  
+Summary of Ranking Parameters and Weightages - 2025 
+(Research Institution)  
+ 
+  Sr. 
+No. Parameter  Marks  Weightage  
+1 Metric for Quantitative Research  100 0.30 
+2 Metric for Qualitative Research  100 0.30 
+3 Metric for Students and Faculty Contribution  100 0.20 
+4 Outreach and Inclusivity  100 0.10 
+5 Perception  100 0.10 
+  
+  S. No. Parameters  Marks  
+1. Metric for Quantitative Research (QNR)  
+Ranking weight: 0.30  100 
+ 
+ A. Combined metric for Publications (PU): 50 marks  
+B. Combined metric for Citations Index (CI): 25 marks  
+C. Footprint of Projects and Professional  Practice (FPPP): 25 marks   
+2. Metric for Qualitative Research (QLR)  
+Ranking weight: 0.30  100 
+ A. Combined metric for publications in 1st Quartile JCR(JCRQ1):  30 
+marks  
+B. Combined metric for Publications in Top 25 (TOP25): 30 marks  
+C. IPR and Patents: Published and Granted (IPR): 20 marks  
+D. H- Index  (HI): 20 marks   
+3. Metric for Students and Faculty Contribution  (SFC)  
+Ranking weight: 0.20  100 
+ A. Combined metric for Faculty with PhD (or equivalent) and Experience 
+(FQE): 40 marks  
+B. Student Strength including Doctoral Students (SS): 30 marks  
+C. Metric for Number of Ph.D. Students Graduated (GPHD): 30 marks   
+4. Outreach and Inclusivity (OI)  
+Ranking weight: 0.10  100 
+ A. Percentage of Students from other States/Countries (Region Diversity 
+RD): 30 marks  
+B. Percentage of Women (Women Diversity WD): 30 marks  
+C. Percentage of SC/ST Students(SCTS) : 20 marks  
+D. Facilities for Physically Challenged Students (PCS): 20 marks  
+  
+5. Perception (PR)  
+Ranking weight: 0.10  100 
+ A. Peer Perception: Employers & Academic Peer (PR):  100 marks  
+  
+ 1. Metric for Quantitative Research  (QNR) : 100 marks  
+• Ranking weight: 0.30  
+• Overall Assessment Metric:  
+QNR  = PU (50) + CI (25) + FPPP (25 ) 
+• Component metrics based on :  
+A. Combined metric for Publications: PU  
+B. Combined metric for Citations Index: CI  
+C. Footprint of Projects and Professional Practice: FPPP  
+ 
+ 
+  
+ A. Combined metric for Publications (PU): 50 marks  
+• PU = 50 × f(P/F RQ) 
+• FRQ is the  maximu m of the nominal number of faculty members as calculated based on  a 
+required FSR of 1:15 or the available faculty in the institution.  
+• Sources: Third -party  sources.   
+ B. Combined metric for Citations Index (CI): 25 marks  
+• CI = 25 × f (CC/F RQ)  
+• Here , CC is the Total Citation Count over the previous three years.  
+• FRQ is the maximum of the nominal number of faculty members as calculated based on  a 
+required FSR of 1:15 or the available faculty in the institution.  
+• Primary Data: Third Party Sources.  
+ 
+  
+ C. Footprint of Projects and Professional Practice (FPPP): 25 marks  
+• FPPP = FPR + FPC  
+• FPR = 18.75 × f (RF)   
+• RF is the average annual research funding earnings (amount actually received in rupees) 
+per faculty at the institute level in the previous three years.  
+• FPC = 6.25 × f (CF)  
+• CF is the average annual consultancy amount ( amount actually received in rupees) per 
+faculty at the institute level in the previous three years.  
+  
+ 2. Metric for Qualitative Research (QLR) : 100 marks  
+• Ranking weight: 0.30  
+• Overall Assessment Metric:  
+ QLR = JCRQ1  (30) + TOP 25 (30) + IPR  (20) + HI (20) 
+The component metrics are explained on the following pages.  
+A. Combined metric for publications in 1st Quartile: JCRQ1  
+B. Combined metric for Publications in Top 25: TOP25  
+C. IPR and Patents: Published and Granted: IPR  
+D. H- Index: HI  
+  
+ A. Combined metric for publicat ions in 1st Quartile JCR  (JCRQ1): 30 Marks  
+• JCRQ1  = 30 × f(JCRQ1 /FRQ) 
+• JCRQ1  is a weighted number of publications in the 1st Quar tile as ascertained from 
+suitable third -party  sources.  
+• FRQ is the  maximum of  the nominal number of faculty members as calculated based on  a 
+required FSR of 1:15 or the available faculty in the institution.  
+ 
+• Sources: Third -party  sources.   
+ B. Combined metric for Publications in Top 25 (TOP25): 30 marks  
+• TOP25 = 3 0× f (TOP25P/P)  
+• P is the weighted number of publications as ascertained from suitable third -party  
+sources.  
+• TOP25P: Number of citations in the top 25 percentile averaged over the previous three 
+years.  
+• Primary Data: Third -Party Sources.  
+  
+ C. IPR and Patents: Patents Published and Granted (IPR): 20  marks  
+• IPR = IPG + IPP  
+IPG = 10× f (PG)  
+• PG is the number of patents granted over the previous three years.  
+IPP = 10  × f (PP)  
+• PP: No. of patents published over the previous three years.  
+• Primary Data: Third -Party  Sources.  
+  
+ D. H-Index:  20 marks  
+H-Index=20*HI  
+HI is a weighted number of H Index as ascertained from suitable third -party  sources (Web of 
+Science  and Scopus)   
+ 3. Metric for Students and Faculty Contribution (SFC): 100 marks  
+• Ranking weight: 0.20  
+• Overall Assessment Metric:  
+• SFC = FQE(40) + SS(30 ) + GPHD(3 0) 
+• The component metrics are explained on the following pages:  
+A. Combined metric for Faculty with PhD (or equivalent) and Experience: FQE  
+B. Student Strength , including Doctoral Students: SS  
+C. Metric for Number of Ph.D. Students Graduated : GPHD  
+  
+ A. Combined Metric for Faculty with PhD (or equivalent) and Experience (FQE): 40 marks  
+• FQ = 20 × (F RA/95) , F RA < 95%;  
+• FQ = 20, F RA ≥ 95%.  
+ 
+• Here , FRA is the percentage of Faculty with Ph.D. (or equivalent qualification) with 
+respect to the total no. of faculty required or actual faculty , whichever is higher, in the 
+previous year.  
+ 
+  F1=Fraction with Experience up to 8 years;  
+ F2= Fraction with Experience between 8+ to 15 years;  
+ F3=Fraction with Experience > 15 years.  
+• FE = 6 min ( 3F1, 1) + 6 min ( 3F2, 1) + 8 min ( 3F3, 1)  
+ Rationale: Full marks for a ratio of 1:1:1  
+• FQE = FQ + FE  
+• Primary Data: Faculty List in the Prescribed Format.  
+ 
+ 
+ 
+  
+ B. Student Strength , including Ph.D. students (SS): 30 Marks  
+• SS = f(N T, NE) × 20 + f(N P) × 10  
+ 
+• The functions f(N T ,NE) and f(N p) are functions to be determined by NIRF.  
+• NT: Total sanctioned approved intake in the institution , considering all UG and PG 
+programs of the institution.  
+• NE: Total number of students enrolled in the institution , considering all UG and PG 
+Programs of the institution.  
+• Np = Total number of students enrolled for the doctoral program till the previous 
+academic year.  
+ 
+• Primary Data: To be provided in a prescribed Format . 
+ 
+ 
+  
+ C. Metric for Number of Ph .D Students Graduated (GPHD): 30  Marks  
+• GPHD = 3 0 × f(N phd) 
+• Nphd = Average number of Ph.D students graduated (awarded Ph.D) over the previous 
+three years.  
+• Primary Data: Number of graduating Ph.D. Students , as reflected in the approved 
+Annual Report/Convocation Report , are to be provided in the prescribed format.   
+ 4. Outreach and Inclusivity (OI): 100 marks  
+• Ranking weight: 0.10  
+• Overall Assessment Metric: OI =  RD(30) + WD(30) +ESCS(20) + PCS(20)  
+• The component metrics are explained on the following pages:  
+A. Percentage of Students from other States/ Countries (Region Diversity): RD  
+B. Percentage of Women (Women Diversity): WD  
+C. Percentage of SC/ST Students: SCTS  
+D. Facilities for Physically Challenged Students: PCS  
+ 
+  
+ A. Percentage of Students from other States/ Countries (Region Diversity RD): 30 marks  
+• RD = 25 × fraction of total students enrolled from other states + 5 × fraction of 
+students enrolled from other coun tries  
+ 
+• Primary Data: To be provided in the prescribed format.  
+  
+ B. Percentage of Women (Women Diversity WD): 30 marks  
+• WD = 15 × (N WS/50) + 15 × (N WF/20)  
+•  NWS is the percentage of Women students.  
+• NWF is the percentage of Women Faculty , including the women members in senior 
+administrative positions, such as Heads of Departments, Deans , or Institute Heads.  
+• Expectation: 50% women students and 20% women faculty.  
+• Primary Data: To be provided in the prescribed format.  
+ 
+  
+ C. Percentage of SC/ST Students (SCTS):  20 marks  
+• SCTS   = 20 × f(N scts)  
+• Nscts is the percentage of UG students being provided full tuition fee reimbursement  by 
+the institution to pursue their degree programs.  
+• Primary Data: To be provided by the institution in the prescribed format.   
+ D. Facilities for Physically Challenged Students (PCS ): 20 marks  
+• PCS = 20 marks, if the Institute provides full facilities for physically challenged 
+students, as outlined.  
+Else, in proportion to facilities.  
+• Basis: Verifiable Responses to Questions.  
+• Primary Data: To be provided in a prescribed format . 
+  
+ 5. Perception (PR) : 100 marks  
+• Ranking weight: 0.1  
+• Overall Assessment Metric: PR = 100  
+• Component metrics are explained in the following pages:  
+A. Peer Perception: Employers &  Academic Peers: (PR)  
+ 
+  
+ A. Peer Perception: Employers & Academic Peer (PR): 100 marks  
+ 
+• This is to be done through a survey conducted over a large category of Employers, 
+Professionals from Reputed Organizations , and a large category of academics to 
+ascertain their preference for graduates of different institutions.  
+• A comprehensive  list will be prepared , taking into account various sectors, regions, etc.  
+• Lists to be updated periodically.  
+ 
+ 

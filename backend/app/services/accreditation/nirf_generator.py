@@ -14,11 +14,11 @@ class NIRFGenerator(BaseAccreditationGenerator):
         
     async def calculate_tlr(self) -> dict:
         """
-        Teaching, Learning & Resources (TLR) - Weight: 40% (for colleges)
-        1a. FSR (Faculty-Student Ratio) - 30 marks
-        1b. FQE (Faculty with PhD & Exp) - 30 marks
-        1c. LL (Library & Lab) - 30 marks
-        1d. SEC (Sports & Extracurricular) - 10 marks
+        Teaching, Learning & Resources (TLR) - Weight: 30% (for Engineering 2025)
+        1a. SS (Student Strength including Ph.D. students) - 20 marks
+        1b. FSR (Faculty-student ratio with emphasis on permanent faculty) - 30 marks
+        1c. FQE (Combined metric for Faculty with Ph.D. and Experience) - 20 marks
+        1d. FRU (Financial Resources and their Utilisation) - 30 marks
         Total: 100
         """
         sanctioned_students, actual_students = await self.get_sanctioned_intake_vs_actual()
@@ -30,63 +30,70 @@ class NIRFGenerator(BaseAccreditationGenerator):
             N = display_sanc * 4  # total students across all years
         else:
             N = actual_students if actual_students > 0 else 1
+            
+        # Add PhD students to N
+        # We don't have active PhD students tracked directly yet, so we assume ~50 active for a college of 3300
+        # and N remains largely UG/PG + active PhDs. Let's just mock active PhD for SS.
+        active_phd = 50
+        total_students_ss = N + active_phd
         
-        # FSR Calculation: FSR = 30 * (20 * (F/N))
+        # SS Calculation: SS = f(N_T). Let's assume full 20 marks for standard intake
+        ss_score = 20.0 
+        
+        # FSR Calculation: FSR = 30 * (15 * (F/N)) (Note: FSR benchmark usually 1:15 or 1:20)
+        # Using 1:20 benchmark for max marks in FSR
         F = faculty_data["regular"] + (0.3 * faculty_data["visiting"])
-        ratio = F / N
-        # Max score requires 1:20 ratio
+        ratio = F / total_students_ss
         fsr_score = min(30.0, 30.0 * (20.0 * ratio))
-        if ratio < (1/50): # If ratio is worse than 1:50, score is 0
+        if ratio < (1/50): 
             fsr_score = 0.0
             
-        # FQE Calculation: FQ = 15 * (F_phd / 95%), FE = 15 * (AvgExp / 15)
-        fq_score = min(15.0, 15.0 * (faculty_data["phd_percentage"] / 95.0))
-        fe_score = min(15.0, 15.0 * (faculty_data["average_experience"] / 15.0))
+        # FQE Calculation (20 marks max)
+        # FQ = 10 * (F_phd / 95%), FE = 10 * (AvgExp / 15)
+        fq_score = min(10.0, 10.0 * (faculty_data["phd_percentage"] / 95.0))
+        fe_score = min(10.0, 10.0 * (faculty_data["average_experience"] / 15.0))
         fqe_score = fq_score + fe_score
         
-        # LL Calculation
+        # FRU Calculation (30 marks max)
         infra_data = await self.get_infrastructure_expenditure()
-        total_lib = infra_data["library_physical"] + (2 * infra_data["library_digital"])
+        total_lib = infra_data["library_physical"] + infra_data["library_digital"]
         total_lab = infra_data["lab_equipment"]
-        # Assuming benchmark is 5000 INR per student for Library and 10000 for Lab for full marks
-        ll_lib_score = min(15.0, 15.0 * ((total_lib / N) / 5000.0))
-        ll_lab_score = min(15.0, 15.0 * ((total_lab / N) / 10000.0))
-        ll_score = ll_lib_score + ll_lab_score
+        total_fru_spend = total_lib + total_lab
+        # Assuming benchmark is 15000 INR per student for FRU for full marks
+        fru_score = min(30.0, 30.0 * ((total_fru_spend / total_students_ss) / 15000.0))
         
-        # SEC Calculation (Mocked out for now as it requires specific sports event tracking)
-        sec_score = 5.0 # baseline
-        
-        total_tlr = fsr_score + fqe_score + ll_score + sec_score
+        total_tlr = ss_score + fsr_score + fqe_score + fru_score
         
         return {
             "parameter": "TLR",
             "total_score": round(total_tlr, 2),
             "max_score": 100,
             "components": {
+                "SS": round(ss_score, 2),
                 "FSR": round(fsr_score, 2),
                 "FQE": round(fqe_score, 2),
-                "LL": round(ll_score, 2),
-                "SEC": round(sec_score, 2)
+                "FRU": round(fru_score, 2)
             },
             "raw_data": {
                 "faculty_count": F,
-                "student_count": N,
+                "student_count": total_students_ss,
                 "phd_percentage": faculty_data["phd_percentage"],
                 "avg_experience": faculty_data["average_experience"],
-                "library_spend": total_lib,
-                "lab_spend": total_lab
+                "fru_spend": total_fru_spend
             }
         }
+
     
     async def calculate_go(self) -> dict:
         """
-        Graduation Outcomes (GO) - Weight: 15% (for colleges)
+        Graduation Outcomes (GO) - Weight: 20% (for Engineering 2025)
         1a. GPH (Combined metric for Placement & Higher Studies) - 40 marks
-        1b. UE (University Examinations) - 40 marks
-        1c. MS (Median Salary) - 20 marks
+        1b. GUE (University Examinations) - 15 marks
+        1c. GMS (Median Salary) - 25 marks
+        1d. GPHD (Ph.D. Students Graduated) - 20 marks
         Total: 100
         """
-        from app.models.accreditation import PlacementRecord
+        from app.models.accreditation import PlacementRecord, PhDGraduationRecord
         from sqlalchemy.future import select
         from sqlalchemy import func
         
@@ -97,15 +104,16 @@ class NIRFGenerator(BaseAccreditationGenerator):
             f"{self.report_year-1}-{self.report_year}"
         ]
         
-        # Note: In a real system, UE depends on exams. We mock UE and focus on GPH & MS.
-        # Get sanctioned intake for capping placement numbers
         # Use display_sanctioned (from programs_data, what appears in report) if available
         db_sanctioned, _ = await self.get_sanctioned_intake_vs_actual()
         sanctioned = getattr(self, 'display_sanctioned', None) or db_sanctioned
         
-        # Fetch Placement Records for the past 3 years
         placement_data = {}
         total_salary_points = 0.0
+        gph_total_points = 0.0
+        
+        # We will assume a static graduation count based on sanctioned intake for GPH
+        graduated_base = max(1, sanctioned)
         
         for yr in years:
             stmt = select(PlacementRecord).where(
@@ -142,25 +150,34 @@ class NIRFGenerator(BaseAccreditationGenerator):
                 "max_salary": salaries[-1] if salaries else 0.0
             }
             
-            # MS is 20 * (Median Salary / Benchmark). Let's say benchmark is 8 LPA for full marks.
-            ms_yr = min(20.0, 20.0 * (median_salary / 8.0))
-            total_salary_points += ms_yr
+            # GMS is 25 * (Median Salary / Benchmark). Benchmark = 8 LPA for full marks.
+            gms_yr = min(25.0, 25.0 * (median_salary / 8.0))
+            total_salary_points += gms_yr
             
-        ms_score = total_salary_points / 3.0
+            # GPH = 40 * (placed + higher_studies) / graduated
+            # Using actual graduated count could skew if missing data, fallback to sanctioned
+            ratio = min(1.0, (placed_count + higher_studies) / graduated_base)
+            gph_total_points += 40.0 * ratio
+            
+        gms_score = total_salary_points / 3.0
+        gph_score = gph_total_points / 3.0
         
-        # GPH relies on (placed + higher studies) / graduated
-        # We will assume a static graduation count and higher studies for this prototype
-        graduated_base = 3000
-        gph_score = 0
-        for yr in years:
-            # 40 marks max per year
-            ratio = min(1.0, placement_data[yr]["placed_count"] / graduated_base)
-            gph_score += 40.0 * ratio
-        gph_score /= 3.0
+        # GUE = 15 marks (Mocked for now)
+        gue_score = 12.0 
         
-        ue_score = 35.0 # Mock UE
+        # GPHD (Ph.D. Students Graduated) - 20 marks
+        stmt_phd = select(PhDGraduationRecord).where(
+            PhDGraduationRecord.college_id == self.college_id,
+            PhDGraduationRecord.academic_year.in_(years)
+        )
+        res_phd = await self.session.execute(stmt_phd)
+        phd_records = res_phd.scalars().all()
         
-        total_go = gph_score + ue_score + ms_score
+        phd_graduated = len(phd_records)
+        # GPHD = 20 * (phd_graduated / Benchmark). Let's say benchmark for 3 years is 45 (15 per year).
+        gphd_score = min(20.0, 20.0 * (phd_graduated / 45.0))
+        
+        total_go = gph_score + gue_score + gms_score + gphd_score
         
         return {
             "parameter": "GO",
@@ -168,34 +185,69 @@ class NIRFGenerator(BaseAccreditationGenerator):
             "max_score": 100,
             "components": {
                 "GPH": round(gph_score, 2),
-                "UE": round(ue_score, 2),
-                "MS": round(ms_score, 2)
+                "GUE": round(gue_score, 2),
+                "GMS": round(gms_score, 2),
+                "GPHD": round(gphd_score, 2)
             },
             "raw_data": {
-                "placement_history": placement_data
+                "placement_history": placement_data,
+                "phd_graduated_3yrs": phd_graduated
             }
         }
     
     async def calculate_rpii(self) -> dict:
-        from app.models.accreditation import PatentRecord, SponsoredResearchRecord, ConsultancyRecord, ExecutiveDevelopmentProgram
+        from app.models.accreditation import PatentRecord, SponsoredResearchRecord, ConsultancyRecord, ExecutiveDevelopmentProgram, PublicationRecord
         from sqlalchemy.future import select
         from sqlalchemy import func
 
         years = [str(self.report_year - 3), str(self.report_year - 2), str(self.report_year - 1)]
+        calendar_years = [self.report_year - 3, self.report_year - 2, self.report_year - 1]
         
-        # IPR (Patents)
+        # 1. PU & QP (Publications and Quality)
+        stmt_pubs = select(PublicationRecord).where(
+            PublicationRecord.college_id == self.college_id,
+            PublicationRecord.calendar_year.in_(calendar_years)
+        )
+        res_pubs = await self.session.execute(stmt_pubs)
+        publications = res_pubs.scalars().all()
+        
+        # Filter out retracted
+        valid_pubs = [p for p in publications if not p.is_retracted]
+        pub_count = len(valid_pubs)
+        
+        # Faculty count for PU calculation: PU = 30 * (P/FRQ)
+        faculty_data = await self.get_faculty_counts()
+        F = faculty_data["regular"] + (0.3 * faculty_data["visiting"])
+        F = max(1, F) # avoid div by zero
+        
+        # Benchmark for publications might be 2.5 per faculty per year (over 3 years = 7.5) -> let's say 3 for max marks for engineering
+        ratio_pu = pub_count / F
+        pu_score = min(30.0, 30.0 * (ratio_pu / 3.0)) 
+        
+        # QP calculation (40 marks)
+        # Quality could be top 25% percentile or citations. We have citation_count and is_top_25_percentile.
+        top_25_count = len([p for p in valid_pubs if p.is_top_25_percentile])
+        total_citations = sum(p.citation_count for p in valid_pubs)
+        
+        # Let's say max QP needs 50% in top 25, and a high citation/faculty ratio.
+        qp_top_25_score = min(20.0, 20.0 * ((top_25_count / max(1, pub_count)) / 0.5))
+        qp_cite_score = min(20.0, 20.0 * ((total_citations / F) / 10.0))
+        qp_score = qp_top_25_score + qp_cite_score
+
+        # 2. IPR (Patents)
         stmt_patents = select(PatentRecord).where(
             PatentRecord.college_id == self.college_id,
-            PatentRecord.calendar_year.in_([int(y) for y in years])
+            PatentRecord.calendar_year.in_(calendar_years)
         )
         res_patents = await self.session.execute(stmt_patents)
         patents = res_patents.scalars().all()
         published = len([p for p in patents if p.status == "PUBLISHED"])
         granted = len([p for p in patents if p.status == "GRANTED"])
         
-        ipr_score = min(15.0, (published * 1.0) + (granted * 3.0)) # mock logic
+        # IPR = 15 marks
+        ipr_score = min(15.0, (published * 0.5) + (granted * 2.0))
         
-        # FPPP (Sponsored + Consultancy)
+        # 3. FPPP (Sponsored + Consultancy)
         stmt_spon = select(func.sum(SponsoredResearchRecord.amount_received)).where(
             SponsoredResearchRecord.college_id == self.college_id,
             SponsoredResearchRecord.academic_year.in_(years)
@@ -218,17 +270,14 @@ class NIRFGenerator(BaseAccreditationGenerator):
         edp_amount = res_edp.scalar() or 0.0
 
         total_earnings = sponsored_amount + consultancy_amount + edp_amount
+        # FPPP = 15 marks
         fppp_score = min(15.0, 15.0 * (total_earnings / 50000000.0))
 
-        # Mock PU and QP as we don't have SCOPUS/WebOfScience integration yet
-        pu_score = 25.0
-        qp_score = 20.0
-        
-        total_rpii = pu_score + qp_score + ipr_score + fppp_score
+        total_rp = pu_score + qp_score + ipr_score + fppp_score
         
         return {
-            "parameter": "RPII",
-            "total_score": round(total_rpii, 2),
+            "parameter": "RP",
+            "total_score": round(total_rp, 2),
             "max_score": 100,
             "components": {
                 "PU": round(pu_score, 2),
@@ -237,6 +286,9 @@ class NIRFGenerator(BaseAccreditationGenerator):
                 "FPPP": round(fppp_score, 2)
             },
             "raw_data": {
+                "publications": pub_count,
+                "top_25_publications": top_25_count,
+                "total_citations": total_citations,
                 "patents_published": published,
                 "patents_granted": granted,
                 "sponsored_amount": int(round(sponsored_amount)),
@@ -343,17 +395,17 @@ class NIRFGenerator(BaseAccreditationGenerator):
         oi = await self.calculate_oi()
         pr = await self.calculate_pr(tlr, rpii, go, oi)
         
-        # Colleges weightage: TLR 0.40, RPII 0.20, GO 0.15, OI 0.15, PR 0.10
+        # Engineering 2025 weightage: TLR 0.30, RP 0.30, GO 0.20, OI 0.10, PR 0.10
         final_score = (
-            (tlr["total_score"] * 0.40) +
-            (rpii["total_score"] * 0.20) +
-            (go["total_score"] * 0.15) +
-            (oi["total_score"] * 0.15) +
+            (tlr["total_score"] * 0.30) +
+            (rpii["total_score"] * 0.30) +
+            (go["total_score"] * 0.20) +
+            (oi["total_score"] * 0.10) +
             (pr["total_score"] * 0.10)
         )
         
         return {
-            "report_type": "NIRF_2024",
+            "report_type": "NIRF_2025",
             "college_id": self.college_id,
             "year": self.report_year,
             "final_score": round(final_score, 2),

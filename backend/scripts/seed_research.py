@@ -14,7 +14,9 @@ from app.models.accreditation import (
     PatentRecord, 
     SponsoredResearchRecord, 
     ConsultancyRecord, 
-    ExecutiveDevelopmentProgram
+    ExecutiveDevelopmentProgram,
+    PublicationRecord,
+    PhDGraduationRecord
 )
 
 async def run():
@@ -37,12 +39,18 @@ async def run():
             print("No faculty found. Run seed_profiles.py first.")
             return
 
+        # Fetch students
+        result = await db.execute(select(User).where(User.college_id == college.id, User.role == "student"))
+        students = list(result.scalars().all())
+
         # Clear old research data
         await db.execute(ResearchOrganization.__table__.delete().where(ResearchOrganization.college_id == college.id))
         await db.execute(PatentRecord.__table__.delete().where(PatentRecord.college_id == college.id))
         await db.execute(SponsoredResearchRecord.__table__.delete().where(SponsoredResearchRecord.college_id == college.id))
         await db.execute(ConsultancyRecord.__table__.delete().where(ConsultancyRecord.college_id == college.id))
         await db.execute(ExecutiveDevelopmentProgram.__table__.delete().where(ExecutiveDevelopmentProgram.college_id == college.id))
+        await db.execute(PublicationRecord.__table__.delete().where(PublicationRecord.college_id == college.id))
+        await db.execute(PhDGraduationRecord.__table__.delete().where(PhDGraduationRecord.college_id == college.id))
 
         # 1. Organizations
         orgs = [
@@ -122,9 +130,46 @@ async def run():
                     )
                 )
 
+        # 6. Publications
+        journals = ["IEEE Access", "Nature", "Science", "ACM Computing Surveys", "Journal of AI Research", "International Journal of Engineering"]
+        for y in calendar_years:
+            for _ in range(random.randint(40, 120)):
+                f = random.choice(faculty)
+                new_records.append(
+                    PublicationRecord(
+                        college_id=college.id,
+                        faculty_id=f.id,
+                        title=f"A Study on {random.choice(patent_titles)} in Modern Engineering",
+                        calendar_year=y,
+                        journal_name=random.choice(journals),
+                        citation_count=random.randint(0, 150),
+                        is_top_25_percentile=random.choice([True, False, False, False]), # 25% chance
+                        is_retracted=random.choice([False, False, False, False, True]) if random.random() < 0.05 else False
+                    )
+                )
+
+        # 7. PhD Graduations
+        from datetime import date
+        for y in years:
+            for _ in range(random.randint(5, 25)):
+                student = random.choice(students) if students else None
+                supervisor = random.choice(faculty)
+                year_num = int(y)
+                new_records.append(
+                    PhDGraduationRecord(
+                        college_id=college.id,
+                        student_id=student.id if student else None,
+                        student_name=f"Student {random.randint(1000, 9999)}",
+                        academic_year=y,
+                        thesis_title=f"Advanced {random.choice(patent_titles)}",
+                        supervisor_id=supervisor.id,
+                        awarded_date=date(year_num + 1, random.randint(1, 12), random.randint(1, 28))
+                    )
+                )
+
         db.add_all(new_records)
         await db.commit()
-        print(f"Successfully inserted {len(new_records)} research/consultancy records.")
+        print(f"Successfully inserted {len(new_records)} research/consultancy/publication/phd records.")
 
 if __name__ == "__main__":
     asyncio.run(run())

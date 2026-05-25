@@ -465,3 +465,37 @@ class ExecutiveDevelopmentProgram(Base, SoftDeleteMixin):
     participants     = Column(Integer, nullable=False, server_default=text('0'))
     annual_earnings  = Column(Float, nullable=False, server_default=text('0.0'))
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PublicationRecord(Base, SoftDeleteMixin):
+    """
+    Tracks faculty publications and their quality metrics (citations, percentiles) for NIRF Research (RP) scores.
+    """
+    __tablename__ = "publication_records"
+    id               = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id       = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    faculty_id       = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title            = Column(String, nullable=False)
+    calendar_year    = Column(Integer, nullable=False)
+    journal_name     = Column(String, nullable=True)
+    citation_count   = Column(Integer, nullable=False, server_default=text('0'))
+    is_top_25_percentile = Column(Boolean, nullable=False, server_default=text('false'))
+    is_retracted     = Column(Boolean, nullable=False, server_default=text('false'))
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PhDGraduationRecord(Base, SoftDeleteMixin):
+    """
+    Tracks graduated Ph.D. students for NIRF Graduation Outcomes (GPHD).
+    """
+    __tablename__ = "phd_graduation_records"
+    id               = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id       = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id       = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    student_name     = Column(String, nullable=False) # In case they are not in the system
+    academic_year    = Column(String, nullable=False)
+    thesis_title     = Column(String, nullable=True)
+    supervisor_id    = Column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    awarded_date     = Column(Date, nullable=False)
+    created_at       = Column(DateTime(timezone=True), server_default=func.now())
+
