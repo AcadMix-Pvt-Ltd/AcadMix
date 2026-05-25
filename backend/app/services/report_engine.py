@@ -273,18 +273,9 @@ class ReportEngineService:
         }
 
     async def _calculate_faculty_metrics(self, college_id: str, department_id: str) -> dict:
-        from app.models.accreditation import FacultyProfile
-        from app.models.core import UserProfile
-        
-        # Join FacultyProfile and UserProfile to get department
-        faculty = (await self.session.scalars(
-            select(FacultyProfile)
-            .join(UserProfile, UserProfile.user_id == FacultyProfile.faculty_id)
-            .where(
-                FacultyProfile.college_id == college_id,
-                UserProfile.department == department_id
-            )
-        )).all()
+        from app.services.institution_stats import InstitutionStatsService
+        stats_svc = InstitutionStatsService(self.session)
+        faculty = await stats_svc.get_faculty_details(college_id, department_id)
 
         total_f = len(faculty)
         if total_f == 0:
@@ -299,15 +290,15 @@ class ReportEngineService:
                 "asst_count": 0
             }
 
-        phd_count = sum(1 for f in faculty if f.qualification and 'phd' in f.qualification.lower())
-        pg_count = sum(1 for f in faculty if f.qualification and any(q in f.qualification.lower() for q in ['mtech', 'me', 'msc', 'm.tech', 'm.e', 'pg']))
+        phd_count = sum(1 for f in faculty if f["qualification"] and 'phd' in f["qualification"].lower())
+        pg_count = sum(1 for f in faculty if f["qualification"] and any(q in f["qualification"].lower() for q in ['mtech', 'me', 'msc', 'm.tech', 'm.e', 'pg']))
         
         # Qualification Score: 1.5 * ((10X + 4Y) / F)
         qual_score = 1.5 * ((10 * phd_count) + (4 * pg_count)) / total_f
 
-        prof_count = sum(1 for f in faculty if f.designation and 'professor' in f.designation.lower() and 'assistant' not in f.designation.lower() and 'associate' not in f.designation.lower())
-        assoc_count = sum(1 for f in faculty if f.designation and 'associate' in f.designation.lower())
-        asst_count = sum(1 for f in faculty if f.designation and 'assistant' in f.designation.lower())
+        prof_count = sum(1 for f in faculty if f["designation"] and 'professor' in f["designation"].lower() and 'assistant' not in f["designation"].lower() and 'associate' not in f["designation"].lower())
+        assoc_count = sum(1 for f in faculty if f["designation"] and 'associate' in f["designation"].lower())
+        asst_count = sum(1 for f in faculty if f["designation"] and 'assistant' in f["designation"].lower())
 
         # Cadre Proportion: required ratio: Prof:Assoc:Asst = 3:6:20. Total required parts = 29.
         req_prof = max((total_f * 3) / 29.0, 1)
@@ -527,41 +518,21 @@ class ReportEngineService:
         NBA Criterion 5: Faculty Information and Contributions
         Calculates Student-Faculty Ratio (SFR) and Cadre Proportions.
         """
-        from app.models.core import User
-        from app.models.accreditation import FacultyProfile
-        from sqlalchemy import select, func
+        from app.services.institution_stats import InstitutionStatsService
+        stats_svc = InstitutionStatsService(self.session)
         
-        # Total Students
-        total_students = (await self.session.scalars(
-            select(func.count(User.id)).where(
-                User.college_id == college_id,
-                User.role == 'student',
-                User.is_deleted == False
-            )
-        )).first() or 0
-        
-        # Total Faculty
-        total_faculty = (await self.session.scalars(
-            select(func.count(User.id)).where(
-                User.college_id == college_id,
-                User.role == 'faculty',
-                User.is_deleted == False
-            )
-        )).first() or 0
+        # Total Students & Faculty
+        total_students = await stats_svc.get_active_student_count(college_id)
+        total_faculty = await stats_svc.get_active_faculty_count(college_id)
         
         sfr = round(total_students / total_faculty, 2) if total_faculty > 0 else 0.0
         
         # Cadre Proportion
-        profiles = (await self.session.scalars(
-            select(FacultyProfile).where(
-                FacultyProfile.college_id == college_id,
-                FacultyProfile.is_deleted == False
-            )
-        )).all()
+        profiles = await stats_svc.get_faculty_details(college_id)
         
-        professors = sum(1 for p in profiles if p.designation and 'Professor' in p.designation and 'Assistant' not in p.designation and 'Associate' not in p.designation)
-        associates = sum(1 for p in profiles if p.designation and 'Associate Professor' in p.designation)
-        assistants = sum(1 for p in profiles if p.designation and 'Assistant Professor' in p.designation)
+        professors = sum(1 for p in profiles if p["designation"] and 'Professor' in p["designation"] and 'Assistant' not in p["designation"] and 'Associate' not in p["designation"])
+        associates = sum(1 for p in profiles if p["designation"] and 'Associate Professor' in p["designation"])
+        assistants = sum(1 for p in profiles if p["designation"] and 'Assistant Professor' in p["designation"])
         
         # Required Cadre is 1:2:6 for SFR of 1:15 or 1:20
         # If total_faculty is N, Required Profs = N/9, Required Assoc = 2N/9, Required Asst = 6N/9

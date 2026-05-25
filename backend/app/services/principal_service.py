@@ -77,25 +77,12 @@ class PrincipalService:
     # ── Dashboards & Quick Stats ─────────────────────────────────────────────
 
     async def get_dashboard_summary(self, college_id: str) -> Dict[str, int]:
-        students_count = await self.db.scalar(
-            select(func.count(models.User.id)).where(
-                models.User.college_id == college_id,
-                models.User.role == "student"
-            )
-        )
+        from app.services.institution_stats import InstitutionStatsService
+        stats_svc = InstitutionStatsService(self.db)
         
-        faculty_count = await self.db.scalar(
-            select(func.count(models.User.id)).where(
-                models.User.college_id == college_id,
-                models.User.role.in_(["teacher", "faculty"])
-            )
-        )
-        
-        depts_count = await self.db.scalar(
-            select(func.count(models.Department.id)).where(
-                models.Department.college_id == college_id
-            )
-        )
+        students_count = await stats_svc.get_active_student_count(college_id)
+        faculty_count = await stats_svc.get_active_faculty_count(college_id)
+        depts_count = await stats_svc.get_department_count(college_id)
         
         pending_hod_leaves = await self.db.scalar(
             select(func.count(models.LeaveRequest.id)).where(

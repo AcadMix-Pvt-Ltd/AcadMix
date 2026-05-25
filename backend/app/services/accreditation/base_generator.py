@@ -34,17 +34,10 @@ class BaseAccreditationGenerator:
         sanc_res = await self.session.execute(stmt_sanc)
         sanctioned = sanc_res.scalar() or 0
 
-        # Get Actual (Active Students)
-        stmt_act = select(func.count(UserProfile.id)).join(
-            User, User.id == UserProfile.user_id
-        ).where(
-            UserProfile.college_id == self.college_id,
-            User.role == "student",
-            UserProfile.enrollment_status == "active",
-            User.is_deleted == False
-        )
-        act_res = await self.session.execute(stmt_act)
-        actual = act_res.scalar() or 0
+        # Get Actual (Active Students) from SSoT
+        from app.services.institution_stats import InstitutionStatsService
+        stats_svc = InstitutionStatsService(self.session)
+        actual = await stats_svc.get_active_student_count(self.college_id)
         
         return int(sanctioned), int(actual)
 
@@ -53,19 +46,9 @@ class BaseAccreditationGenerator:
         Returns detailed faculty counts.
         Shared SSoT for NIRF TLR, NAAC C2, NBA C5.
         """
-        stmt = select(
-            User.id,
-            FacultyProfile.qualification,
-            FacultyProfile.experience_years
-        ).join(
-            FacultyProfile, FacultyProfile.faculty_id == User.id
-        ).where(
-            User.college_id == self.college_id,
-            User.role.in_(["faculty", "teacher", "hod", "principal"]),
-            User.is_deleted == False
-        )
-        res = await self.session.execute(stmt)
-        faculty_list = res.all()
+        from app.services.institution_stats import InstitutionStatsService
+        stats_svc = InstitutionStatsService(self.session)
+        faculty_list = await stats_svc.get_faculty_details(self.college_id)
 
         total = len(faculty_list)
         regular = 0
@@ -80,10 +63,10 @@ class BaseAccreditationGenerator:
             else:
                 visiting += 1
                 
-            if f.qualification and "phd" in f.qualification.lower():
+            if f["qualification"] and "phd" in f["qualification"].lower():
                 phd_count += 1
                 
-            total_experience_years += (f.experience_years or 0)
+            total_experience_years += (f["experience_years"] or 0)
 
         return {
             "total": total,
