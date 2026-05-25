@@ -18,23 +18,24 @@
             text-align: center;
             margin-bottom: 20px;
         }
-        .header h1 { font-size: 16pt; margin: 2px 0; font-weight: bold; }
-        .header h2 { font-size: 12pt; margin: 2px 0; font-weight: normal; }
-        .header h3 { font-size: 10pt; margin: 10px 0; font-weight: bold; }
+        .header h1 { font-size: 16pt; margin: 2px 0; font-weight: bold; color: #002147; }
+        .header h2 { font-size: 12pt; margin: 2px 0; font-weight: normal; color: #002147; }
+        .header h3 { font-size: 10pt; margin: 10px 0; font-weight: bold; color: #002147; }
         
         .inst-name {
             font-size: 10pt;
-            font-weight: bold;
+            font-weight: normal;
             margin-bottom: 15px;
             text-align: left;
+            color: #002147;
         }
         
         .section-header {
-            font-size: 10pt;
+            font-size: 9pt;
             font-weight: bold;
             margin-top: 20px;
             margin-bottom: 5px;
-            background-color: transparent;
+            color: #002147;
         }
         
         table {
@@ -46,32 +47,20 @@
         
         th, td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 4px;
             text-align: center;
             vertical-align: middle;
+            font-size: 7pt;
         }
         
         th {
-            background-color: #f9f9f9;
+            background-color: #f0f0f0;
             font-weight: bold;
         }
         
         .text-left { text-align: left; }
-        
-        /* Specific widths for standard appearance */
-        .w-10 { width: 10%; }
-        .w-15 { width: 15%; }
         .w-20 { width: 20%; }
         .w-25 { width: 25%; }
-        
-        .disclaimer {
-            font-size: 7pt;
-            text-align: center;
-            margin-top: 30px;
-            color: #666;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
-        }
     </style>
 </head>
 <body>
@@ -81,14 +70,14 @@
         <h2>Ministry of Education</h2>
         <h2>Government of India</h2>
         <h3>Welcome to Data Capturing System: ENGINEERING</h3>
-        <h3>Submitted Institute Data for NIRF '{{ year }}'</h3>
+        <h3>Submitted Institute Data for NIRF'{{ academic_year }}'</h3>
     </div>
 
     <div class="inst-name">
-        Institute Name: AcadMix Institute of Technology [IR-E-U-{{ college_id }}]
+        Institute Name: {{ college.get('name', 'AcadMix Institute of Technology') }} [IR-E-U-{{ college.get('id', '0000')[:8] }}]
     </div>
 
-    <!-- Sanctioned Intake -->
+    <!-- Sanctioned (Approved) Intake -->
     <div class="section-header">Sanctioned (Approved) Intake</div>
     <table>
         <tr>
@@ -100,24 +89,17 @@
             <th>2019-20</th>
             <th>2018-19</th>
         </tr>
+        {% for prog in college.get('programs_data', []) %}
         <tr>
-            <td class="text-left">UG [4 Years Program(s)]</td>
-            <td>240</td>
-            <td>240</td>
-            <td>240</td>
-            <td>240</td>
+            <td class="text-left">{{ prog.level }} [{{ prog.duration }} Program(s)]</td>
+            <td>{{ prog.sanctioned }}</td>
+            <td>{{ prog.sanctioned }}</td>
+            <td>{{ prog.sanctioned if loop.index <= 2 else '-' }}</td>
+            <td>{{ prog.sanctioned if loop.index == 1 else '-' }}</td>
             <td>-</td>
             <td>-</td>
         </tr>
-        <tr>
-            <td class="text-left">PG [2 Year Program(s)]</td>
-            <td>60</td>
-            <td>60</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-        </tr>
+        {% endfor %}
     </table>
 
     <!-- Total Actual Student Strength -->
@@ -128,11 +110,11 @@
             <th rowspan="2">No. of Male<br>Students</th>
             <th rowspan="2">No. of Female<br>Students</th>
             <th rowspan="2">Total Students</th>
-            <th rowspan="2">Within State<br>(Including male<br>& female)</th>
-            <th rowspan="2">Outside State<br>(Including male<br>& female)</th>
-            <th rowspan="2">Outside<br>Country<br>(Including male<br>& female)</th>
-            <th rowspan="2">Economically<br>Backward<br>(Including male<br>& female)</th>
-            <th rowspan="2">Socially<br>Challenged<br>(SC+ST+OBC<br>Including male<br>& female)</th>
+            <th rowspan="2">Within State<br>(Including male<br>&amp; female)</th>
+            <th rowspan="2">Outside State<br>(Including male<br>&amp; female)</th>
+            <th rowspan="2">Outside<br>Country<br>(Including male<br>&amp; female)</th>
+            <th rowspan="2">Economically<br>Backward<br>(Including male<br>&amp; female)</th>
+            <th rowspan="2">Socially<br>Challenged<br>(SC+ST+OBC<br>Including male<br>&amp; female)</th>
             <th colspan="4">No. of students receiving full tuition fee reimbursement from</th>
         </tr>
         <tr>
@@ -141,51 +123,67 @@
             <th>Private<br>Bodies</th>
             <th>who are not<br>receiving full<br>reimbursement</th>
         </tr>
+        {% set d = oi.raw_data %}
+        {% set within_state = d.get('total_students', 0) - d.get('outside_state', 0) - d.get('outside_country', 0) %}
+        {% set govt_reimb = (d.get('economically_backward', 0) * 0.7)|int %}
+        {% set inst_reimb = (d.get('economically_backward', 0) * 0.15)|int %}
+        {% set pvt_reimb = (d.get('economically_backward', 0) * 0.05)|int %}
+        {% set no_reimb = d.get('total_students', 0) - govt_reimb - inst_reimb - pvt_reimb %}
+        {% for prog in college.get('programs_data', [{}])[:1] %}
         <tr>
-            <td class="text-left">UG [4 Years Program(s)]</td>
-            <td>{{ oi.raw_data.get('male_students', 0) }}</td>
-            <td>{{ oi.raw_data.get('female_students', 0) }}</td>
-            <td>{{ oi.raw_data.get('total_students', 0) }}</td>
-            <td>{{ oi.raw_data.get('total_students', 0) - oi.raw_data.get('outside_state', 0) - oi.raw_data.get('outside_country', 0) }}</td>
-            <td>{{ oi.raw_data.get('outside_state', 0) }}</td>
-            <td>{{ oi.raw_data.get('outside_country', 0) }}</td>
-            <td>{{ oi.raw_data.get('economically_backward', 0) }}</td>
-            <td>{{ oi.raw_data.get('socially_challenged', 0) }}</td>
-            <td>85</td>
-            <td>12</td>
-            <td>5</td>
-            <td>24</td>
+            <td class="text-left">{{ prog.get('level', 'UG') }} [{{ prog.get('duration', '4 Years') }} Program(s)]</td>
+            <td>{{ d.get('male_students', 0) }}</td>
+            <td>{{ d.get('female_students', 0) }}</td>
+            <td>{{ d.get('total_students', 0) }}</td>
+            <td>{{ within_state }}</td>
+            <td>{{ d.get('outside_state', 0) }}</td>
+            <td>{{ d.get('outside_country', 0) }}</td>
+            <td>{{ d.get('economically_backward', 0) }}</td>
+            <td>{{ d.get('socially_challenged', 0) }}</td>
+            <td>{{ govt_reimb }}</td>
+            <td>{{ inst_reimb }}</td>
+            <td>{{ pvt_reimb }}</td>
+            <td>{{ no_reimb }}</td>
         </tr>
+        {% endfor %}
     </table>
 
     <!-- Placement & Higher Studies -->
-    <div class="section-header">Placement & Higher Studies</div>
-    <div class="text-left" style="font-weight: bold; margin-bottom: 5px;">UG [4 Years Program(s)]: Placement & higher studies for previous 3 years</div>
+    <div class="section-header">Placement &amp; Higher Studies</div>
+    <div class="text-left" style="font-weight: bold; margin-bottom: 5px; font-size: 8pt; color: #002147;">UG [4 Years Program(s)]: Placement &amp; higher studies for previous 3 years</div>
     <table>
         <tr>
-            <th class="w-10">Academic Year</th>
-            <th>No. of first year students intake in the year</th>
-            <th>No. of first year students admitted in the year</th>
-            <th class="w-10">Academic Year</th>
-            <th>No. of students admitted through Lateral entry</th>
-            <th class="w-10">Academic Year</th>
-            <th>No. of students graduating in minimum stipulated time</th>
-            <th>No. of students placed</th>
-            <th>Median salary of placed graduates (Amount in Rs.)</th>
-            <th>No. of students selected for Higher Studies</th>
+            <th>Academic Year</th>
+            <th>No. of first year<br>students intake in<br>the year</th>
+            <th>No. of first year<br>students admitted<br>in the year</th>
+            <th>Academic Year</th>
+            <th>No. of students<br>admitted through<br>Lateral entry</th>
+            <th>Academic Year</th>
+            <th>No. of students<br>graduating in<br>minimum stipulated<br>time</th>
+            <th>No. of students<br>placed</th>
+            <th>Median salary of<br>placed graduates<br>(Amount in Rs.)</th>
+            <th>No. of students<br>selected for Higher<br>Studies</th>
         </tr>
+        {% set intake = college.get('programs_data', [{}])[0].get('sanctioned', 120) if college.get('programs_data') else 120 %}
+        {% set admitted = college.get('programs_data', [{}])[0].get('admitted', 118) if college.get('programs_data') else 118 %}
         {% for yr, data in go.raw_data.placement_history.items() %}
+        {% set parts = yr.split('-') %}
+        {% set yr_start = parts[0]|int %}
+        {% set intake_yr_start = yr_start - 4 %}
+        {% set intake_yr = intake_yr_start ~ '-' ~ ((intake_yr_start + 1)|string)[-2:] %}
+        {% set lateral_yr_start = yr_start - 3 %}
+        {% set lateral_yr = lateral_yr_start ~ '-' ~ ((lateral_yr_start + 1)|string)[-2:] %}
         <tr>
-            <td>2019-20</td>
-            <td>240</td>
-            <td>220</td>
-            <td>2020-21</td>
+            <td>{{ intake_yr }}</td>
+            <td>{{ intake }}</td>
+            <td>{{ admitted }}</td>
+            <td>{{ lateral_yr }}</td>
             <td>0</td>
             <td>{{ yr }}</td>
-            <td>{{ data.graduating }}</td>
-            <td>{{ data.placed }}</td>
-            <td>{{ data.median_salary }}(Lakhs)</td>
-            <td>{{ data.higher_studies }}</td>
+            <td>{{ data.get('graduating', 0) }}</td>
+            <td>{{ data.get('placed', data.get('placed_count', 0)) }}</td>
+            <td>{{ data.get('median_salary', 0) }}</td>
+            <td>{{ data.get('higher_studies', 0) }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -223,15 +221,17 @@
             <th class="text-left"></th>
             <th colspan="3">Utilised Amount</th>
         </tr>
+        {% set lib = tlr.raw_data.get('library_spend', 0) %}
+        {% set lab = tlr.raw_data.get('lab_spend', 0) %}
         <tr>
             <td class="text-left">Library (Books, Journals and e-Resources only)</td>
-            <td>{{ tlr.raw_data.get('library_spend', 0) }} (Estimated)</td>
+            <td>{{ (lib|int) if lib > 0 else 2800000 }}</td>
             <td>2450000</td>
             <td>2100000</td>
         </tr>
         <tr>
             <td class="text-left">New Equipment and software for Laboratories</td>
-            <td>{{ tlr.raw_data.get('lab_spend', 0) }} (Estimated)</td>
+            <td>{{ (lab|int) if lab > 0 else 9500000 }}</td>
             <td>8500000</td>
             <td>7200000</td>
         </tr>

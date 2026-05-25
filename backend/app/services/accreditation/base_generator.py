@@ -125,8 +125,10 @@ class BaseAccreditationGenerator:
         inflated counts from seeded/test data.
         """
         # Get sanctioned intake to use as a sanity cap
-        sanctioned, _ = await self.get_sanctioned_intake_vs_actual()
-        # A college with 240 intake/year and 4-year programs has ~960 students max
+        db_sanctioned, _ = await self.get_sanctioned_intake_vs_actual()
+        # Use display_sanctioned (from programs_data) if available
+        sanctioned = getattr(self, 'display_sanctioned', None) or db_sanctioned
+        # A college with 258 intake/year and 4-year programs has ~1032 students max
         max_reasonable_students = max(sanctioned * 4, 500)  # floor of 500
         
         stmt = select(UserProfile.gender).join(
