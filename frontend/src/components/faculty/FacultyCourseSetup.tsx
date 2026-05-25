@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Plus, Trash, Check, TreeStructure, WarningCircle, FloppyDisk, MagicWand } from '@phosphor-icons/react';

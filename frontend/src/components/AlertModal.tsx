@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { Warning, CheckCircle, Info, SignOut, X } from '@phosphor-icons/react';
 

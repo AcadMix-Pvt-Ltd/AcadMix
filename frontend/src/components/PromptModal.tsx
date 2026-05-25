@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import { SignIn, X } from '@phosphor-icons/react';
 

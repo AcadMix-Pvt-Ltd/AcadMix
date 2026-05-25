@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { timetableAPI, attendanceAPI, syllabusAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';

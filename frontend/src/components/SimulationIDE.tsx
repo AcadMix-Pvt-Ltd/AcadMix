@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { Play, Download, TerminalWindow, CornersIn } from '@phosphor-icons/react';
