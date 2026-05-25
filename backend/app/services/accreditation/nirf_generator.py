@@ -25,10 +25,7 @@ class NIRFGenerator(BaseAccreditationGenerator):
         faculty_data = await self.get_faculty_counts()
         
         N = actual_students if actual_students > 0 else 1
-        
-        # Assume some PhDs for SS. We use a base metric if no direct PhD tracking.
-        active_phd = max(0, int(N * 0.015)) # 1.5% of students are PhDs
-        total_students_ss = N + active_phd
+        total_students_ss = N
         
         # SS Calculation: SS = f(N_T). Let's assume full 20 marks for standard intake
         ss_score = 20.0 
