@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Clock, BookOpen, Fire, Play, CheckCircle } from '@phosphor-icons/react';
-import { analyticsAPI } from '../services/api';
+import { useStudentDashboard } from '../hooks/useAnalytics';
 import PageHeader from '../components/PageHeader';
 
-const getDeadlineInfo = (quiz) => {
+const getDeadlineInfo = (quiz: any) => {
   const end = quiz.end_date || quiz.deadline;
   if (!end) return null;
   const diff = new Date(end).getTime() - Date.now();
@@ -14,22 +14,13 @@ const getDeadlineInfo = (quiz) => {
   return { text: `${days}d left`, urgent: days <= 2 };
 };
 
-const AvailableQuizzes = ({ navigate, user }) => {
-  const [quizzes, setQuizzes] = useState([]);
-  const [inProgress, setInProgress] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface AvailableQuizzesProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await analyticsAPI.studentDashboard();
-        setQuizzes(data.upcoming_quizzes || []);
-        setInProgress(data.in_progress || []);
-      } catch (err) { console.error(err); }
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+const AvailableQuizzes: React.FC<AvailableQuizzesProps> = ({ navigate, user }) => {
+  const { data, isLoading: loading } = useStudentDashboard();
 
   if (loading) return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300 flex items-center justify-center">
@@ -39,6 +30,9 @@ const AvailableQuizzes = ({ navigate, user }) => {
       </div>
     </div>
   );
+
+  const quizzes = data?.upcoming_quizzes || [];
+  const inProgress = data?.in_progress || [];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">

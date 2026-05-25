@@ -1,42 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { Users, MagnifyingGlass, GraduationCap } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { marksAPI } from '../services/api';
+import { useMyAssignments, useStudentsForAssignment } from '../hooks/useMarks';
 
-const StudentManagement = ({ navigate, user }) => {
-  const [assignments, setAssignments] = useState([]);
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
-  const [students, setStudents] = useState([]);
+interface StudentManagementProps {
+  navigate: (path: string) => void;
+  user: any;
+}
+
+const StudentManagement: React.FC<StudentManagementProps> = ({ navigate, user }) => {
+  const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
 
+  const { data: assignments = [], isLoading: assignmentsLoading } = useMyAssignments();
+
+  // Set the first assignment as selected if none is selected yet
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await marksAPI.myAssignments();
-        setAssignments(data);
-        if (data.length > 0) {
-          setSelectedAssignment(data[0]);
-          const res = await marksAPI.students(data[0].department, data[0].batch, data[0].section);
-          setStudents(res.data);
-        }
-      } catch (err) { console.error(err); }
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+    if (assignments.length > 0 && !selectedAssignment) {
+      setSelectedAssignment(assignments[0]);
+    }
+  }, [assignments, selectedAssignment]);
 
-  const handleClassSelect = async (a) => {
+  const { data: students = [], isLoading: studentsLoading } = useStudentsForAssignment(
+    selectedAssignment?.department,
+    selectedAssignment?.batch,
+    selectedAssignment?.section
+  );
+
+  const loading = assignmentsLoading || studentsLoading;
+
+  const handleClassSelect = (a: any) => {
     setSelectedAssignment(a);
-    setLoading(true);
-    try {
-      const { data } = await marksAPI.students(a.department, a.batch, a.section);
-      setStudents(data);
-    } catch (err) { console.error(err); }
-    setLoading(false);
   };
 
-  const filtered = students.filter(s =>
+  const filtered = students.filter((s: any) =>
     s.name?.toLowerCase().includes(search.toLowerCase()) ||
     s.college_id?.toLowerCase().includes(search.toLowerCase())
   );

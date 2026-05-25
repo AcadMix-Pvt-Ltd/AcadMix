@@ -1,37 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ChartBar, Clock, Users, Trophy, CheckCircle, XCircle, TrendUp, CircleNotch, CaretUp, CaretDown } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
 import { analyticsAPI } from '../services/api';
+import { useClassResults } from '../hooks/useAnalytics';
 
-const ClassResults = ({ navigate, user }) => {
+interface ClassResultsProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
+
+const ClassResults: React.FC<ClassResultsProps> = ({ navigate, user }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [loading, setLoading] = useState(true);
-  
-  const [assignedClasses, setAssignedClasses] = useState([]);
-  const [quizResults, setQuizResults] = useState({});
-  const [midMarks, setMidMarks] = useState({});
-
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<any>(null);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
-  const [quizDetails, setQuizDetails] = useState([]);
+  const [quizDetails, setQuizDetails] = useState<any[]>([]);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'rollNo', direction: 'asc' });
 
-  useEffect(() => {
-    const fetchAnalytics = async () => {
-      try {
-        const { data } = await analyticsAPI.classResults();
-        setAssignedClasses(data.assignedClasses || []);
-        setQuizResults(data.quizResults || {});
-        setMidMarks(data.midMarks || {});
-      } catch (err) {
-        console.error("Failed to fetch class analytics", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
+  const { data, isLoading: loading } = useClassResults();
+  const assignedClasses = data?.assignedClasses || [];
+  const quizResults = data?.quizResults || {};
+  const midMarks = data?.midMarks || {};
 
   const currentClass = assignedClasses[activeTab] || null;
   const currentQuizzes = currentClass ? (quizResults[currentClass.class_key] || []) : [];

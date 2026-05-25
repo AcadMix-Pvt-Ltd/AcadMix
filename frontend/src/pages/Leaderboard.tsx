@@ -1,25 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Trophy, Fire, Target, Medal, CircleNotch, ChartLine } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { analyticsAPI } from '../services/api';
+import { useLeaderboard } from '../hooks/useLeaderboard';
 
-const Leaderboard = ({ navigate, user, userRole }) => {
-  const [leaderboardData, setLeaderboardData] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface LeaderboardProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+  userRole?: string;
+}
 
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const { data } = await analyticsAPI.leaderboard();
-        setLeaderboardData(data || []);
-      } catch (err) {
-        console.error('Failed to fetch leaderboard', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLeaderboard();
-  }, []);
+const Leaderboard: React.FC<LeaderboardProps> = ({ navigate, user, userRole }) => {
+  const { data: leaderboardData = [], isLoading: loading } = useLeaderboard();
 
   const getBadgeStyle = (rank) => {
     if (rank === 1) return { icon: Trophy, bg: 'bg-amber-50 dark:bg-amber-500/15', text: 'text-amber-500' };

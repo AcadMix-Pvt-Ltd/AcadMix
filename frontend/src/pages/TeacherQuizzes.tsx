@@ -1,42 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Eye, Calendar, Users, ChartLine, Clipboard, PencilLine, Fire } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { analyticsAPI } from '../services/api';
+import { useTeacherDashboard } from '../hooks/useAnalytics';
 
-const statusStyle = {
+const statusStyle: Record<string, string> = {
   active: 'bg-emerald-50 text-emerald-600',
   ended: 'bg-slate-100 text-slate-500 dark:text-slate-400',
   scheduled: 'bg-amber-50 text-amber-600',
   draft: 'bg-purple-50 text-purple-600',
 };
 
-const statusLabel = { active: 'Active', ended: 'Ended', scheduled: 'Scheduled', draft: 'Draft' };
+const statusLabel: Record<string, string> = { active: 'Active', ended: 'Ended', scheduled: 'Scheduled', draft: 'Draft' };
 
-const TeacherQuizzes = ({ navigate, user }) => {
-  const [quizzes, setQuizzes] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface TeacherQuizzesProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
+
+const TeacherQuizzes: React.FC<TeacherQuizzesProps> = ({ navigate, user }) => {
   const [filter, setFilter] = useState('all');
+  
+  const { data, isLoading: loading } = useTeacherDashboard();
+  const quizzes = data?.quizzes || [];
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await analyticsAPI.teacherDashboard();
-        setQuizzes(data.quizzes || []);
-      } catch (err) { console.error(err); }
-      setLoading(false);
-    };
-    fetch();
-  }, []);
-
-  const filtered = quizzes.filter(q => {
+  const filtered = quizzes.filter((q: any) => {
     if (filter === 'active') return q.status === 'active';
     if (filter === 'ended') return q.status === 'ended';
     if (filter === 'draft') return q.status === 'draft';
     return true;
   });
 
-  const activeCount = quizzes.filter(q => q.status === 'active').length;
-  const endedCount = quizzes.filter(q => q.status === 'ended').length;
+  const activeCount = quizzes.filter((q: any) => q.status === 'active').length;
+  const endedCount = quizzes.filter((q: any) => q.status === 'ended').length;
 
   if (loading) return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300 flex items-center justify-center">

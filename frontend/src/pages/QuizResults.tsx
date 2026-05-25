@@ -1,33 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Trophy, Clock, CheckCircle, XCircle, Target } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { attemptsAPI } from '../services/api';
+import { useQuizAttempts } from '../hooks/useQuizzes';
 
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) return (
     <div className="bg-white rounded-xl dark:bg-[#1A202C] p-3 shadow-lg border border-slate-100 dark:border-slate-700">
       <p className="font-bold text-sm text-slate-800 dark:text-slate-100">{label}</p>
-      {payload.map((p, i) => <p key={i} className="text-sm font-medium" style={{ color: p.color }}>{p.name}: {p.value}</p>)}
+      {payload.map((p: any, i: number) => <p key={i} className="text-sm font-medium" style={{ color: p.color }}>{p.name}: {p.value}</p>)}
     </div>
   );
   return null;
 };
 
-const QuizResults = ({ navigate, user }) => {
-  const [attempts, setAttempts] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface QuizResultsProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
 
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        const { data } = await attemptsAPI.list();
-        setAttempts(data.filter(a => a.status === 'submitted'));
-      } catch {}
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+const QuizResults: React.FC<QuizResultsProps> = ({ navigate, user }) => {
+  const { data, isLoading: loading } = useQuizAttempts();
+  const attempts = (data || []).filter((a: any) => a.status === 'submitted');
 
   const avgScore = attempts.length > 0 ? (attempts.reduce((s, a) => s + (a.percentage || 0), 0) / attempts.length).toFixed(1) : 0;
   const bestScore = attempts.length > 0 ? Math.max(...attempts.map(a => a.percentage || 0)) : 0;

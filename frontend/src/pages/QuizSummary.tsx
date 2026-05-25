@@ -1,31 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Trophy, Warning, Code, BookOpen, Minus, CaretDown, CaretUp, Eye } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { attemptsAPI } from '../services/api';
+import { useQuizResult } from '../hooks/useQuizzes';
 
-const QuizSummary = ({ navigate, user, attemptData }) => {
-  const [attempt, setAttempt] = useState(attemptData || null);
-  const [loading, setLoading] = useState(!attemptData);
-  const [expandedQ, setExpandedQ] = useState(new Set());
+interface QuizSummaryProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+  attemptData?: any;
+}
 
-  useEffect(() => {
-    if (attemptData?.id && !attemptData?.results) {
-      // We have an attempt ID but no detailed results — fetch them
-      const fetchResult = async () => {
-        try {
-          const { data } = await attemptsAPI.result(attemptData.id);
-          setAttempt(data);
-        } catch (err) {
-          console.error('Failed to fetch attempt result', err);
-        }
-        setLoading(false);
-      };
-      fetchResult();
-    } else if (attemptData) {
-      setAttempt(attemptData);
-      setLoading(false);
-    }
-  }, [attemptData]);
+const QuizSummary: React.FC<QuizSummaryProps> = ({ navigate, user, attemptData }) => {
+  const [expandedQ, setExpandedQ] = useState<Set<number>>(new Set());
+
+  const { data: attempt, isLoading: loading } = useQuizResult(attemptData?.id, attemptData);
 
   const toggleExpand = (index) => {
     setExpandedQ(prev => {

@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TrendUp, Target, BookOpen, CheckCircle, GraduationCap, ChartBar } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { analyticsAPI } from '../services/api';
+import { useStudentAnalytics } from '../hooks/useAnalytics';
 
-const CustomTooltip = ({ active, payload, label }) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}
+
+const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white rounded-xl dark:bg-[#1A202C] p-3 shadow-lg border border-slate-100 dark:border-slate-700">
@@ -18,24 +24,16 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const Analytics = ({ navigate, user, userRole }) => {
-  const [activeTab, setActiveTab] = useState('quiz');
-  const [analytics, setAnalytics] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const role = userRole || user?.role;
+interface AnalyticsProps {
+  navigate: (path: string) => void;
+  user: any;
+  userRole?: string;
+}
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (user?.id) {
-          const { data } = await analyticsAPI.student(user.id);
-          setAnalytics(data);
-        }
-      } catch (err) { console.error(err); }
-      setLoading(false);
-    };
-    fetchData();
-  }, [user]);
+const Analytics: React.FC<AnalyticsProps> = ({ navigate, user, userRole }) => {
+  const [activeTab, setActiveTab] = useState('quiz');
+  
+  const { data: analytics, isLoading: loading } = useStudentAnalytics(user?.id);
 
   const performanceTrend = [
     { month: 'Aug', quizScore: 75, cgpa: 8.2 }, { month: 'Sep', quizScore: 82, cgpa: 8.3 },

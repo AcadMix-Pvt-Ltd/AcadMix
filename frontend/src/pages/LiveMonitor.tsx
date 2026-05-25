@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, CheckCircle, Clock, Warning, Eye, Camera, CircleNotch, DownloadSimple, StopCircle, Plus, X, StopCircle as StopIcon } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
 import { quizzesAPI } from '../services/api';
+import { useLiveMonitor } from '../hooks/useQuizzes';
 import * as XLSX from 'xlsx';
 
 /* ── Reusable Confirm Modal ──────────────────────────────────────────────── */
@@ -66,38 +67,26 @@ function ConfirmModal({ open, onConfirm, onCancel, title, description, confirmLa
 }
 
 /* ── LiveMonitor ─────────────────────────────────────────────────────────── */
-const LiveMonitor = ({ quiz, navigate, user }) => {
+interface LiveMonitorProps {
+  quiz: any;
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
+
+const LiveMonitor: React.FC<LiveMonitorProps> = ({ quiz, navigate, user }) => {
   const [activeTab, setActiveTab] = useState('active');
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState<{msg: string, type: string} | null>(null);
   const [quizEnded, setQuizEnded] = useState(false);
-  const [extendMins, setExtendMins] = useState(10);
+  const [extendMins, setExtendMins] = useState<number | string>(10);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  const showToast = (msg, type = 'success') => {
+  const { data: students = [], isLoading: loading, refetch: fetchLive } = useLiveMonitor(quiz?.id);
+
+  const showToast = (msg: string, type = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
-
-  const fetchLive = useCallback(async () => {
-    if (!quiz?.id) return;
-    try {
-      const { data } = await quizzesAPI.liveMonitor(quiz.id);
-      setStudents(data || []);
-    } catch (err) {
-      console.error('Live monitor fetch error', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [quiz?.id]);
-
-  useEffect(() => {
-    fetchLive();
-    const interval = setInterval(fetchLive, 10000);
-    return () => clearInterval(interval);
-  }, [fetchLive]);
 
   const handleExtendTime = async () => {
     if (!quiz?.id || actionLoading) return;

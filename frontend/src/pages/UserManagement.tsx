@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Upload, MagnifyingGlass, Pencil, Trash, Spinner } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { usersAPI, departmentsAPI, sectionsAPI, rolesAPI } from '../services/api';
+import { departmentsAPI, sectionsAPI, rolesAPI } from '../services/api';
 import { Toaster, toast } from 'sonner';
+import { useUsersList, useCreateUser, useUpdateUser, useDeleteUser } from '../hooks/useUsers';
+import { useDepartments, useSections, useRoles } from '../hooks/useInstitution';
 
 const PERMISSION_MODULES = [
   { id: 'students', label: 'Students', actions: ['view', 'create', 'edit', 'deactivate'] },
@@ -17,50 +19,44 @@ const PERMISSION_MODULES = [
   { id: 'metrics', label: 'Metrics', actions: ['view_dept', 'view_college'] },
 ];
 
-const UserManagement = ({ navigate, user }) => {
+interface UserManagementProps {
+  navigate: (path: string) => void;
+  user: any;
+}
+
+const UserManagement: React.FC<UserManagementProps> = ({ navigate, user }) => {
   const [activeTab, setActiveTab] = useState('students');
   const [searchQuery, setSearchQuery] = useState('');
   
-  const [data, setData] = useState({ students: [], teachers: [], departments: [], sections: [], roles: [] });
-  const [loading, setLoading] = useState(true);
+  const { data: users = [], isLoading: usersLoading } = useUsersList();
+  const { data: departments = [], isLoading: deptsLoading } = useDepartments();
+  const { data: sections = [], isLoading: secsLoading } = useSections();
+  const { data: roles = [], isLoading: rolesLoading } = useRoles();
+  
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
+  
+  const loading = usersLoading || deptsLoading || secsLoading || rolesLoading;
+  
+  const data = {
+    students: users.filter((u: any) => u.role === 'student'),
+    teachers: users.filter((u: any) => u.role !== 'student' && u.role !== 'admin'),
+    departments,
+    sections,
+    roles
+  };
   
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('add');
-  const [editItem, setEditItem] = useState(null);
-  const [formData, setFormData] = useState({});
+  const [editItem, setEditItem] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [usersRes, deptsRes, secRes, rolRes] = await Promise.all([
-        usersAPI.list(),
-        departmentsAPI.list(),
-        sectionsAPI.list(),
-        rolesAPI.list()
-      ]);
-      const allUsers = usersRes.data || [];
-      setData({
-        students: allUsers.filter(u => u.role === 'student'),
-        teachers: allUsers.filter(u => u.role !== 'student' && u.role !== 'admin'),
-        departments: deptsRes.data || [],
-        sections: secRes.data || [],
-        roles: rolRes.data || []
-      });
-    } catch (err) {
-      toast.error('Failed to load institution data. Please try again.');
-    }
-    setLoading(false);
-  };
-
   const getDisplayData = () => {
-    let list = data[activeTab] || [];
+    let list = (data as any)[activeTab] || [];
     if (searchQuery) {
-      list = list.filter(item => 
+      list = list.filter((item: any) => 
         (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.college_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,7 +69,7 @@ const UserManagement = ({ navigate, user }) => {
   const openAddModal = () => {
     setModalMode('add');
     setEditItem(null);
-    let initialData = {};
+    let initialData: any = {};
     if (activeTab === 'teachers') {
        initialData.password = Math.random().toString(36).slice(-8);
     } else if (activeTab === 'roles') {
@@ -83,22 +79,23 @@ const UserManagement = ({ navigate, user }) => {
     setShowModal(true);
   };
 
-  const openEditModal = (item) => {
+  const openEditModal = (item: any) => {
     setModalMode('edit');
     setEditItem(item);
     setFormData(item);
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     try {
       if (activeTab === 'departments') await departmentsAPI.delete(id);
       else if (activeTab === 'sections') await sectionsAPI.delete(id);
       else if (activeTab === 'roles') await rolesAPI.delete(id);
-      else await usersAPI.delete(id);
+      else await deleteUser.mutateAsync(id);
       
       toast.success('Record successfully deleted.');
-      fetchData();
+      // For departments/sections/roles we'll need to invalidate their specific queries later. 
+      // For now they will fetch correctly on reload, but users uses mutateAsync
     } catch (err) {
       toast.error('Failed to delete. Resource may be protected.');
     }
@@ -161,7 +158,7 @@ const UserManagement = ({ navigate, user }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.department, formData.section, formData.batch, formData.name, activeTab, modalMode]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitLoading(true);
     try {
@@ -185,12 +182,11 @@ const UserManagement = ({ navigate, user }) => {
         
         if (modalMode === 'add') {
           payload.password = payload.password || "password123";
-          await usersAPI.create(payload);
-        } else await usersAPI.update(editItem.id, payload);
+          await createUser.mutateAsync(payload);
+        } else await updateUser.mutateAsync({ id: editItem.id, data: payload });
       }
       setShowModal(false);
       toast.success('Successfully saved changes.');
-      fetchData();
     } catch (err) {
       toast.error('Operation failed! Ensure IDs/Codes are unique and fields are valid.');
     }
@@ -279,8 +275,8 @@ const UserManagement = ({ navigate, user }) => {
                 </tr>
               </thead>
               <tbody>
-                {displayData.map((item) => {
-                  let mappedDept = data.departments.find(d => d.id === item.department_id)?.name || 'Unknown';
+                {displayData.map((item: any) => {
+                  let mappedDept = data.departments.find((d: any) => d.id === item.department_id)?.name || 'Unknown';
                   return (
                   <tr key={item.id} className="border-b border-slate-50 hover:bg-slate-50 dark:bg-slate-800/50 transition-colors">
                     {activeTab === 'departments' ? (

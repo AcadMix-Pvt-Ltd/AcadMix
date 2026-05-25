@@ -3,7 +3,12 @@ import PageHeader from '../components/PageHeader';
 import FacultyProfile from '../components/faculty/FacultyProfile';
 import { motion } from 'framer-motion';
 
-const FacultyProfilePage = ({ navigate, user }) => {
+interface FacultyProfilePageProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
+
+const FacultyProfilePage: React.FC<FacultyProfilePageProps> = ({ navigate, user }) => {
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F19] transition-colors duration-300">
       <PageHeader

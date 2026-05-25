@@ -1,43 +1,38 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { CaretLeft, CaretRight, Calendar, Clock, Users, Eye, PencilLine, Fire, Clipboard, CalendarBlank } from '@phosphor-icons/react';
 import PageHeader from '../components/PageHeader';
-import { analyticsAPI } from '../services/api';
+import { useTeacherDashboard } from '../hooks/useAnalytics';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-const statusConfig = {
+const statusConfig: Record<string, any> = {
   active:    { label: 'Active',    dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-600 ring-emerald-200',  bg: 'bg-emerald-50/60', border: 'border-emerald-200' },
   ended:     { label: 'Ended',     dot: 'bg-slate-400',   badge: 'bg-slate-100 text-slate-500 dark:text-slate-400 ring-slate-200',       bg: 'bg-slate-50 dark:bg-slate-800/50/60',   border: 'border-slate-200 dark:border-slate-700' },
   scheduled: { label: 'Scheduled', dot: 'bg-amber-500',   badge: 'bg-amber-50 text-amber-600 ring-amber-200',       bg: 'bg-amber-50/60',   border: 'border-amber-200' },
   draft:     { label: 'Draft',     dot: 'bg-purple-500',  badge: 'bg-purple-50 text-purple-600 ring-purple-200',     bg: 'bg-purple-50/60',  border: 'border-purple-200' },
 };
 
-const QuizCalendar = ({ navigate, user }) => {
-  const [quizzes, setQuizzes] = useState([]);
-  const [loading, setLoading] = useState(true);
+interface QuizCalendarProps {
+  navigate: (path: string, state?: any) => void;
+  user: any;
+}
+
+const QuizCalendar: React.FC<QuizCalendarProps> = ({ navigate, user }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedQuiz, setSelectedQuiz] = useState<string | null>(null);
+
+  const { data, isLoading: loading } = useTeacherDashboard();
+  const quizzes = data?.quizzes || [];
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  useEffect(() => {
-    const fetchQuizzes = async () => {
-      try {
-        const { data } = await analyticsAPI.teacherDashboard();
-        setQuizzes(data.quizzes || []);
-      } catch (err) { console.error(err); }
-      setLoading(false);
-    };
-    fetchQuizzes();
-  }, []);
-
   // Group quizzes by date string (YYYY-MM-DD)
   const quizMap = useMemo(() => {
-    const map = {};
-    quizzes.forEach(q => {
+    const map: Record<string, any[]> = {};
+    quizzes.forEach((q: any) => {
       const dateStr = q.created_at ? new Date(q.created_at).toISOString().split('T')[0] : null;
       if (dateStr) {
         if (!map[dateStr]) map[dateStr] = [];
