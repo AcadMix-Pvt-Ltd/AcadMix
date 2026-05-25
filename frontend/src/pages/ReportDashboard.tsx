@@ -130,20 +130,20 @@ export default function ReportDashboard({ user }: { user: any }) {
                 
                 <div className="flex flex-col gap-4 text-sm mb-8">
                   <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700/50 pb-2">
+                    <span className="text-slate-500 dark:text-slate-400">SS (Student Strength)</span>
+                    <span className="font-semibold">{previewData.tlr.components.SS} / 20</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700/50 pb-2">
                     <span className="text-slate-500 dark:text-slate-400">FSR (Faculty-Student Ratio)</span>
                     <span className="font-semibold">{previewData.tlr.components.FSR} / 30</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700/50 pb-2">
                     <span className="text-slate-500 dark:text-slate-400">FQE (Qualification & Experience)</span>
-                    <span className="font-semibold">{previewData.tlr.components.FQE} / 30</span>
+                    <span className="font-semibold">{previewData.tlr.components.FQE} / 20</span>
                   </div>
                   <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700/50 pb-2">
-                    <span className="text-slate-500 dark:text-slate-400">LL (Library & Lab Facilities)</span>
-                    <span className="font-semibold">{previewData.tlr.components.LL} / 30</span>
-                  </div>
-                  <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-700/50 pb-2">
-                    <span className="text-slate-500 dark:text-slate-400">SEC (Sports & Extracurricular)</span>
-                    <span className="font-semibold">{previewData.tlr.components.SEC} / 10</span>
+                    <span className="text-slate-500 dark:text-slate-400">FRU (Financial Resources)</span>
+                    <span className="font-semibold">{previewData.tlr.components.FRU} / 30</span>
                   </div>
                 </div>
 
