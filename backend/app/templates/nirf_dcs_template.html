@@ -164,8 +164,16 @@
             <th>Median salary of<br>placed graduates<br>(Amount in Rs.)</th>
             <th>No. of students<br>selected for Higher<br>Studies</th>
         </tr>
-        {% set intake = college.get('programs_data', [{}])[0].get('sanctioned', 120) if college.get('programs_data') else 120 %}
-        {% set admitted = college.get('programs_data', [{}])[0].get('admitted', 118) if college.get('programs_data') else 118 %}
+        {% set intake = 0 %}
+        {% set admitted = 0 %}
+        {% for prog in college.get('programs_data', []) %}
+            {% if prog.get('level') == 'UG' and '4' in (prog.get('duration', '')|string) %}
+                {% set intake = intake + prog.get('sanctioned', 0) %}
+                {% set admitted = admitted + prog.get('admitted', 0) %}
+            {% endif %}
+        {% endfor %}
+        {% if intake == 0 %}{% set intake = 780 %}{% endif %}
+        {% if admitted == 0 %}{% set admitted = 763 %}{% endif %}
         {% for yr, data in go.raw_data.placement_history.items() %}
         {% set parts = yr.split('-') %}
         {% set yr_start = parts[0]|int %}

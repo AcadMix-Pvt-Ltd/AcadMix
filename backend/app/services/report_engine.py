@@ -38,10 +38,10 @@ class ReportEngineService:
                 "vision": "To be a global center of excellence in technological education and research, fostering innovation and leadership to address societal challenges.",
                 "mission": "To impart quality technical education through continuous curriculum innovation. To establish state-of-the-art research facilities. To promote industry-academia collaboration and instill ethical values in our graduates.",
                 "programs_data": [
-                    {"level": "UG", "name": "B.Tech in Computer Science and Engineering", "duration": "4 Years", "medium": "English", "sanctioned": 120, "admitted": 118},
-                    {"level": "UG", "name": "B.Tech in Electronics and Communication", "duration": "4 Years", "medium": "English", "sanctioned": 60, "admitted": 58},
-                    {"level": "UG", "name": "B.Tech in Artificial Intelligence", "duration": "4 Years", "medium": "English", "sanctioned": 60, "admitted": 60},
-                    {"level": "PG", "name": "M.Tech in Data Science", "duration": "2 Years", "medium": "English", "sanctioned": 18, "admitted": 15}
+                    {"level": "UG", "name": "B.Tech in Computer Science and Engineering", "duration": "4 Years", "medium": "English", "sanctioned": 360, "admitted": 355},
+                    {"level": "UG", "name": "B.Tech in Electronics and Communication", "duration": "4 Years", "medium": "English", "sanctioned": 300, "admitted": 290},
+                    {"level": "UG", "name": "B.Tech in Artificial Intelligence", "duration": "4 Years", "medium": "English", "sanctioned": 120, "admitted": 118},
+                    {"level": "PG", "name": "M.Tech in Data Science", "duration": "2 Years", "medium": "English", "sanctioned": 60, "admitted": 55}
                 ],
                 "category_admission_data": [
                     {"year": "2023-2024", "general": 110, "sc": 45, "st": 15, "obc": 81},

@@ -123,16 +123,11 @@ class NIRFGenerator(BaseAccreditationGenerator):
                 mid = len(salaries) // 2
                 median_salary = (salaries[mid] + salaries[~mid]) / 2.0
             
-            # Cap placed to a reasonable number relative to graduating batch
-            # sanctioned_intake is for ALL sections; one graduating cohort ~= intake/year
-            # For the report, we show the UG 4-year program which has ~120-240 sanctioned
-            # Cap to be realistic relative to a single program's graduating batch
-            max_graduating_batch = max(200, int(sanctioned / max(1, len(years))))
-            placed_count = min(raw_placed_count, int(max_graduating_batch * 0.85))
+            placed_count = raw_placed_count
             
             # Estimate graduating = placed + ~10% higher studies + ~5% others
             higher_studies = max(2, int(placed_count * 0.08))
-            graduating = min(max_graduating_batch, placed_count + higher_studies + max(1, int(placed_count * 0.05)))
+            graduating = placed_count + higher_studies + max(1, int(placed_count * 0.05))
             
             # Convert median_salary to integer rupees (if stored in LPA, multiply by 100000)
             median_salary_rupees = int(round(median_salary * 100000)) if median_salary < 200 else int(round(median_salary))

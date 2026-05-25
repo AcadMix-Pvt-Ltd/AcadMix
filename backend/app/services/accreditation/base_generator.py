@@ -147,18 +147,11 @@ class BaseAccreditationGenerator:
         male = len([g for g in genders if g and g.lower() == "male"])
         unspecified = raw_total - female - male
         
-        # Cap total to reasonable number
-        total = min(raw_total, max_reasonable_students)
-        
-        # Scale proportionally if we had to cap
-        if raw_total > 0 and total < raw_total:
-            scale = total / raw_total
-            female = int(female * scale)
-            male = int(male * scale)
-        
         # If male is 0 but we have students, infer from total - female
-        if male == 0 and total > female:
-            male = total - female
+        if male == 0 and raw_total > female:
+            male = raw_total - female
+            
+        total = raw_total
         
         return {
             "total_students": total,
