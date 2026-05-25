@@ -24,17 +24,10 @@ class NIRFGenerator(BaseAccreditationGenerator):
         sanctioned_students, actual_students = await self.get_sanctioned_intake_vs_actual()
         faculty_data = await self.get_faculty_counts()
         
-        # Use display_sanctioned if available for consistent student count
-        display_sanc = getattr(self, 'display_sanctioned', None)
-        if display_sanc:
-            N = display_sanc * 4  # total students across all years
-        else:
-            N = actual_students if actual_students > 0 else 1
-            
-        # Add PhD students to N
-        # We don't have active PhD students tracked directly yet, so we assume ~50 active for a college of 3300
-        # and N remains largely UG/PG + active PhDs. Let's just mock active PhD for SS.
-        active_phd = 50
+        N = actual_students if actual_students > 0 else 1
+        
+        # Assume some PhDs for SS. We use a base metric if no direct PhD tracking.
+        active_phd = max(0, int(N * 0.015)) # 1.5% of students are PhDs
         total_students_ss = N + active_phd
         
         # SS Calculation: SS = f(N_T). Let's assume full 20 marks for standard intake
@@ -104,9 +97,8 @@ class NIRFGenerator(BaseAccreditationGenerator):
             f"{self.report_year-1}-{self.report_year}"
         ]
         
-        # Use display_sanctioned (from programs_data, what appears in report) if available
-        db_sanctioned, _ = await self.get_sanctioned_intake_vs_actual()
-        sanctioned = getattr(self, 'display_sanctioned', None) or db_sanctioned
+        db_sanctioned, actual_students = await self.get_sanctioned_intake_vs_actual()
+        sanctioned = db_sanctioned
         
         placement_data = {}
         total_salary_points = 0.0

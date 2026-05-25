@@ -67,7 +67,7 @@ class InstitutionStatsService:
             User,
             UserProfile,
             FacultyProfile
-        ).join(
+        ).outerjoin(
             UserProfile, User.id == UserProfile.user_id
         ).outerjoin(
             FacultyProfile, FacultyProfile.faculty_id == User.id
@@ -89,7 +89,7 @@ class InstitutionStatsService:
                 "id": u.id,
                 "name": u.name,
                 "role": u.role,
-                "department": up.department,
+                "department": up.department if up else None,
                 "qualification": fp.qualification if fp else None,
                 "experience_years": fp.experience_years if fp else 0,
                 "designation": fp.designation if fp else None

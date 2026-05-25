@@ -612,12 +612,6 @@ class ReportEngineService:
             
         generator = NIRFGenerator(self.session, college_id, report_year)
         
-        # Calculate the total sanctioned from programs_data (what appears in the report)
-        # This is typically much smaller than the raw DB sections total
-        programs = college_info.get("programs_data", [])
-        display_sanctioned = sum(p.get("sanctioned", 0) for p in programs) if programs else None
-        generator.display_sanctioned = display_sanctioned
-        
         nirf_report = await generator.generate_full_report()
         
         # The NIRFGenerator handles all TLR, RPII, GO, OI, PR calculations based on raw SSoT
