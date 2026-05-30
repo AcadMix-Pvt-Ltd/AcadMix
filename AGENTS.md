@@ -12,7 +12,7 @@ AcadMix is a B2B multi-tenant academic SaaS platform. The monorepo contains a Py
 - `frontend/` — React + Vite (port 3000). College tenant dashboard for students/faculty. Served per-college as `<college>.acadmix.org` (prod) or `<college>.localhost:3000` (dev). Also builds the Capacitor Android app.
 - `platform-admin/` — React + Vite + Tailwind v4 (port 5174). AcadMix platform admin panel.
 - `website/` — React + Vite marketing/landing page for `acadmix.org`.
-- `acadmix-opus-hub/` — TanStack Start full-stack SSR app targeting Cloudflare Workers.
+- `marketing-test/` — TanStack Start full-stack SSR app targeting Cloudflare Workers (just a test marketing page).
 - `code-runner/` — Separate FastAPI sandbox for executing student code (Python, C/C++, Java, Go, Node, C#, Octave, etc.) with cgroups/iptables isolation.
 - `insights-query/` — Edge function for analytics queries.
 - `k8s/` — Kubernetes manifests (backend deployment, HPA, PgBouncer).
@@ -47,10 +47,10 @@ AcadMix is a B2B multi-tenant academic SaaS platform. The monorepo contains a Py
 - Dev: `cd website && npm run dev`
 - Build: `cd website && npm run build`
 
-### AcadMix Opus Hub (TanStack Start)
+### Marketing Test (TanStack Start)
 
-- Dev: `cd acadmix-opus-hub && npm run dev`
-- Build: `cd acadmix-opus-hub && npm run build`
+- Dev: `cd marketing-test && npm run dev`
+- Build: `cd marketing-test && npm run build`
 
 ## Architecture Notes
 

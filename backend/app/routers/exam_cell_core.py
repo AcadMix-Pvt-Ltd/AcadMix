@@ -3,7 +3,7 @@ Exam Cell Router — thin HTTP layer delegating to ExamCellService.
 """
 
 import html
-from fastapi import APIRouter, Depends, Query, UploadFile, File
+from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
@@ -249,8 +249,56 @@ async def publish_results(
 
 @router.post("/examcell/upload")
 async def upload_examcell_file(
+    subject_code: str = Form(...),
+    subject_name: str = Form(""),
+    department: str = Form(""),
+    batch: str = Form(""),
+    section: str = Form(""),
+    semester: int = Form(...),
     file: UploadFile = File(...),
     user: dict = Depends(require_role("exam_cell", "admin")),
     svc: ExamCellService = Depends(get_examcell_service)
 ):
-    return {"message": "File uploaded successfully", "filename": file.filename}
+    import csv
+    import io
+    contents = await file.read()
+    try:
+        decoded = contents.decode("utf-8")
+        reader = csv.DictReader(io.StringIO(decoded))
+        
+        entries = []
+        for row in reader:
+            college_id = row.get("college_id") or row.get("id") or row.get("student_id")
+            marks = row.get("marks")
+            grade = row.get("grade", "O")
+            
+            if not college_id or not marks:
+                continue
+                
+            entries.append({
+                "student_id": str(college_id).strip(),
+                "marks": float(marks),
+                "grade": grade,
+                "credits": 3
+            })
+            
+        if not entries:
+            raise HTTPException(status_code=400, detail="No valid entries found in CSV. Expected columns: college_id, marks")
+
+        payload = {
+            "subject_code": subject_code,
+            "subject_name": subject_name,
+            "department": department,
+            "batch": batch,
+            "section": section,
+            "semester": semester,
+            "max_marks": 100.0,
+            "entries": entries
+        }
+        
+        await svc.save_endterm_manual(user["college_id"], payload)
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+        
+    return {"message": f"Successfully uploaded and processed {len(entries)} records.", "filename": file.filename}

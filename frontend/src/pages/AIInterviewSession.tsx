@@ -209,7 +209,7 @@ const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text
 };
 
 // ─── Scorecard Component ─────────────────────────────────────────────────────
-const Scorecard = ({ feedback, onBack, onRetry }) => {
+const Scorecard = ({ feedback, conversation, onBack, onRetry }) => {
   const { isDark } = useTheme();
   if (!feedback) return null;
 
@@ -321,6 +321,28 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
           </motion.div>
         )}
 
+        {/* Full Conversation History */}
+        {conversation?.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+            className="bg-[#111827]/80 backdrop-blur-xl border border-white/5 shadow-2xl rounded-3xl p-5 mb-6">
+            <h4 className="font-extrabold text-sm text-white mb-4">Conversation History</h4>
+            <div className="space-y-4">
+              {conversation.map((msg, i) => (
+                <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${msg.role === 'user' ? 'text-emerald-500' : 'text-indigo-400'}`}>
+                    {msg.role === 'user' ? 'You' : 'Ami'}
+                  </span>
+                  <div className={`text-sm px-4 py-3 rounded-2xl max-w-[90%] leading-relaxed ${
+                    msg.role === 'user' ? 'bg-emerald-500/10 text-emerald-50 border border-emerald-500/20 rounded-br-sm' : 'bg-indigo-500/10 text-indigo-50 border border-indigo-500/20 rounded-bl-sm'
+                  }`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Action buttons */}
         <div className="flex items-center justify-between mt-8 mb-12">
           <button onClick={onBack} className="text-slate-400 hover:text-white text-sm font-bold transition-colors">
@@ -336,44 +358,30 @@ const Scorecard = ({ feedback, onBack, onRetry }) => {
 };
 
 // ─── Small Bottom Audio Visualizer ─────────────────────────────────────────────
-const BottomAudioVisualizer = ({ analyserRef, isListening }) => {
-  const barsRef = useRef([]);
-  const heightRef = useRef(new Array(12).fill(3));
-
-  useEffect(() => {
-    if (!isListening) return;
-    let animationId;
-    const renderLoop = () => {
-      if (analyserRef?.current) {
-        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(dataArray);
-
-        for (let i = 0; i < 12; i++) {
-          // dataArray has 32 bins. We take the first 12 or uniformly sample.
-          const val = dataArray[i * 2] / 255; 
-          const targetHeight = 3 + val * 16; // 3 to 19px
-          heightRef.current[i] += (targetHeight - heightRef.current[i]) * 0.4;
-          if (barsRef.current[i]) {
-            barsRef.current[i].style.height = `${heightRef.current[i]}px`;
-          }
-        }
-      }
-      animationId = requestAnimationFrame(renderLoop);
-    };
-    renderLoop();
-    return () => cancelAnimationFrame(animationId);
-  }, [isListening, analyserRef]);
-
+const BottomAudioVisualizer = ({ isListening }) => {
   if (!isListening) return null;
 
   return (
-    <div className="flex gap-0.5 items-end h-5">
+    <div className="flex gap-2 items-center h-5">
+      <style>{`
+        @keyframes gemini-wave {
+          0%, 100% { transform: scale(0.7); opacity: 0.2; }
+          50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 6px rgba(16,185,129,0.8); }
+        }
+        .gemini-dot {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background-color: #10b981;
+          animation: gemini-wave 1.5s infinite ease-in-out;
+          will-change: transform, opacity;
+        }
+      `}</style>
       {[...Array(12)].map((_, i) => (
         <div
           key={i}
-          ref={(el) => (barsRef.current[i] = el)}
-          className="w-1 bg-emerald-500/60 rounded-full"
-          style={{ height: '3px' }} // Initial height
+          className="gemini-dot"
+          style={{ animationDelay: (i * 0.1) + 's' }}
         />
       ))}
     </div>
@@ -432,6 +440,13 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     }
   };
 
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleResumeUpload(file);
@@ -455,6 +470,10 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       };
       
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (!isMountedRef.current) {
+        stream.getTracks().forEach(t => t.stop());
+        return;
+      }
       streamRef.current = stream;
       setPermissionsGranted(true);
       
@@ -738,6 +757,16 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const interviewIdRef = useRef<any>(null); // Avoids stale closure in submitAnswer
   const stopListeningAndTranscribeRef = useRef<(() => void) | null>(null);
   
+  // Follow Up Timeout Refs
+  const followUpCountRef = useRef(0);
+  const idleTimerRef = useRef<any>(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+  
   // Audio Web API Refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -901,6 +930,11 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         };
         console.log('[MIC] Requesting getUserMedia with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        if (!isMountedRef.current || (phaseRef.current !== 'active' && phaseRef.current !== 'setup' && phaseRef.current !== 'starting')) {
+            console.log('[MIC] Discarding stream, component unmounted or phase inactive');
+            stream.getTracks().forEach(t => t.stop());
+            return;
+        }
         mediaStreamRef.current = stream;
         console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}`));
       } catch (err) {
@@ -964,9 +998,9 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    recognition.maxAlternatives = 3;
+    recognition.interimResults = false; // Disable interim results to stop words from flickering/changing
+    recognition.lang = 'en-IN'; // Optimized for Indian English accents
+    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => { setIsListening(true); setOrbState('listening'); };
 
@@ -999,6 +1033,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // Only reset silence timer when the DISPLAYED text actually changed
       if (displayed !== prevDisplayedRef.current) {
         prevDisplayedRef.current = displayed;
+        followUpCountRef.current = 0; // Reset follow-up counter since user spoke
+        
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = setTimeout(() => {
           if (transcriptRef.current.trim()) {
@@ -1064,13 +1100,15 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     transcriptRef.current = '';
     prevDisplayedRef.current = '';
 
+    // Immediately display the user's answer in the conversation history
+    setConversation(prev => [...prev, { role: 'user', content: answer }]);
+
     try {
       const { data } = await interviewAPI.sendMessage(currentInterviewId, { content: answer });
       
       const onAudioStart = () => {
         setConversation(prev => [
           ...prev,
-          { role: 'user', content: answer },
           { role: 'assistant', content: data.ai_response },
         ]);
         setQuestionNumber(data.question_number);
@@ -1234,11 +1272,45 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     };
   }, [stopListening, cleanupAudio]);
 
+  // ── Follow-up Idle Timeout Logic ──
+  useEffect(() => {
+    if (isListening && phase === 'active') {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(() => {
+         if (!transcript.trim()) {
+           followUpCountRef.current += 1;
+           if (followUpCountRef.current > 2) {
+               toast.error("Interview ended due to inactivity.");
+               handleEndInterview();
+           } else {
+               stopListening();
+               const followUpText = "Are you still there? Take your time, but let me know when you are ready to answer.";
+               speakText(followUpText, () => {
+                   setConversation(prev => [...prev, { role: 'assistant', content: followUpText }]);
+                   setCurrentQuestion(followUpText);
+               }).then(() => {
+                   if (phaseRef.current === 'active') {
+                       setOrbState('listening');
+                       startListening();
+                   }
+               });
+           }
+         }
+      }, 20000); // 20s
+    } else {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    }
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    }
+  }, [isListening, transcript, phase, handleEndInterview, speakText, stopListening, startListening, setCurrentQuestion]);
+
   // ── Scorecard View ──
   if (phase === 'scorecard' && feedback) {
     return (
       <Scorecard
         feedback={feedback}
+        conversation={conversation}
         onBack={() => navigate('interview-warroom')}
         onRetry={() => navigate('interview-warroom')}
       />
@@ -1403,7 +1475,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           )}
         </div>
         {isListening && (
-          <BottomAudioVisualizer analyserRef={analyserRef} isListening={isListening} />
+          <BottomAudioVisualizer isListening={isListening} />
         )}
       </div>
     </div>

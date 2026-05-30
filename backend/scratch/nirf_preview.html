@@ -66,19 +66,16 @@
 </head>
 <body>
 
-    <div class="header" style="text-align: center; font-family: Arial, sans-serif; font-weight: bold; margin-bottom: 20px;">
-        <div style="font-size: 16pt;">National Institutional Ranking Framework</div>
-        <div style="font-size: 12pt; margin-top: 5px;">Ministry of Education</div>
-        <div style="font-size: 12pt;">Government of India</div>
-    </div>
-    
-    <div style="text-align: center; font-size: 14pt; margin-bottom: 20px;">
-        <strong>Welcome to Data Capturing System: ENGINEERING</strong><br>
-        Submitted Institute Data for NIRF'{{ academic_year }}'
+    <div class="header">
+        <h1>National Institutional Ranking Framework</h1>
+        <h2>Ministry of Education</h2>
+        <h2>Government of India</h2>
+        <h3>Welcome to Data Capturing System: ENGINEERING</h3>
+        <h3>Submitted Institute Data for NIRF'2024'</h3>
     </div>
 
     <div class="inst-name">
-        Institute Name: {{ college.get('name', 'AcadMix Institute of Technology') }} [IR-E-U-{{ college.get('id', '0000')[:8] }}]
+        Institute Name: Indian Institute of Technology XYZ [IR-E-U-IR-E-U-0]
     </div>
 
     <!-- Sanctioned (Approved) Intake -->
@@ -93,17 +90,17 @@
             <th>2019-20</th>
             <th>2018-19</th>
         </tr>
-        {% for prog in college.get('programs_data', []) %}
+        
         <tr>
-            <td class="text-left">{{ prog.level }} [{{ prog.duration }} Program(s)]</td>
-            <td>{{ prog.sanctioned }}</td>
-            <td>{{ prog.sanctioned }}</td>
-            <td>{{ prog.sanctioned if loop.index <= 2 else '-' }}</td>
-            <td>{{ prog.sanctioned if loop.index == 1 else '-' }}</td>
+            <td class="text-left">UG [4 Years Program(s)]</td>
+            <td>60</td>
+            <td>60</td>
+            <td>60</td>
+            <td>60</td>
             <td>-</td>
             <td>-</td>
         </tr>
-        {% endfor %}
+        
     </table>
 
     <!-- Total Actual Student Strength -->
@@ -127,29 +124,29 @@
             <th>Private<br>Bodies</th>
             <th>who are not<br>receiving full<br>reimbursement</th>
         </tr>
-        {% set d = oi.raw_data %}
-        {% set within_state = d.get('total_students', 0) - d.get('outside_state', 0) - d.get('outside_country', 0) %}
-        {% set govt_reimb = (d.get('economically_backward', 0) * 0.7)|int %}
-        {% set inst_reimb = (d.get('economically_backward', 0) * 0.15)|int %}
-        {% set pvt_reimb = (d.get('economically_backward', 0) * 0.05)|int %}
-        {% set no_reimb = d.get('total_students', 0) - govt_reimb - inst_reimb - pvt_reimb %}
-        {% for prog in college.get('programs_data', [{}])[:1] %}
+        
+        
+        
+        
+        
+        
+        
         <tr>
-            <td class="text-left">{{ prog.get('level', 'UG') }} [{{ prog.get('duration', '4 Years') }} Program(s)]</td>
-            <td>{{ d.get('male_students', 0) }}</td>
-            <td>{{ d.get('female_students', 0) }}</td>
-            <td>{{ d.get('total_students', 0) }}</td>
-            <td>{{ within_state }}</td>
-            <td>{{ d.get('outside_state', 0) }}</td>
-            <td>{{ d.get('outside_country', 0) }}</td>
-            <td>{{ d.get('economically_backward', 0) }}</td>
-            <td>{{ d.get('socially_challenged', 0) }}</td>
-            <td>{{ govt_reimb }}</td>
-            <td>{{ inst_reimb }}</td>
-            <td>{{ pvt_reimb }}</td>
-            <td>{{ no_reimb }}</td>
+            <td class="text-left">UG [4 Years Program(s)]</td>
+            <td>180</td>
+            <td>60</td>
+            <td>240</td>
+            <td>240</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>240</td>
         </tr>
-        {% endfor %}
+        
     </table>
 
     <!-- Placement & Higher Studies -->
@@ -168,36 +165,36 @@
             <th>Median salary of<br>placed graduates<br>(Amount in Rs.)</th>
             <th>No. of students<br>selected for Higher<br>Studies</th>
         </tr>
-        {% set intake = 0 %}
-        {% set admitted = 0 %}
-        {% for prog in college.get('programs_data', []) %}
-            {% if prog.get('level') == 'UG' and '4' in (prog.get('duration', '')|string) %}
-                {% set intake = intake + prog.get('sanctioned', 0) %}
-                {% set admitted = admitted + prog.get('admitted', 0) %}
-            {% endif %}
-        {% endfor %}
-        {% if intake == 0 %}{% set intake = 780 %}{% endif %}
-        {% if admitted == 0 %}{% set admitted = 763 %}{% endif %}
-        {% for yr, data in go.raw_data.placement_history.items() %}
-        {% set parts = yr.split('-') %}
-        {% set yr_start = parts[0]|int %}
-        {% set intake_yr_start = yr_start - 4 %}
-        {% set intake_yr = intake_yr_start ~ '-' ~ ((intake_yr_start + 1)|string)[-2:] %}
-        {% set lateral_yr_start = yr_start - 3 %}
-        {% set lateral_yr = lateral_yr_start ~ '-' ~ ((lateral_yr_start + 1)|string)[-2:] %}
+        
+        
+        
+            
+                
+                
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         <tr>
-            <td>{{ intake_yr }}</td>
-            <td>{{ intake }}</td>
-            <td>{{ admitted }}</td>
-            <td>{{ lateral_yr }}</td>
+            <td>2019-20</td>
+            <td>780</td>
+            <td>763</td>
+            <td>2020-21</td>
             <td>0</td>
-            <td>{{ yr }}</td>
-            <td>{{ data.get('graduating', 0) }}</td>
-            <td>{{ data.get('placed', data.get('placed_count', 0)) }}</td>
-            <td>{{ data.get('median_salary', 0) }}</td>
-            <td>{{ data.get('higher_studies', 0) }}</td>
+            <td>2023-24</td>
+            <td>60</td>
+            <td>55</td>
+            <td>800000</td>
+            <td>5</td>
         </tr>
-        {% endfor %}
+        
     </table>
 
     <!-- Ph.D Student Details -->
@@ -233,17 +230,17 @@
             <th class="text-left"></th>
             <th colspan="3">Utilised Amount</th>
         </tr>
-        {% set lib = tlr.raw_data.get('library_spend', 0) %}
-        {% set lab = tlr.raw_data.get('lab_spend', 0) %}
+        
+        
         <tr>
             <td class="text-left">Library (Books, Journals and e-Resources only)</td>
-            <td>{{ (lib|int) if lib > 0 else 2800000 }}</td>
+            <td>2800000</td>
             <td>2450000</td>
             <td>2100000</td>
         </tr>
         <tr>
             <td class="text-left">New Equipment and software for Laboratories</td>
-            <td>{{ (lab|int) if lab > 0 else 9500000 }}</td>
+            <td>9500000</td>
             <td>8500000</td>
             <td>7200000</td>
         </tr>
@@ -305,13 +302,13 @@
         </tr>
         <tr>
             <td class="text-left">No. of Patents Published</td>
-            <td>{{ rp.raw_data.get('patents_published', 0) }}</td>
+            <td>4</td>
             <td>4</td>
             <td>2</td>
         </tr>
         <tr>
             <td class="text-left">No. of Patents Granted</td>
-            <td>{{ rp.raw_data.get('patents_granted', 0) }}</td>
+            <td>1</td>
             <td>1</td>
             <td>0</td>
         </tr>
@@ -340,7 +337,7 @@
         </tr>
         <tr>
             <td class="text-left">Total Amount Received (Amount in Rupees)</td>
-            <td>{{ rp.raw_data.get('sponsored_amount', 0) }}</td>
+            <td>1200000</td>
             <td>1200000</td>
             <td>850000</td>
         </tr>
@@ -369,7 +366,7 @@
         </tr>
         <tr>
             <td class="text-left">Total Amount Received (Amount in Rupees)</td>
-            <td>{{ rp.raw_data.get('consultancy_amount', 0) }}</td>
+            <td>950000</td>
             <td>950000</td>
             <td>600000</td>
         </tr>

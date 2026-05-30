@@ -272,13 +272,9 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
     { label: 'Departments', value: deptCount.toLocaleString(), icon: Database, color: 'bg-sky-50 text-sky-500' },
   ];
   const departmentPerformance = (dashboardData?.departments || []).map(d => ({
-    dept: d.name, avgScore: 75 + Math.floor(d.count * 2)
+    dept: d.name, students: d.count
   }));
-  const enrollmentTrend = [
-    { month: 'Aug', students: Math.max(totalStudents - 5, 0) }, { month: 'Sep', students: Math.max(totalStudents - 4, 0) },
-    { month: 'Oct', students: Math.max(totalStudents - 3, 0) }, { month: 'Nov', students: Math.max(totalStudents - 2, 0) },
-    { month: 'Dec', students: Math.max(totalStudents - 1, 0) }, { month: 'Jan', students: totalStudents },
-  ];
+  const enrollmentTrend = dashboardData?.enrollment_trend || [];
 
   if (loading) return <DashboardSkeleton variant="admin" />;
 
@@ -379,7 +375,7 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
                     <YAxis stroke="#94A3B8" style={{ fontSize: '12px', fontWeight: 600 }} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontWeight: 'bold', fontSize: '12px' }} />
-                    <Bar dataKey="avgScore" fill="#6366F1" radius={[8, 8, 0, 0]} name="Avg Score" />
+                    <Bar dataKey="students" fill="#6366F1" radius={[8, 8, 0, 0]} name="Students" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

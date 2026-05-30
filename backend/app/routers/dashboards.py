@@ -156,13 +156,33 @@ async def admin_dashboard(user: dict = Depends(require_role("admin")), session: 
     total_quizzes = quizzes_r.scalar() or 0
     active_r = await session.execute(select(func.count(models.Quiz.id)).where(models.Quiz.college_id == user["college_id"], models.Quiz.status == "active"))
     active_quizzes = active_r.scalar() or 0
+
+    dept_r = await session.execute(
+        select(models.UserProfile.department, func.count(models.UserProfile.user_id))
+        .join(models.User, models.User.id == models.UserProfile.user_id)
+        .where(models.User.college_id == user["college_id"], models.User.role == "student")
+        .group_by(models.UserProfile.department)
+    )
+    departments = [{"name": d or "Unassigned", "count": c} for d, c in dept_r.all() if d]
+    
+    trend_r = await session.execute(
+        select(
+            func.to_char(models.User.created_at, 'Mon'),
+            func.count(models.User.id)
+        )
+        .where(models.User.college_id == user["college_id"], models.User.role == "student")
+        .group_by(func.to_char(models.User.created_at, 'Mon'))
+    )
+    enrollment_trend = [{"month": m, "students": c} for m, c in trend_r.all()]
+
     return {
         "total_students": role_counts.get("student", 0),
         "total_teachers": role_counts.get("teacher", 0),
         "total_hods": role_counts.get("hod", 0),
         "total_exam_cell": role_counts.get("exam_cell", 0),
         "total_quizzes": total_quizzes, "active_quizzes": active_quizzes,
-        "departments": [],
+        "departments": departments,
+        "enrollment_trend": enrollment_trend
     }
 
 

@@ -224,6 +224,7 @@ class UserService:
                 roll_number=student_id,
                 department=row.get("department", ""),
                 batch=row.get("batch", ""),
+                section=row.get("section", ""),
                 force_password_change=True,
             )
             self.db.add(profile)

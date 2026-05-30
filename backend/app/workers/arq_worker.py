@@ -817,6 +817,73 @@ async def notify_results_task(ctx, college_id: str, semester: int, student_ids: 
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# TENANT PROVISIONING (Stripe Onboarding)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def provision_tenant(ctx, college_name: str, college_domain: str, admin_email: str, plan: str, stripe_customer_id: str, stripe_subscription_id: str):
+    """
+    ARQ Task to provision a new college tenant asynchronously after Stripe checkout.
+    """
+    import uuid
+    import logging
+    from database import admin_session_ctx
+    from app.models.core import College, User, UserProfile, Role
+    from app.core.security import get_password_hash
+
+    logger = logging.getLogger("acadmix.worker.provision")
+    logger.info(f"[provision] Starting provisioning for {college_name} ({college_domain})")
+
+    try:
+        async with admin_session_ctx() as session:
+            college_id = str(uuid.uuid4())
+            new_college = College(
+                id=college_id,
+                name=college_name,
+                domain=college_domain,
+                stripe_customer_id=stripe_customer_id,
+                stripe_subscription_id=stripe_subscription_id,
+                settings={"plan": plan}
+            )
+            session.add(new_college)
+
+            # Create default Admin role
+            admin_role = Role(
+                id=str(uuid.uuid4()),
+                college_id=college_id,
+                name="admin",
+                permissions={"all": True}
+            )
+            session.add(admin_role)
+
+            # Create the initial Admin user
+            admin_user = User(
+                id=str(uuid.uuid4()),
+                college_id=college_id,
+                email=admin_email,
+                name="Platform Admin",
+                role="admin",
+                password_hash=get_password_hash("changeme123")  # Prompt to change on first login
+            )
+            session.add(admin_user)
+
+            # Create admin profile
+            admin_profile = UserProfile(
+                id=str(uuid.uuid4()),
+                user_id=admin_user.id,
+                college_id=college_id,
+                force_password_change=True
+            )
+            session.add(admin_profile)
+
+            await session.commit()
+            logger.info(f"[provision] Successfully provisioned {college_name} with admin {admin_email}")
+
+            # Optionally, send an email to the admin with their credentials.
+    except Exception as e:
+        logger.error(f"[provision] Failed to provision tenant {college_name}: {e}")
+        raise e
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # WORKER SETTINGS
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -847,6 +914,8 @@ class WorkerSettings:
         generate_nba_sar_task,
         generate_nirf_dcs_task,
         generate_nep_compliance_task,
+        # Onboarding
+        provision_tenant,
     ]
     
     # Scheduled background jobs

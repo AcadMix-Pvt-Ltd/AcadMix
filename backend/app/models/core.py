@@ -33,6 +33,8 @@ class College(Base, SoftDeleteMixin):
     settings = Column(JSONB, nullable=False, server_default='{}')
     group_id = Column(String, ForeignKey("college_groups.id"), nullable=True)
     campus_id = Column(String, ForeignKey("campuses.id"), nullable=True)
+    stripe_customer_id = Column(String, nullable=True)
+    stripe_subscription_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
@@ -81,6 +83,8 @@ class User(Base, SoftDeleteMixin):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     name = Column(String, nullable=False)
+    sso_provider = Column(String, nullable=True) # e.g. "google", "azure"
+    sso_id = Column(String, nullable=True) # The unique external ID
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     # GDPR Right to Erasure
