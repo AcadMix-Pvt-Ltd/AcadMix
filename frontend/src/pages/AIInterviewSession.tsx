@@ -538,19 +538,40 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       }
       
       let stream;
+      const constraints: any = {
+        audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
+        video: selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true,
+      };
+      
       try {
-        // We wrap the ENTIRE hardware request in a strict 5-second timeout.
-        // We only request AUDIO first. This completely bypasses any Windows Camera deadlocks!
+        // Try audio+video first with a timeout
         stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia({ audio: true, video: false }),
+          navigator.mediaDevices.getUserMedia(constraints),
           new Promise((_, reject) => setTimeout(() => {
              const err = new Error("Hardware timeout");
              err.name = "TimeoutError";
              reject(err);
-          }, 2000))
+          }, 5000))
         ]);
       } catch (err: any) {
-        throw err; // cascade down to the main catch block
+        // If video failed, fallback to audio-only
+        if (err.name === "NotFoundError" || err.name === "NotReadableError" || err.name === "TimeoutError") {
+          console.warn("Video failed, falling back to audio-only:", err.name);
+          try {
+            stream = await Promise.race([
+              navigator.mediaDevices.getUserMedia({ audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true, video: false }),
+              new Promise((_, reject) => setTimeout(() => {
+                const e = new Error("Audio timeout");
+                e.name = "TimeoutError";
+                reject(e);
+              }, 3000))
+            ]);
+          } catch (audioErr: any) {
+            throw audioErr;
+          }
+        } else {
+          throw err;
+        }
       }
       
       if (!isMountedRef.current) {
@@ -562,13 +583,21 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       setPermissionsGranted(true);
       setHardwareError('');
       
-      // Now that we have microphone permission, enumerateDevices is GUARANTEED to not hang
+      if (videoRef.current && videoRef.current.srcObject !== stream) {
+        videoRef.current.srcObject = stream;
+      }
+
+      // Enumerate all devices now that permissions are granted
       try {
          const updatedDevices = await navigator.mediaDevices.enumerateDevices();
+         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
          const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
-         setDevices({ video: [], audio: audioDevices });
+         setDevices({ video: videoDevices, audio: audioDevices });
          if (!selectedAudioId && audioDevices.length > 0) {
             setSelectedAudioId(audioDevices[0].deviceId);
+         }
+         if (!selectedVideoId && videoDevices.length > 0) {
+            setSelectedVideoId(videoDevices[0].deviceId);
          }
       } catch(e) {}
 
@@ -658,7 +687,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAudioId]); // Removed selectedVideoId dependency to prevent infinite loops if camera is disabled
+  }, [selectedAudioId, selectedVideoId]);
 
   const handleStartWrapper = () => {
     // 1. Stop local tracks immediately
