@@ -519,142 +519,88 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (file) handleResumeUpload(file);
   };
 
-  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
-    if (requestInProgressRef.current) return;
-    requestInProgressRef.current = true;
     try {
-      if (!navigator.mediaDevices) {
-        toast.error('Hardware access blocked. Use HTTPS or localhost.');
-        setPermissionsGranted(false);
-        return;
-      }
-      
-      let allDevices = [];
-      try {
-        allDevices = await navigator.mediaDevices.enumerateDevices();
-      } catch (e) {
-        console.warn("Initial enumerate failed", e);
-      }
-      const hasVideoHardware = allDevices.some(d => d.kind === 'videoinput');
-      const hasAudioHardware = allDevices.some(d => d.kind === 'audioinput');
-
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       
       const constraints = {
-        video: hasVideoHardware ? (selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true) : false,
-        audio: hasAudioHardware ? (selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true) : false,
+        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
+        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
       };
       
-      let stream;
-      try {
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia(constraints),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
-      } catch (err) {
-        console.warn("Failed with ideal constraints, trying fallback", err);
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia({ video: hasVideoHardware, audio: hasAudioHardware }),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
-      }
-      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (!isMountedRef.current) {
-        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach(t => t.stop());
         return;
       }
-      
       streamRef.current = stream;
       setPermissionsGranted(true);
-      (window as any).webRtcErrorMsg = "";
       
       if (videoRef.current && videoRef.current.srcObject !== stream) {
         videoRef.current.srcObject = stream;
       }
 
-      // Re-enumerate safely now that permissions are granted (to get real labels)
-      try {
-         const updatedDevices = await navigator.mediaDevices.enumerateDevices();
-         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
-         const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
-         setDevices({ video: videoDevices, audio: audioDevices });
-      } catch(e) {}
-
-      if (hasAudioHardware) {
-        try {
-          if (!audioContextRef.current) {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            audioContextRef.current = new AudioContext();
-          }
-          if (audioContextRef.current.state === 'suspended') {
-             audioContextRef.current.resume();
-          }
-          const analyser = audioContextRef.current.createAnalyser();
-          analyser.fftSize = 256;
-          const source = audioContextRef.current.createMediaStreamSource(stream);
-          source.connect(analyser);
-
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
-
-          const checkVolume = () => {
-            if (!streamRef.current) return;
-            analyser.getByteFrequencyData(dataArray);
-            let sum = 0;
-            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-            const average = sum / bufferLength;
-            
-            const noiseFloor = 15;
-            const normalizedVolume = Math.max(0, average - noiseFloor);
-            
-            if (normalizedVolume > 0) setHasMicSignal(true);
-            if (amplitudeBarRef.current) {
-               const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
-               amplitudeBarRef.current.style.width = `${visualWidth}%`;
-            }
-            animationFrameRef.current = requestAnimationFrame(checkVolume);
-          };
-          checkVolume();
-        } catch (ampErr) {
-          console.warn("Could not setup audio amplitude meter:", ampErr);
-          setHasMicSignal(true);
-        }
-      } else {
-        setHasMicSignal(true);
+      // Enumerate available devices safely
+      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+      const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
+      
+      setDevices({ video: videoDevices, audio: audioDevices });
+      
+      if (!selectedVideoId && videoDevices.length > 0) {
+        const activeVideo = stream.getVideoTracks()[0];
+        const matched = videoDevices.find(d => d.label === activeVideo?.label);
+        setSelectedVideoId(matched?.deviceId || videoDevices[0].deviceId);
       }
+      if (!selectedAudioId && audioDevices.length > 0) {
+        const activeAudio = stream.getAudioTracks()[0];
+        const matched = audioDevices.find(d => d.label === activeAudio?.label);
+        setSelectedAudioId(matched?.deviceId || audioDevices[0].deviceId);
+      }
+
+      // Amplitude setup
+      if (!audioContextRef.current) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContextRef.current = new AudioContext();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+         audioContextRef.current.resume();
+      }
+      const analyser = audioContextRef.current.createAnalyser();
+      analyser.fftSize = 256;
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const checkVolume = () => {
+        if (!streamRef.current) return;
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+        const average = sum / bufferLength;
+        
+        // Filter out ambient noise floor (most laptop mics sit around 15-20 when silent)
+        const noiseFloor = 15;
+        const normalizedVolume = Math.max(0, average - noiseFloor);
+        
+        if (normalizedVolume > 0) setHasMicSignal(true);
+        if (amplitudeBarRef.current) {
+           // Smooth the visual representation and make it less twitchy at the bottom
+           const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+           amplitudeBarRef.current.style.width = `${visualWidth}%`;
+        }
+        animationFrameRef.current = requestAnimationFrame(checkVolume);
+      };
+      checkVolume();
 
     } catch (err: any) {
       console.error("Camera/Mic access denied:", err);
-      if (err.name === "NotReadableError") {
-         (window as any).webRtcErrorMsg = "Camera or mic is in use by another application";
-         toast.error("Camera or mic is currently in use by another application.");
-         setPermissionsGranted(true);
-      } else if (err.name === "NotFoundError") {
-         (window as any).webRtcErrorMsg = "No camera or microphone found!";
-         toast.error("No camera or microphone found!");
-         setPermissionsGranted(true);
-      } else if (err.name === "TimeoutError") {
-         (window as any).webRtcErrorMsg = "Hardware didn't respond (Timeout). Check privacy settings.";
-         toast.error("Hardware took too long to respond. Check Windows privacy settings.");
-         setPermissionsGranted(false);
-      } else {
-         (window as any).webRtcErrorMsg = `${err.name}: ${err.message}`;
-         toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
-         setPermissionsGranted(false);
-      }
-    } finally {
-      requestInProgressRef.current = false;
+      toast.error('Please grant camera and microphone permissions to proceed.');
+      setPermissionsGranted(false);
     }
   };
 
@@ -669,7 +615,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedVideoId, selectedAudioId]);
 
   const handleStartWrapper = () => {
     // 1. Stop local tracks immediately
@@ -1048,7 +994,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         console.log('[TTS] audio.play() started successfully');
         setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
         if (onAudioStart) onAudioStart();
-      } catch (err) {
+      } catch (err: any) {
         console.error('[TTS] speakText error:', err);
         setIsSpeaking(false);
         isSpeakingRef.current = false;
@@ -1076,7 +1022,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         }
         mediaStreamRef.current = stream;
         console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}`));
-      } catch (err) {
+      } catch (err: any) {
         console.error('[MIC] Camera/Microphone access denied.', err);
         toast.error('Camera and Microphone access are required for the interview.');
       }
@@ -1098,7 +1044,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
         sourceNodeRef.current.connect(analyserRef.current);
         console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize);
-      } catch (err) {
+      } catch (err: any) {
         console.error('[MIC] Failed to connect analyser:', err);
       }
     } else if (audioContextRef.current?.state === 'suspended') {
@@ -1119,7 +1065,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         };
         
         recorder.start();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to start MediaRecorder capture:", err);
       }
     }
@@ -1218,7 +1164,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       setFeedback(data.feedback ? { ...data.feedback, overall_score: data.overall_score, scores: data.scores } : data);
       setPhase('scorecard');
       try { document.exitFullscreen(); } catch {}
-    } catch (err) {
+    } catch (err: any) {
       toast.error('Failed to generate feedback');
       setPhase('active');
       setOrbState('listening');
@@ -1273,7 +1219,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // Start listening again
       setOrbState('listening');
       startListening();
-    } catch (err) {
+    } catch (err: any) {
       toast.error('Failed to process response. Please try again.');
       setOrbState('listening');
       startListening();
@@ -1322,7 +1268,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         setOrbState('listening');
         startListening();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Transcription failed:", err);
       const finalAnswer = transcriptRef.current.trim();
       if (finalAnswer) {
@@ -1391,7 +1337,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // Start continuous listening
       setOrbState('listening');
       startListening();
-    } catch (err) {
+    } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to start interview');
       setPhase('setup');
       try { document.exitFullscreen(); } catch {}
