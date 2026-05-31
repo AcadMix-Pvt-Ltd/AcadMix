@@ -409,13 +409,13 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
     <div className="relative" ref={containerRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-slate-200"
+        className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors text-slate-800"
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <Icon className="text-slate-400 shrink-0" size={18} />
+          <Icon className="text-slate-500 shrink-0" size={18} />
           <span className="text-sm font-bold truncate">{selectedOption?.label || label}</span>
         </div>
-        <div className="shrink-0 ml-2 text-slate-500 text-xs">▼</div>
+        <div className="shrink-0 ml-2 text-slate-400 text-xs">▼</div>
       </button>
       
       <AnimatePresence>
@@ -424,7 +424,7 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute left-0 mt-2 min-w-full w-max max-w-sm bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl z-50 p-1"
+            className="absolute left-0 mt-2 min-w-full w-max max-w-sm bg-white border border-slate-200 rounded-xl shadow-2xl z-50 p-1"
           >
             <div className="max-h-60 overflow-y-auto">
               {options.length > 0 ? options.map((opt: any) => (
@@ -432,13 +432,13 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
                   key={opt.deviceId}
                   onClick={() => { onChange(opt.deviceId); setIsOpen(false); }}
                   className={`w-full text-left px-4 py-3 text-sm font-bold transition-colors rounded-xl ${
-                    value === opt.deviceId ? 'bg-teal-500/20 text-teal-400' : 'text-slate-300 hover:bg-white/5'
+                    value === opt.deviceId ? 'bg-teal-50 text-teal-600' : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   {opt.label || `Device ${opt.deviceId.slice(0, 5)}`}
                 </button>
               )) : (
-                <div className="px-4 py-3 text-sm text-slate-500 font-bold">No devices found</div>
+                <div className="px-4 py-3 text-sm text-slate-400 font-bold">No devices found</div>
               )}
             </div>
           </motion.div>
@@ -628,21 +628,21 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#06090e] flex items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden font-sans">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
-        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] mix-blend-multiply opacity-50" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-500/10 rounded-full blur-[150px] mix-blend-multiply opacity-50" />
       </div>
 
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-4xl w-full bg-[#111827]/80 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/5">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-4xl w-full bg-white/90 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200/60">
         <div className="p-6 sm:p-8">
-          <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-6">
-             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 shadow-inner shrink-0">
-               <Sparkle size={24} weight="fill" className="text-indigo-400" />
+          <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-teal-50 flex items-center justify-center border border-slate-200/60 shadow-inner shrink-0">
+               <Sparkle size={24} weight="fill" className="text-indigo-600" />
              </div>
              <div>
-               <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Green Room Setup</h2>
-               <p className="text-sm text-slate-400">
+               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-wide">Green Room Setup</h2>
+               <p className="text-sm text-slate-500">
                  {sessionConfig?.interview_type?.charAt(0).toUpperCase() + sessionConfig?.interview_type?.slice(1)} Interview
                  {sessionConfig?.target_company && ` @ ${sessionConfig.target_company}`}
                  {' — '}{sessionConfig?.target_role}
@@ -653,33 +653,33 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Left Column: Camera Preview */}
             <div className="flex flex-col gap-4">
-              <div className="relative w-full aspect-video bg-black/40 rounded-2xl overflow-hidden border border-white/10 shadow-inner flex items-center justify-center">
+              <div className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner flex items-center justify-center">
                 {permissionsGranted ? (
                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
                 ) : (
-                   <div className="flex flex-col items-center text-slate-500">
+                   <div className="flex flex-col items-center text-slate-400">
                      <VideoCameraSlash size={48} weight="thin" className="mb-2 opacity-50 text-amber-500" />
-                     <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Awaiting Permissions</span>
+                     <span className="text-sm font-bold uppercase tracking-wider text-slate-500">Awaiting Permissions</span>
                    </div>
                 )}
                 {/* Overlay status */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <div className={`p-2 rounded-full backdrop-blur-md ${hasMicSignal ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${hasMicSignal ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
                     {hasMicSignal ? <Microphone size={20} weight="fill" /> : <MicrophoneSlash size={20} weight="fill" />}
                   </div>
-                  <div className={`p-2 rounded-full backdrop-blur-md ${permissionsGranted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${permissionsGranted ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
                     {permissionsGranted ? <VideoCamera size={20} weight="fill" /> : <VideoCameraSlash size={20} weight="fill" />}
                   </div>
                 </div>
               </div>
               
               {/* Mic Input Level / Volume Meter */}
-              <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                <div className="flex justify-between text-xs text-slate-400 mb-2 font-bold uppercase tracking-wider">
+              <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
+                <div className="flex justify-between text-xs text-slate-500 mb-2 font-bold uppercase tracking-wider">
                   <span>Mic Input Level</span>
                 </div>
-                <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden flex items-center border border-white/5">
-                  <div ref={amplitudeBarRef} className="h-full bg-emerald-400 w-0 transition-all duration-75 shadow-[0_0_10px_#34d399]" />
+                <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden flex items-center border border-slate-200/60 shadow-inner">
+                  <div ref={amplitudeBarRef} className="h-full bg-emerald-500 w-0 transition-all duration-75 shadow-[0_0_10px_#10b981]" />
                 </div>
               </div>
             </div>
@@ -687,7 +687,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
             {/* Right Column: Checklists & Resume */}
             <div className="flex flex-col gap-6">
               <div className="space-y-4">
-                <h3 className="font-bold text-slate-300 border-b border-white/5 pb-2 text-sm uppercase tracking-wider">Pre-flight Checklist</h3>
+                <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2 text-sm uppercase tracking-wider">Pre-flight Checklist</h3>
                 
                 {/* Microphone Selector */}
                 <div>
@@ -704,22 +704,22 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                     <div
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={onDrop}
-                      className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-md transition-colors hover:bg-amber-500/15"
+                      className="p-5 rounded-2xl border border-amber-300 bg-amber-50 backdrop-blur-md transition-colors hover:bg-amber-100"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-11 h-11 bg-amber-500/20 rounded-xl flex items-center justify-center shrink-0 border border-amber-500/30 shadow-inner">
-                          <FileText size={22} weight="duotone" className="text-amber-400" />
+                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 border border-amber-200 shadow-sm">
+                          <FileText size={22} weight="duotone" className="text-amber-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-extrabold text-sm text-amber-300 mb-1">Resume Required</h4>
-                          <p className="text-xs text-amber-200/70 mb-3 leading-relaxed">
+                          <h4 className="font-extrabold text-sm text-amber-700 mb-1">Resume Required</h4>
+                          <p className="text-xs text-amber-600/80 mb-3 leading-relaxed">
                             Upload a PDF for Ami to personalize your interview.
                           </p>
                           <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-60 w-full justify-center"
+                            className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold text-xs shadow-[0_4px_15px_rgba(245,158,11,0.2)] transition-all disabled:opacity-60 w-full justify-center"
                           >
                             <Upload size={14} weight="bold" />
                             {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
@@ -729,34 +729,34 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                     </div>
                   )}
                   {hasResume === null && (
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-3">
-                      <div className="animate-spin w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full shrink-0" />
-                      <span className="text-xs font-bold text-slate-400">Checking resume vault...</span>
+                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-3">
+                      <div className="animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full shrink-0" />
+                      <span className="text-xs font-bold text-slate-500">Checking resume vault...</span>
                     </div>
                   )}
                   {hasResume === true && (
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText size={16} weight="fill" className="text-emerald-400" />
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                        <FileText size={16} weight="fill" className="text-emerald-600" />
                       </div>
-                      <span className="text-xs font-bold text-emerald-400">Resume detected — Ami will personalize your interview</span>
+                      <span className="text-xs font-bold text-emerald-700">Resume detected — Ami will personalize your interview</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="mt-auto pt-6 border-t border-white/5">
+              <div className="mt-auto pt-6 border-t border-slate-100">
                 <button
                   onClick={handleStartWrapper}
                   disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-xl font-extrabold text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(16,185,129,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
                 >
                   <Sparkle size={18} weight="fill" />
                   {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Waiting for permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
                 </button>
                 <button 
                   onClick={onCancel}
-                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-white/5 text-slate-400 hover:text-slate-200 rounded-xl font-bold text-xs transition-colors"
+                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl font-bold text-xs transition-colors"
                 >
                   Cancel
                 </button>
