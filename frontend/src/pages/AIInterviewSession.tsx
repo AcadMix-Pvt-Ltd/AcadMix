@@ -457,6 +457,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [hasMicSignal, setHasMicSignal] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [hardwareError, setHardwareError] = useState('');
   const [hasResume, setHasResume] = useState<boolean | null>(null); // null = loading
   const [isUploading, setIsUploading] = useState(false);
   const [showTroubleshooter, setShowTroubleshooter] = useState(false);
@@ -519,94 +520,158 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (file) handleResumeUpload(file);
   };
 
+  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
+    if (requestInProgressRef.current) return;
+    requestInProgressRef.current = true;
     try {
+      setHardwareError('');
+      if (!navigator.mediaDevices) {
+        toast.error('Hardware access blocked. Use HTTPS or localhost.');
+        setHardwareError('Hardware access blocked. Ensure you are using HTTPS or localhost.');
+        setPermissionsGranted(false);
+        return;
+      }
+      
+      let allDevices = [];
+      try {
+        allDevices = await navigator.mediaDevices.enumerateDevices();
+      } catch (e) {
+        console.warn("Initial enumerate failed", e);
+      }
+      const hasVideoHardware = allDevices.some(d => d.kind === 'videoinput');
+      const hasAudioHardware = allDevices.some(d => d.kind === 'audioinput');
+
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       
       const constraints = {
-        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
-        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
+        video: hasVideoHardware ? (selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true) : false,
+        audio: hasAudioHardware ? (selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true) : false,
       };
       
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia(constraints),
+          new Promise((_, reject) => setTimeout(() => {
+             const err = new Error("Hardware timeout");
+             err.name = "TimeoutError";
+             reject(err);
+          }, 5000))
+        ]);
+      } catch (err) {
+        console.warn("Failed with ideal constraints, trying fallback", err);
+        stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia({ video: hasVideoHardware, audio: hasAudioHardware }),
+          new Promise((_, reject) => setTimeout(() => {
+             const err = new Error("Hardware timeout");
+             err.name = "TimeoutError";
+             reject(err);
+          }, 5000))
+        ]);
+      }
+      
       if (!isMountedRef.current) {
-        stream.getTracks().forEach(t => t.stop());
+        if (stream) stream.getTracks().forEach(t => t.stop());
         return;
       }
+      
       streamRef.current = stream;
       setPermissionsGranted(true);
+      setHardwareError('');
       
       if (videoRef.current && videoRef.current.srcObject !== stream) {
         videoRef.current.srcObject = stream;
       }
 
-      // Enumerate available devices safely
-      const allDevices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
-      const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
-      
-      setDevices({ video: videoDevices, audio: audioDevices });
-      
-      if (!selectedVideoId && videoDevices.length > 0) {
-        const activeVideo = stream.getVideoTracks()[0];
-        const matched = videoDevices.find(d => d.label === activeVideo?.label);
-        setSelectedVideoId(matched?.deviceId || videoDevices[0].deviceId);
-      }
-      if (!selectedAudioId && audioDevices.length > 0) {
-        const activeAudio = stream.getAudioTracks()[0];
-        const matched = audioDevices.find(d => d.label === activeAudio?.label);
-        setSelectedAudioId(matched?.deviceId || audioDevices[0].deviceId);
-      }
+      // Re-enumerate safely now that permissions are granted
+      try {
+         const updatedDevices = await navigator.mediaDevices.enumerateDevices();
+         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
+         const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
+         setDevices({ video: videoDevices, audio: audioDevices });
+      } catch(e) {}
 
-      // Amplitude setup
-      if (!audioContextRef.current) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioContextRef.current = new AudioContext();
-      }
-      if (audioContextRef.current.state === 'suspended') {
-         audioContextRef.current.resume();
-      }
-      const analyser = audioContextRef.current.createAnalyser();
-      analyser.fftSize = 256;
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyser);
+      if (hasAudioHardware) {
+        try {
+          if (!audioContextRef.current) {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            audioContextRef.current = new AudioContext();
+          }
+          if (audioContextRef.current.state === 'suspended') {
+             audioContextRef.current.resume();
+          }
+          const analyser = audioContextRef.current.createAnalyser();
+          analyser.fftSize = 256;
+          const source = audioContextRef.current.createMediaStreamSource(stream);
+          source.connect(analyser);
 
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
 
-      const checkVolume = () => {
-        if (!streamRef.current) return;
-        analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-        const average = sum / bufferLength;
-        
-        // Filter out ambient noise floor (most laptop mics sit around 15-20 when silent)
-        const noiseFloor = 15;
-        const normalizedVolume = Math.max(0, average - noiseFloor);
-        
-        if (normalizedVolume > 0) setHasMicSignal(true);
-        if (amplitudeBarRef.current) {
-           // Smooth the visual representation and make it less twitchy at the bottom
-           const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
-           amplitudeBarRef.current.style.width = `${visualWidth}%`;
+          const checkVolume = () => {
+            if (!streamRef.current) return;
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+            const average = sum / bufferLength;
+            
+            const noiseFloor = 15;
+            const normalizedVolume = Math.max(0, average - noiseFloor);
+            
+            if (normalizedVolume > 0) setHasMicSignal(true);
+            if (amplitudeBarRef.current) {
+               const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+               amplitudeBarRef.current.style.width = `${visualWidth}%`;
+            }
+            animationFrameRef.current = requestAnimationFrame(checkVolume);
+          };
+          checkVolume();
+        } catch (ampErr) {
+          console.warn("Could not setup audio amplitude meter:", ampErr);
+          setHasMicSignal(true);
         }
-        animationFrameRef.current = requestAnimationFrame(checkVolume);
-      };
-      checkVolume();
+      } else {
+        setHasMicSignal(true);
+      }
 
     } catch (err: any) {
       console.error("Camera/Mic access denied:", err);
-      toast.error('Please grant camera and microphone permissions to proceed.');
-      setPermissionsGranted(false);
+      if (err.name === "NotReadableError") {
+         setHardwareError("Camera or mic is in use by another application. Close other apps and refresh.");
+         toast.error("Camera or mic is currently in use by another application.");
+         // Do not bypass, if we can't read it we can't use it
+         setPermissionsGranted(false);
+      } else if (err.name === "NotFoundError") {
+         setHardwareError("No camera or microphone found!");
+         toast.error("No camera or microphone found!");
+         setPermissionsGranted(true);
+      } else if (err.name === "TimeoutError") {
+         setHardwareError("Hardware deadlocked. Chrome's camera driver crashed. You MUST restart your browser.");
+         toast.error("Hardware took too long to respond. Please restart your browser completely.");
+         setPermissionsGranted(false);
+      } else {
+         setHardwareError(`${err.name}: ${err.message}`);
+         toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
+         setPermissionsGranted(false);
+      }
+    } finally {
+      requestInProgressRef.current = false;
     }
   };
 
   useEffect(() => {
     requestPermissionsAndEnumerate();
+    const handleBeforeUnload = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(()=>{});
@@ -682,7 +747,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                    <div className="flex flex-col items-center text-slate-400">
                      <VideoCameraSlash size={48} weight="thin" className="mb-3 opacity-50 text-indigo-400" />
                      <span className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Awaiting Permissions</span>
-                       {(window as any).webRtcErrorMsg && <div className="text-red-500 font-bold mb-4 p-3 bg-red-100 rounded-lg text-xs max-w-[80%] text-center border border-red-200 shadow-sm">ERROR: {(window as any).webRtcErrorMsg}</div>}
+                       {hardwareError && <div className="text-red-600 font-bold mb-4 p-4 bg-red-50 rounded-xl text-sm max-w-[90%] text-center border border-red-200 shadow-sm">{hardwareError}</div>}
                      <button 
                        onClick={() => {
                          requestPermissionsAndEnumerate();
