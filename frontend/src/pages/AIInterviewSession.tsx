@@ -432,13 +432,13 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
                   key={opt.deviceId}
                   onClick={() => { onChange(opt.deviceId); setIsOpen(false); }}
                   className={`w-full text-left px-4 py-3 text-sm font-bold transition-colors rounded-xl ${
-                    value === opt.deviceId ? 'bg-teal-50 text-teal-600' : 'text-slate-600 hover:bg-slate-50'
+                    value === opt.deviceId ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
                   {opt.label || `Device ${opt.deviceId.slice(0, 5)}`}
                 </button>
               )) : (
-                <div className="px-4 py-3 text-sm text-slate-400 font-bold">No devices found</div>
+                <div className="px-4 py-3 text-sm text-slate-400 font-bold">Waiting for permissions...</div>
               )}
             </div>
           </motion.div>
@@ -664,10 +664,10 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                 )}
                 {/* Overlay status */}
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${hasMicSignal ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
+                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${hasMicSignal ? 'bg-indigo-100 text-indigo-600' : 'bg-rose-100 text-rose-600'}`}>
                     {hasMicSignal ? <Microphone size={20} weight="fill" /> : <MicrophoneSlash size={20} weight="fill" />}
                   </div>
-                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${permissionsGranted ? 'bg-emerald-500/20 text-emerald-600' : 'bg-rose-500/20 text-rose-600'}`}>
+                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${permissionsGranted ? 'bg-indigo-100 text-indigo-600' : 'bg-rose-100 text-rose-600'}`}>
                     {permissionsGranted ? <VideoCamera size={20} weight="fill" /> : <VideoCameraSlash size={20} weight="fill" />}
                   </div>
                 </div>
@@ -679,7 +679,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                   <span>Mic Input Level</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden flex items-center border border-slate-200/60 shadow-inner">
-                  <div ref={amplitudeBarRef} className="h-full bg-emerald-500 w-0 transition-all duration-75 shadow-[0_0_10px_#10b981]" />
+                  <div ref={amplitudeBarRef} className="h-full bg-indigo-500 w-0 transition-all duration-75 shadow-[0_0_10px_#6366f1]" />
                 </div>
               </div>
             </div>
@@ -704,22 +704,22 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                     <div
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={onDrop}
-                      className="p-5 rounded-2xl border border-amber-300 bg-amber-50 backdrop-blur-md transition-colors hover:bg-amber-100"
+                      className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50 backdrop-blur-md transition-colors hover:bg-indigo-100"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 border border-amber-200 shadow-sm">
-                          <FileText size={22} weight="duotone" className="text-amber-500" />
+                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+                          <FileText size={22} weight="duotone" className="text-indigo-500" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-extrabold text-sm text-amber-700 mb-1">Resume Required</h4>
-                          <p className="text-xs text-amber-600/80 mb-3 leading-relaxed">
+                          <h4 className="font-extrabold text-sm text-indigo-700 mb-1">Resume Required</h4>
+                          <p className="text-xs text-indigo-600/80 mb-3 leading-relaxed">
                             Upload a PDF for Ami to personalize your interview.
                           </p>
                           <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold text-xs shadow-[0_4px_15px_rgba(245,158,11,0.2)] transition-all disabled:opacity-60 w-full justify-center"
+                            className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-[0_4px_15px_rgba(79,70,229,0.2)] transition-all disabled:opacity-60 w-full justify-center"
                           >
                             <Upload size={14} weight="bold" />
                             {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
@@ -735,11 +735,11 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                     </div>
                   )}
                   {hasResume === true && (
-                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText size={16} weight="fill" className="text-emerald-600" />
+                    <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center gap-3">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+                        <FileText size={16} weight="fill" className="text-indigo-600" />
                       </div>
-                      <span className="text-xs font-bold text-emerald-700">Resume detected — Ami will personalize your interview</span>
+                      <span className="text-xs font-bold text-indigo-700">Resume detected — Ami will personalize your interview</span>
                     </div>
                   )}
                 </div>
@@ -749,7 +749,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                 <button
                   onClick={handleStartWrapper}
                   disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(16,185,129,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(15,23,42,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
                 >
                   <Sparkle size={18} weight="fill" />
                   {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Waiting for permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
