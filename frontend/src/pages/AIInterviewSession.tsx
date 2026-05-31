@@ -722,6 +722,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                    <div className="flex flex-col items-center text-slate-400">
                      <VideoCameraSlash size={48} weight="thin" className="mb-3 opacity-50 text-indigo-400" />
                      <span className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Awaiting Permissions</span>
+                       {(window as any).webRtcErrorMsg && <div className="text-red-500 font-bold mb-4 p-3 bg-red-100 rounded-lg text-xs max-w-[80%] text-center border border-red-200 shadow-sm">ERROR: {(window as any).webRtcErrorMsg}</div>}
                      <button 
                        onClick={() => {
                          requestPermissionsAndEnumerate();
