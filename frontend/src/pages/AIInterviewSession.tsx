@@ -521,7 +521,6 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   const requestInProgressRef = useRef(false);
-  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
     if (requestInProgressRef.current) return;
     requestInProgressRef.current = true;
