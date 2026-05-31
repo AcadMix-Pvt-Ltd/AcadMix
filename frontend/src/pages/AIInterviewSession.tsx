@@ -438,7 +438,7 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
                   {opt.label || `Device ${opt.deviceId.slice(0, 5)}`}
                 </button>
               )) : (
-                <div className="px-4 py-3 text-sm text-slate-400 font-bold">Waiting for permissions...</div>
+                <div className="px-4 py-3 text-sm text-slate-400 font-bold">No devices available (or awaiting permissions)</div>
               )}
             </div>
           </motion.div>
@@ -790,7 +790,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(15,23,42,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
                 >
                   <Sparkle size={18} weight="fill" />
-                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Waiting for permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
+                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'No devices available (or awaiting permissions)' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
                 </button>
                 <button 
                   onClick={onCancel}
