@@ -853,14 +853,21 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                 <button
                   onClick={handleStartWrapper}
                   disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(15,23,42,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
+                  className={`group relative w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl font-extrabold text-sm transition-all duration-300 overflow-hidden ${
+                    permissionsGranted && hasMicSignal && hasResume === true
+                      ? 'bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-[0_8px_30px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.55)] hover:scale-[1.02] active:scale-[0.98]'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
-                  <Sparkle size={18} weight="fill" />
-                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'No devices available (or awaiting permissions)' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
+                  {permissionsGranted && hasMicSignal && hasResume === true && (
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  )}
+                  <Sparkle size={18} weight="fill" className={permissionsGranted && hasMicSignal && hasResume === true ? 'animate-pulse' : ''} />
+                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Awaiting permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
                 </button>
                 <button 
                   onClick={onCancel}
-                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-xl font-bold text-xs transition-all duration-200"
                 >
                   Cancel
                 </button>
