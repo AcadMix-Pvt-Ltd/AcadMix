@@ -525,7 +525,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (requestInProgressRef.current) return;
     requestInProgressRef.current = true;
     try {
-      setHardwareError('Requesting microphone access...');
+      setHardwareError('');
       if (!navigator.mediaDevices) {
         toast.error('Hardware access blocked. Use HTTPS or localhost.');
         setHardwareError('Hardware access blocked. Ensure you are using HTTPS or localhost.');
@@ -637,6 +637,10 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   useEffect(() => {
+    // Reset refs for React 18 StrictMode remount — without this,
+    // the second mount is permanently locked out by stale ref values
+    isMountedRef.current = true;
+    requestInProgressRef.current = false;
     requestPermissionsAndEnumerate();
     const handleBeforeUnload = () => {
       if (streamRef.current) {
