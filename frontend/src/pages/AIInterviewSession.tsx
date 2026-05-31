@@ -519,130 +519,144 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (file) handleResumeUpload(file);
   };
 
+  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
-    if (!navigator.mediaDevices) {
-      toast.error('Hardware access blocked. Use HTTPS or localhost.');
-      setPermissionsGranted(false);
-      return;
-    }
-
+    if (requestInProgressRef.current) return;
+    requestInProgressRef.current = true;
     try {
+      if (!navigator.mediaDevices) {
+        toast.error('Hardware access blocked. Use HTTPS or localhost.');
+        setPermissionsGranted(false);
+        return;
+      }
+      
+      let allDevices = [];
+      try {
+        allDevices = await navigator.mediaDevices.enumerateDevices();
+      } catch (e) {
+        console.warn("Initial enumerate failed", e);
+      }
+      const hasVideoHardware = allDevices.some(d => d.kind === 'videoinput');
+      const hasAudioHardware = allDevices.some(d => d.kind === 'audioinput');
+
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       
       const constraints = {
-        video: selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true,
-        audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
+        video: hasVideoHardware ? (selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true) : false,
+        audio: hasAudioHardware ? (selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true) : false,
       };
       
       let stream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia(constraints),
+          new Promise((_, reject) => setTimeout(() => {
+             const err = new Error("Hardware timeout");
+             err.name = "TimeoutError";
+             reject(err);
+          }, 5000))
+        ]);
       } catch (err) {
-        console.warn("Failed with ideal constraints, trying default true", err);
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        console.warn("Failed with ideal constraints, trying fallback", err);
+        stream = await Promise.race([
+          navigator.mediaDevices.getUserMedia({ video: hasVideoHardware, audio: hasAudioHardware }),
+          new Promise((_, reject) => setTimeout(() => {
+             const err = new Error("Hardware timeout");
+             err.name = "TimeoutError";
+             reject(err);
+          }, 5000))
+        ]);
       }
       
       if (!isMountedRef.current) {
-        stream.getTracks().forEach(t => t.stop());
+        if (stream) stream.getTracks().forEach(t => t.stop());
         return;
       }
+      
       streamRef.current = stream;
       setPermissionsGranted(true);
+      (window as any).webRtcErrorMsg = "";
       
       if (videoRef.current && videoRef.current.srcObject !== stream) {
         videoRef.current.srcObject = stream;
       }
 
-      // Enumerate available devices safely
-      const allDevices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
-      const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
-      
-      setDevices({ video: videoDevices, audio: audioDevices });
-      
-      if (!selectedVideoId && videoDevices.length > 0) {
-        const activeVideo = stream.getVideoTracks()[0];
-        const matched = videoDevices.find(d => d.label === activeVideo?.label);
-        setSelectedVideoId(matched?.deviceId || videoDevices[0].deviceId);
-      }
-      if (!selectedAudioId && audioDevices.length > 0) {
-        const activeAudio = stream.getAudioTracks()[0];
-        const matched = audioDevices.find(d => d.label === activeAudio?.label);
-        setSelectedAudioId(matched?.deviceId || audioDevices[0].deviceId);
-      }
+      // Re-enumerate safely now that permissions are granted (to get real labels)
+      try {
+         const updatedDevices = await navigator.mediaDevices.enumerateDevices();
+         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
+         const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
+         setDevices({ video: videoDevices, audio: audioDevices });
+      } catch(e) {}
 
-      // Amplitude setup
+      if (hasAudioHardware) {
         try {
-          if (stream.getAudioTracks().length === 0) {
-            console.warn("No audio tracks available for amplitude meter");
-          } else {
-            if (!audioContextRef.current) {
-              const AudioContext = window.AudioContext || window.webkitAudioContext;
-              audioContextRef.current = new AudioContext();
-            }
-            if (audioContextRef.current.state === 'suspended') {
-               audioContextRef.current.resume();
-            }
-            const analyser = audioContextRef.current.createAnalyser();
-            analyser.fftSize = 256;
-            const source = audioContextRef.current.createMediaStreamSource(stream);
-            source.connect(analyser);
-      
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-      
-            const checkVolume = () => {
-              if (!streamRef.current) return;
-              analyser.getByteFrequencyData(dataArray);
-              let sum = 0;
-              for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-              const average = sum / bufferLength;
-              
-              const noiseFloor = 15;
-              const normalizedVolume = Math.max(0, average - noiseFloor);
-              
-              if (normalizedVolume > 0) setHasMicSignal(true);
-              if (amplitudeBarRef.current) {
-                 const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
-                 amplitudeBarRef.current.style.width = `${visualWidth}%`;
-              }
-              animationFrameRef.current = requestAnimationFrame(checkVolume);
-            };
-            checkVolume();
+          if (!audioContextRef.current) {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            audioContextRef.current = new AudioContext();
           }
+          if (audioContextRef.current.state === 'suspended') {
+             audioContextRef.current.resume();
+          }
+          const analyser = audioContextRef.current.createAnalyser();
+          analyser.fftSize = 256;
+          const source = audioContextRef.current.createMediaStreamSource(stream);
+          source.connect(analyser);
+
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+
+          const checkVolume = () => {
+            if (!streamRef.current) return;
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+            const average = sum / bufferLength;
+            
+            const noiseFloor = 15;
+            const normalizedVolume = Math.max(0, average - noiseFloor);
+            
+            if (normalizedVolume > 0) setHasMicSignal(true);
+            if (amplitudeBarRef.current) {
+               const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+               amplitudeBarRef.current.style.width = `${visualWidth}%`;
+            }
+            animationFrameRef.current = requestAnimationFrame(checkVolume);
+          };
+          checkVolume();
         } catch (ampErr) {
           console.warn("Could not setup audio amplitude meter:", ampErr);
           setHasMicSignal(true);
         }
+      } else {
+        setHasMicSignal(true);
+      }
 
     } catch (err: any) {
-        console.error("Camera/Mic access denied:", err);
-        if (err.name === "NotReadableError") {
-           toast.error("Camera or mic is currently in use by another application.");
-           setPermissionsGranted(true);
-        } else if (err.name === "NotFoundError") {
-           toast.error("No camera or microphone found!");
-           setPermissionsGranted(true);
-        } else {
-           (window as any).webRtcErrorMsg = `${err.name}: ${err.message}`;
-           toast.error(`Permissions failed: ${err.name || err.message || "Unknown Error"}`);
-           setPermissionsGranted(false);
-        }
+      console.error("Camera/Mic access denied:", err);
+      if (err.name === "NotReadableError") {
+         (window as any).webRtcErrorMsg = "Camera or mic is in use by another application";
+         toast.error("Camera or mic is currently in use by another application.");
+         setPermissionsGranted(true);
+      } else if (err.name === "NotFoundError") {
+         (window as any).webRtcErrorMsg = "No camera or microphone found!";
+         toast.error("No camera or microphone found!");
+         setPermissionsGranted(true);
+      } else if (err.name === "TimeoutError") {
+         (window as any).webRtcErrorMsg = "Hardware didn't respond (Timeout). Check privacy settings.";
+         toast.error("Hardware took too long to respond. Check Windows privacy settings.");
+         setPermissionsGranted(false);
+      } else {
+         (window as any).webRtcErrorMsg = `${err.name}: ${err.message}`;
+         toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
+         setPermissionsGranted(false);
       }
-
-      // Always enumerate devices so dropdowns work even if stream failed
-      try {
-        const allDevices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
-        const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
-        
-        setDevices({ video: videoDevices, audio: audioDevices });
-      } catch (e) {
-        console.error("Enumerate failed", e);
-      }
-    };
+    } finally {
+      requestInProgressRef.current = false;
+    }
+  };
 
   useEffect(() => {
     requestPermissionsAndEnumerate();
