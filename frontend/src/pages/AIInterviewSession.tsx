@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight } from '@phosphor-icons/react';
-import { interviewAPI, resumeAPI } from '../services/api';
+import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera } from '@phosphor-icons/react';
+import { interviewAPI, resumeAPI, resumeVaultAPI } from '../services/api';
 import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
@@ -388,6 +388,66 @@ const BottomAudioVisualizer = ({ isListening }) => {
   );
 };
 
+// ─── Custom Animated Dropdown ────────────────────────────────────────────────
+const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find((o: any) => o.deviceId === value) || options[0];
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-slate-200"
+      >
+        <div className="flex items-center gap-3 overflow-hidden">
+          <Icon className="text-slate-400 shrink-0" size={18} />
+          <span className="text-sm font-bold truncate">{selectedOption?.label || label}</span>
+        </div>
+        <div className="shrink-0 ml-2 text-slate-500 text-xs">▼</div>
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute left-0 mt-2 min-w-full w-max max-w-sm bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl z-50 p-1"
+          >
+            <div className="max-h-60 overflow-y-auto">
+              {options.length > 0 ? options.map((opt: any) => (
+                <button
+                  key={opt.deviceId}
+                  onClick={() => { onChange(opt.deviceId); setIsOpen(false); }}
+                  className={`w-full text-left px-4 py-3 text-sm font-bold transition-colors rounded-xl ${
+                    value === opt.deviceId ? 'bg-teal-500/20 text-teal-400' : 'text-slate-300 hover:bg-white/5'
+                  }`}
+                >
+                  {opt.label || `Device ${opt.deviceId.slice(0, 5)}`}
+                </button>
+              )) : (
+                <div className="px-4 py-3 text-sm text-slate-500 font-bold">No devices found</div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // ─── Hardware Setup Lobby ──────────────────────────────────────────────────────
 const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   const videoRef = useRef(null);
@@ -406,9 +466,9 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
 
   // ── Resume presence check on mount ──
   useEffect(() => {
-    resumeAPI.latest()
+    resumeVaultAPI.getPrimary()
       .then(res => {
-        setHasResume(!!(res?.data && (res.data.id || res.data.parsed_text)));
+        setHasResume(!!res?.data);
       })
       .catch(() => {
         setHasResume(false);
@@ -430,9 +490,9 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      await resumeAPI.upload(formData);
+      await resumeVaultAPI.upload(formData);
       setHasResume(true);
-      toast.success('Resume uploaded! You\'re good to go.');
+      toast.success('Resume uploaded to vault! You\'re good to go.');
     } catch (err: any) {
       toast.error(err?.response?.data?.detail || 'Resume upload failed. Please try again.');
     } finally {
@@ -612,19 +672,16 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
             {/* Microphone Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Microphone</label>
-              <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md p-3 transition-colors hover:bg-white/10">
-                <select 
-                  className="w-full bg-transparent text-sm font-bold text-slate-200 outline-none cursor-pointer truncate"
+              <div className="flex flex-col gap-3">
+                <HardwareDropdown
+                  icon={Microphone}
+                  label="Select Microphone"
                   value={selectedAudioId}
-                  onChange={(e) => setSelectedAudioId(e.target.value)}
-                  disabled={devices.audio.length === 0}
-                >
-                  {devices.audio.length > 0 ? devices.audio.map(d => (
-                    <option key={d.deviceId} value={d.deviceId} className="bg-slate-900 text-slate-200">{d.label || `Microphone ${d.deviceId.slice(0, 5)}`}</option>
-                  )) : <option>No microphone found</option>}
-                </select>
+                  options={devices.audio}
+                  onChange={setSelectedAudioId}
+                />
                 {/* Amplitude Bar */}
-                <div className="mt-3 h-1.5 w-full bg-black/40 rounded-full overflow-hidden flex items-center border border-white/5">
+                <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden flex items-center border border-white/5">
                   <div ref={amplitudeBarRef} className="h-full bg-emerald-400 w-0 transition-all duration-75 shadow-[0_0_10px_#34d399]" />
                 </div>
               </div>
@@ -633,18 +690,13 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
             {/* Camera Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Camera</label>
-              <div className="border border-white/10 rounded-xl bg-white/5 backdrop-blur-md p-3 transition-colors hover:bg-white/10">
-                <select 
-                  className="w-full bg-transparent text-sm font-bold text-slate-200 outline-none cursor-pointer truncate"
-                  value={selectedVideoId}
-                  onChange={(e) => setSelectedVideoId(e.target.value)}
-                  disabled={devices.video.length === 0}
-                >
-                  {devices.video.length > 0 ? devices.video.map(d => (
-                    <option key={d.deviceId} value={d.deviceId} className="bg-slate-900 text-slate-200">{d.label || `Camera ${d.deviceId.slice(0, 5)}`}</option>
-                  )) : <option>No camera found</option>}
-                </select>
-              </div>
+              <HardwareDropdown
+                icon={VideoCamera}
+                label="Select Camera"
+                value={selectedVideoId}
+                options={devices.video}
+                onChange={setSelectedVideoId}
+              />
             </div>
           </div>
 
@@ -674,7 +726,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-full font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-60"
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-60"
                   >
                     <Upload size={14} weight="bold" />
                     {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
