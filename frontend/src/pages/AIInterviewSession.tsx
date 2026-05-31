@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera, VideoCameraSlash, ArrowElbowLeftUp, LockKey } from '@phosphor-icons/react';
+import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera } from '@phosphor-icons/react';
 import { interviewAPI, resumeAPI, resumeVaultAPI } from '../services/api';
 import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
@@ -409,13 +409,13 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
     <div className="relative" ref={containerRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors text-slate-800"
+        className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-slate-200"
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <Icon className="text-slate-500 shrink-0" size={18} />
+          <Icon className="text-slate-400 shrink-0" size={18} />
           <span className="text-sm font-bold truncate">{selectedOption?.label || label}</span>
         </div>
-        <div className="shrink-0 ml-2 text-slate-400 text-xs">▼</div>
+        <div className="shrink-0 ml-2 text-slate-500 text-xs">▼</div>
       </button>
       
       <AnimatePresence>
@@ -424,7 +424,7 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute left-0 mt-2 min-w-full w-max max-w-sm bg-white border border-slate-200 rounded-xl shadow-2xl z-50 p-1"
+            className="absolute left-0 mt-2 min-w-full w-max max-w-sm bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl z-50 p-1"
           >
             <div className="max-h-60 overflow-y-auto">
               {options.length > 0 ? options.map((opt: any) => (
@@ -432,13 +432,13 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
                   key={opt.deviceId}
                   onClick={() => { onChange(opt.deviceId); setIsOpen(false); }}
                   className={`w-full text-left px-4 py-3 text-sm font-bold transition-colors rounded-xl ${
-                    value === opt.deviceId ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'
+                    value === opt.deviceId ? 'bg-teal-500/20 text-teal-400' : 'text-slate-300 hover:bg-white/5'
                   }`}
                 >
                   {opt.label || `Device ${opt.deviceId.slice(0, 5)}`}
                 </button>
               )) : (
-                <div className="px-4 py-3 text-sm text-slate-400 font-bold">No devices available (or awaiting permissions)</div>
+                <div className="px-4 py-3 text-sm text-slate-500 font-bold">No devices found</div>
               )}
             </div>
           </motion.div>
@@ -457,10 +457,8 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   const [selectedAudioId, setSelectedAudioId] = useState('');
   const [hasMicSignal, setHasMicSignal] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
-  const [hardwareError, setHardwareError] = useState('');
   const [hasResume, setHasResume] = useState<boolean | null>(null); // null = loading
   const [isUploading, setIsUploading] = useState(false);
-  const [showTroubleshooter, setShowTroubleshooter] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -520,158 +518,94 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (file) handleResumeUpload(file);
   };
 
-  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
-    if (requestInProgressRef.current) return;
-    requestInProgressRef.current = true;
     try {
-      setHardwareError('');
-      if (!navigator.mediaDevices) {
-        toast.error('Hardware access blocked. Use HTTPS or localhost.');
-        setHardwareError('Hardware access blocked. Ensure you are using HTTPS or localhost.');
-        setPermissionsGranted(false);
-        return;
-      }
-      
-      let allDevices = [];
-      try {
-        allDevices = await navigator.mediaDevices.enumerateDevices();
-      } catch (e) {
-        console.warn("Initial enumerate failed", e);
-      }
-      const hasVideoHardware = allDevices.some(d => d.kind === 'videoinput');
-      const hasAudioHardware = allDevices.some(d => d.kind === 'audioinput');
-
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       
       const constraints = {
-        video: hasVideoHardware ? (selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true) : false,
-        audio: hasAudioHardware ? (selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true) : false,
+        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
+        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
       };
       
-      let stream;
-      try {
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia(constraints),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
-      } catch (err) {
-        console.warn("Failed with ideal constraints, trying fallback", err);
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia({ video: hasVideoHardware, audio: hasAudioHardware }),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
-      }
-      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       if (!isMountedRef.current) {
-        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach(t => t.stop());
         return;
       }
-      
       streamRef.current = stream;
       setPermissionsGranted(true);
-      setHardwareError('');
       
       if (videoRef.current && videoRef.current.srcObject !== stream) {
         videoRef.current.srcObject = stream;
       }
 
-      // Re-enumerate safely now that permissions are granted
-      try {
-         const updatedDevices = await navigator.mediaDevices.enumerateDevices();
-         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
-         const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
-         setDevices({ video: videoDevices, audio: audioDevices });
-      } catch(e) {}
+      // Enumerate available devices safely
+      const allDevices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+      const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
+      
+      setDevices({ video: videoDevices, audio: audioDevices });
+      
+      if (!selectedVideoId && videoDevices.length > 0) {
+        const activeVideo = stream.getVideoTracks()[0];
+        const matched = videoDevices.find(d => d.label === activeVideo?.label);
+        setSelectedVideoId(matched?.deviceId || videoDevices[0].deviceId);
+      }
+      if (!selectedAudioId && audioDevices.length > 0) {
+        const activeAudio = stream.getAudioTracks()[0];
+        const matched = audioDevices.find(d => d.label === activeAudio?.label);
+        setSelectedAudioId(matched?.deviceId || audioDevices[0].deviceId);
+      }
 
-      if (hasAudioHardware) {
-        try {
-          if (!audioContextRef.current) {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            audioContextRef.current = new AudioContext();
-          }
-          if (audioContextRef.current.state === 'suspended') {
-             audioContextRef.current.resume();
-          }
-          const analyser = audioContextRef.current.createAnalyser();
-          analyser.fftSize = 256;
-          const source = audioContextRef.current.createMediaStreamSource(stream);
-          source.connect(analyser);
+      // Amplitude setup
+      if (!audioContextRef.current) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContextRef.current = new AudioContext();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+         audioContextRef.current.resume();
+      }
+      const analyser = audioContextRef.current.createAnalyser();
+      analyser.fftSize = 256;
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyser);
 
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
 
-          const checkVolume = () => {
-            if (!streamRef.current) return;
-            analyser.getByteFrequencyData(dataArray);
-            let sum = 0;
-            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-            const average = sum / bufferLength;
-            
-            const noiseFloor = 15;
-            const normalizedVolume = Math.max(0, average - noiseFloor);
-            
-            if (normalizedVolume > 0) setHasMicSignal(true);
-            if (amplitudeBarRef.current) {
-               const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
-               amplitudeBarRef.current.style.width = `${visualWidth}%`;
-            }
-            animationFrameRef.current = requestAnimationFrame(checkVolume);
-          };
-          checkVolume();
-        } catch (ampErr) {
-          console.warn("Could not setup audio amplitude meter:", ampErr);
-          setHasMicSignal(true);
+      const checkVolume = () => {
+        if (!streamRef.current) return;
+        analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+        const average = sum / bufferLength;
+        
+        // Filter out ambient noise floor (most laptop mics sit around 15-20 when silent)
+        const noiseFloor = 15;
+        const normalizedVolume = Math.max(0, average - noiseFloor);
+        
+        if (normalizedVolume > 0) setHasMicSignal(true);
+        if (amplitudeBarRef.current) {
+           // Smooth the visual representation and make it less twitchy at the bottom
+           const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+           amplitudeBarRef.current.style.width = `${visualWidth}%`;
         }
-      } else {
-        setHasMicSignal(true);
-      }
+        animationFrameRef.current = requestAnimationFrame(checkVolume);
+      };
+      checkVolume();
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Camera/Mic access denied:", err);
-      if (err.name === "NotReadableError") {
-         setHardwareError("Camera or mic is in use by another application. Close other apps and refresh.");
-         toast.error("Camera or mic is currently in use by another application.");
-         // Do not bypass, if we can't read it we can't use it
-         setPermissionsGranted(false);
-      } else if (err.name === "NotFoundError") {
-         setHardwareError("No camera or microphone found!");
-         toast.error("No camera or microphone found!");
-         setPermissionsGranted(true);
-      } else if (err.name === "TimeoutError") {
-         setHardwareError("Hardware deadlocked. Chrome's camera driver crashed. You MUST restart your browser.");
-         toast.error("Hardware took too long to respond. Please restart your browser completely.");
-         setPermissionsGranted(false);
-      } else {
-         setHardwareError(`${err.name}: ${err.message}`);
-         toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
-         setPermissionsGranted(false);
-      }
-    } finally {
-      requestInProgressRef.current = false;
+      toast.error('Please grant camera and microphone permissions to proceed.');
+      setPermissionsGranted(false);
     }
   };
 
   useEffect(() => {
     requestPermissionsAndEnumerate();
-    const handleBeforeUnload = () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(()=>{});
@@ -694,171 +628,139 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#06090e] flex items-center justify-center p-6 relative overflow-hidden font-sans">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[120px] mix-blend-multiply opacity-50" />
-        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-500/10 rounded-full blur-[150px] mix-blend-multiply opacity-50" />
+        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
       </div>
 
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-4xl w-full bg-white/90 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200/60">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-2xl w-full bg-[#111827]/80 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/5">
         <div className="p-6 sm:p-8">
-          <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
-             <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center border border-slate-200/60 shadow-inner shrink-0 overflow-hidden p-0.5">
-               <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${sessionConfig?.target_role || 'Ami'}&backgroundColor=transparent`} alt="Avatar" className="w-full h-full object-contain drop-shadow-sm" />
+          <div className="flex items-center gap-4 mb-6 border-b border-white/5 pb-6">
+             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-teal-500/20 flex items-center justify-center border border-white/10 shadow-inner">
+               <Sparkle size={24} weight="fill" className="text-indigo-400" />
              </div>
              <div>
-               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-wide">Green Room Setup</h2>
-               <p className="text-sm text-slate-500">
-                 {sessionConfig?.interview_type ? sessionConfig.interview_type.charAt(0).toUpperCase() + sessionConfig.interview_type.slice(1) : 'Mock'} Interview
+               <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-wide">Hardware Setup</h2>
+               <p className="text-sm text-slate-400">
+                 {sessionConfig?.interview_type?.charAt(0).toUpperCase() + sessionConfig?.interview_type?.slice(1)} Interview
                  {sessionConfig?.target_company && ` @ ${sessionConfig.target_company}`}
                  {' — '}{sessionConfig?.target_role}
                </p>
              </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column: Camera Preview */}
-            <div className="flex flex-col gap-4">
-              <div className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner flex items-center justify-center">
-                {permissionsGranted ? (
-                   <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-                ) : showTroubleshooter ? (
-                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center text-center p-6 w-full h-full bg-indigo-50/50">
-                     <motion.div 
-                       animate={{ y: [-10, 0, -10], x: [-10, 0, -10] }} 
-                       transition={{ repeat: Infinity, duration: 1.5 }}
-                       className="absolute top-6 left-6 text-indigo-500 drop-shadow-md"
-                     >
-                       <ArrowElbowLeftUp size={48} weight="duotone" />
-                     </motion.div>
-                     <div className="space-y-5 max-w-sm mt-4">
-                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-sm font-bold text-slate-700">
-                         1. Look up! Click the <LockKey size={18} weight="fill" className="inline text-slate-400 -mt-1 mx-1"/> lock icon near the URL bar.
-                       </motion.p>
-                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-sm font-bold text-slate-700">
-                         2. Switch Camera & Microphone to <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">'Allow'</span>.
-                       </motion.p>
-                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }} className="text-sm font-bold text-indigo-600">
-                         3. Reload the page and let's go!
-                       </motion.p>
-                     </div>
-                   </motion.div>
-                ) : (
-                   <div className="flex flex-col items-center text-slate-400">
-                     <VideoCameraSlash size={48} weight="thin" className="mb-3 opacity-50 text-indigo-400" />
-                     <span className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Awaiting Permissions</span>
-                       {hardwareError && <div className="text-red-600 font-bold mb-4 p-4 bg-red-50 rounded-xl text-sm max-w-[90%] text-center border border-red-200 shadow-sm">{hardwareError}</div>}
-                     <button 
-                       onClick={() => {
-                         requestPermissionsAndEnumerate();
-                         setShowTroubleshooter(true);
-                       }}
-                       className="px-5 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-xs font-bold transition-colors shadow-sm"
-                     >
-                       Fix Permissions
-                     </button>
-                   </div>
-                )}
-                {/* Overlay status */}
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${hasMicSignal ? 'bg-indigo-100 text-indigo-600' : 'bg-rose-100 text-rose-600'}`}>
-                    {hasMicSignal ? <Microphone size={20} weight="fill" /> : <MicrophoneSlash size={20} weight="fill" />}
-                  </div>
-                  <div className={`p-2 rounded-full backdrop-blur-md border border-white/20 shadow-sm ${permissionsGranted ? 'bg-indigo-100 text-indigo-600' : 'bg-rose-100 text-rose-600'}`}>
-                    {permissionsGranted ? <VideoCamera size={20} weight="fill" /> : <VideoCameraSlash size={20} weight="fill" />}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Mic Input Level / Volume Meter */}
-              <div className="bg-slate-50 border border-slate-200/60 p-4 rounded-xl">
-                <div className="flex justify-between text-xs text-slate-500 mb-2 font-bold uppercase tracking-wider">
-                  <span>Mic Input Level</span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden flex items-center border border-slate-200/60 shadow-inner">
-                  <div ref={amplitudeBarRef} className="h-full bg-indigo-500 w-0 transition-all duration-75 shadow-[0_0_10px_#6366f1]" />
+          {/* Camera Preview */}
+          <div className="relative w-full aspect-video bg-black/40 rounded-2xl overflow-hidden mb-6 border border-white/10 shadow-inner">
+            {permissionsGranted ? (
+               <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline 
+                  muted 
+                  className="w-full h-full object-cover scale-x-[-1]" 
+               />
+            ) : (
+               <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                  <Warning size={32} className="mb-2 opacity-50 text-amber-500" />
+                  <span className="text-sm font-bold uppercase tracking-wider text-slate-400">Awaiting Permissions</span>
+               </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {/* Microphone Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Microphone</label>
+              <div className="flex flex-col gap-3">
+                <HardwareDropdown
+                  icon={Microphone}
+                  label="Select Microphone"
+                  value={selectedAudioId}
+                  options={devices.audio}
+                  onChange={setSelectedAudioId}
+                />
+                {/* Amplitude Bar */}
+                <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden flex items-center border border-white/5">
+                  <div ref={amplitudeBarRef} className="h-full bg-emerald-400 w-0 transition-all duration-75 shadow-[0_0_10px_#34d399]" />
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Checklists & Resume */}
-            <div className="flex flex-col gap-6">
-              <div className="space-y-4">
-                <h3 className="font-bold text-slate-700 border-b border-slate-100 pb-2 text-sm uppercase tracking-wider">Pre-flight Checklist</h3>
-                
-                {/* Microphone Selector */}
-                <div>
-                  <HardwareDropdown icon={Microphone} label="Select Microphone" value={selectedAudioId} options={devices.audio} onChange={setSelectedAudioId} />
-                </div>
-                {/* Camera Selector */}
-                <div>
-                  <HardwareDropdown icon={VideoCamera} label="Select Camera" value={selectedVideoId} options={devices.video} onChange={setSelectedVideoId} />
-                </div>
+            {/* Camera Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Camera</label>
+              <HardwareDropdown
+                icon={VideoCamera}
+                label="Select Camera"
+                value={selectedVideoId}
+                options={devices.video}
+                onChange={setSelectedVideoId}
+              />
+            </div>
+          </div>
 
-                {/* Resume Check */}
-                <div className="pt-2">
-                  {hasResume === false && (
-                    <div
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={onDrop}
-                      className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50 backdrop-blur-md transition-colors hover:bg-indigo-100"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
-                          <FileText size={22} weight="duotone" className="text-indigo-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-extrabold text-sm text-indigo-700 mb-1">Resume Required</h4>
-                          <p className="text-xs text-indigo-600/80 mb-3 leading-relaxed">
-                            Upload a PDF for Ami to personalize your interview.
-                          </p>
-                          <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-[0_4px_15px_rgba(79,70,229,0.2)] transition-all disabled:opacity-60 w-full justify-center"
-                          >
-                            <Upload size={14} weight="bold" />
-                            {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {hasResume === null && (
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-3">
-                      <div className="animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full shrink-0" />
-                      <span className="text-xs font-bold text-slate-500">Checking resume vault...</span>
-                    </div>
-                  )}
-                  {hasResume === true && (
-                    <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText size={16} weight="fill" className="text-indigo-600" />
-                      </div>
-                      <span className="text-xs font-bold text-indigo-700">Resume detected — Ami will personalize your interview</span>
-                    </div>
-                  )}
+          {/* ── Resume Check ── */}
+          {hasResume === false && (
+            <div
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onDrop}
+              className="mt-6 mb-6 p-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-md transition-colors hover:bg-amber-500/15"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-11 h-11 bg-amber-500/20 rounded-xl flex items-center justify-center shrink-0 border border-amber-500/30 shadow-inner">
+                  <FileText size={22} weight="duotone" className="text-amber-400" />
                 </div>
-              </div>
-
-              <div className="mt-auto pt-6 border-t border-slate-100">
-                <button
-                  onClick={handleStartWrapper}
-                  disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-extrabold text-sm shadow-[0_8px_20px_rgba(15,23,42,0.25)] transition-all disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed"
-                >
-                  <Sparkle size={18} weight="fill" />
-                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'No devices available (or awaiting permissions)' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
-                </button>
-                <button 
-                  onClick={onCancel}
-                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-500 hover:text-slate-700 rounded-xl font-bold text-xs transition-colors"
-                >
-                  Cancel
-                </button>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-extrabold text-sm text-amber-300 mb-1">Resume Required</h4>
+                  <p className="text-xs text-amber-200/70 mb-3 leading-relaxed">
+                    Ami personalizes your interview using your resume. Upload a PDF to get started.
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={onFileChange}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-bold text-xs shadow-[0_0_15px_rgba(245,158,11,0.4)] transition-all disabled:opacity-60"
+                  >
+                    <Upload size={14} weight="bold" />
+                    {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
+                  </button>
+                  <p className="text-[10px] text-amber-600/50 dark:text-amber-400/40 mt-2">or drag & drop a PDF here</p>
+                </div>
               </div>
             </div>
+          )}
+          {hasResume === true && (
+            <div className="mt-6 mb-6 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center gap-3">
+              <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                <FileText size={16} weight="fill" className="text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Resume detected — Ami will personalize your interview</span>
+            </div>
+          )}
+
+          {/* Action Row */}
+          <div className="mt-8 flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-slate-100 dark:border-slate-800/50">
+            <button 
+              onClick={onCancel}
+              className="px-6 py-3.5 rounded-xl font-bold text-sm text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleStartWrapper} 
+              disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
+              className="flex-1 py-3.5 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Waiting for permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
+              {permissionsGranted && hasMicSignal && hasResume && <ArrowsOut size={16} weight="bold" />}
+            </button>
           </div>
         </div>
       </motion.div>
@@ -1059,7 +961,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         console.log('[TTS] audio.play() started successfully');
         setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
         if (onAudioStart) onAudioStart();
-      } catch (err: any) {
+      } catch (err) {
         console.error('[TTS] speakText error:', err);
         setIsSpeaking(false);
         isSpeakingRef.current = false;
@@ -1075,8 +977,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (!mediaStreamRef.current) {
       try {
         const constraints = {
-          audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
-          video: sessionVideoIdRef.current ? { deviceId: { ideal: sessionVideoIdRef.current } } : true
+          audio: sessionMicIdRef.current ? { deviceId: { exact: sessionMicIdRef.current } } : true,
+          video: sessionVideoIdRef.current ? { deviceId: { exact: sessionVideoIdRef.current } } : true
         };
         console.log('[MIC] Requesting getUserMedia with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -1087,7 +989,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         }
         mediaStreamRef.current = stream;
         console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}`));
-      } catch (err: any) {
+      } catch (err) {
         console.error('[MIC] Camera/Microphone access denied.', err);
         toast.error('Camera and Microphone access are required for the interview.');
       }
@@ -1109,7 +1011,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
         sourceNodeRef.current.connect(analyserRef.current);
         console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize);
-      } catch (err: any) {
+      } catch (err) {
         console.error('[MIC] Failed to connect analyser:', err);
       }
     } else if (audioContextRef.current?.state === 'suspended') {
@@ -1130,7 +1032,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         };
         
         recorder.start();
-      } catch (err: any) {
+      } catch (err) {
         console.error("Failed to start MediaRecorder capture:", err);
       }
     }
@@ -1229,7 +1131,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       setFeedback(data.feedback ? { ...data.feedback, overall_score: data.overall_score, scores: data.scores } : data);
       setPhase('scorecard');
       try { document.exitFullscreen(); } catch {}
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Failed to generate feedback');
       setPhase('active');
       setOrbState('listening');
@@ -1284,7 +1186,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // Start listening again
       setOrbState('listening');
       startListening();
-    } catch (err: any) {
+    } catch (err) {
       toast.error('Failed to process response. Please try again.');
       setOrbState('listening');
       startListening();
@@ -1333,7 +1235,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         setOrbState('listening');
         startListening();
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Transcription failed:", err);
       const finalAnswer = transcriptRef.current.trim();
       if (finalAnswer) {
@@ -1402,7 +1304,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // Start continuous listening
       setOrbState('listening');
       startListening();
-    } catch (err: any) {
+    } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to start interview');
       setPhase('setup');
       try { document.exitFullscreen(); } catch {}
