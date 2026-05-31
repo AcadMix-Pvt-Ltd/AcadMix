@@ -526,11 +526,18 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       }
       
       const constraints = {
-        video: selectedVideoId ? { deviceId: { exact: selectedVideoId } } : true,
-        audio: selectedAudioId ? { deviceId: { exact: selectedAudioId } } : true,
+        video: selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true,
+        audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true,
       };
       
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (err) {
+        console.warn("Failed with ideal constraints, trying default true", err);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      }
+      
       if (!isMountedRef.current) {
         stream.getTracks().forEach(t => t.stop());
         return;
@@ -638,13 +645,13 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 max-w-4xl w-full bg-white/90 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-slate-200/60">
         <div className="p-6 sm:p-8">
           <div className="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
-             <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-50 to-teal-50 flex items-center justify-center border border-slate-200/60 shadow-inner shrink-0">
-               <Sparkle size={24} weight="fill" className="text-indigo-600" />
+             <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center border border-slate-200/60 shadow-inner shrink-0 overflow-hidden p-0.5">
+               <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${sessionConfig?.target_role || 'Ami'}&backgroundColor=transparent`} alt="Avatar" className="w-full h-full object-contain drop-shadow-sm" />
              </div>
              <div>
                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-wide">Green Room Setup</h2>
                <p className="text-sm text-slate-500">
-                 {sessionConfig?.interview_type?.charAt(0).toUpperCase() + sessionConfig?.interview_type?.slice(1)} Interview
+                 {sessionConfig?.interview_type ? sessionConfig.interview_type.charAt(0).toUpperCase() + sessionConfig.interview_type.slice(1) : 'Mock'} Interview
                  {sessionConfig?.target_company && ` @ ${sessionConfig.target_company}`}
                  {' — '}{sessionConfig?.target_role}
                </p>
