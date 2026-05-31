@@ -525,7 +525,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     if (requestInProgressRef.current) return;
     requestInProgressRef.current = true;
     try {
-      setHardwareError('');
+      setHardwareError('Requesting microphone access...');
       if (!navigator.mediaDevices) {
         toast.error('Hardware access blocked. Use HTTPS or localhost.');
         setHardwareError('Hardware access blocked. Ensure you are using HTTPS or localhost.');
@@ -547,7 +547,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
              const err = new Error("Hardware timeout");
              err.name = "TimeoutError";
              reject(err);
-          }, 4000))
+          }, 2000))
         ]);
       } catch (err: any) {
         throw err; // cascade down to the main catch block
