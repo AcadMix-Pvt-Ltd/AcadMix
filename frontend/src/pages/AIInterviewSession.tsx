@@ -999,7 +999,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     return new Promise<void>(async (resolve) => {
       // 1. Interrupt any active playback
       if (currentAudioRef.current) {
-        try { currentAudioRef.current.pause(); } catch {}
+        try { (currentAudioRef.current as any).stop(); } catch {}
         currentAudioRef.current = null;
       }
 
@@ -1036,27 +1036,27 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           resolve();
           return;
         }
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        let audio = document.getElementById('tts-audio') as HTMLAudioElement;
-        if (!audio) {
-          audio = new Audio();
-          audio.id = 'tts-audio';
-          audio.style.display = 'none';
-          document.body.appendChild(audio);
+        // Play TTS using Web Audio API for maximum reliability and bypass of DOM restrictions
+        if (!audioContextRef.current) {
+          audioContextRef.current = new window.AudioContext();
         }
-        audio.src = audioUrl;
-        audio.volume = 1.0;
-        audio.muted = false;
-        currentAudioRef.current = audio;
+        
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+        
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioContextRef.current.destination);
+        
+        // Store the source so we can stop it if interrupted
+        currentAudioRef.current = source as any; // Type override since we changed from HTMLAudioElement
 
         let resolved = false;
         const safeResolve = () => {
           if (!resolved) {
             resolved = true;
             setIsSpeaking(false);
-            isSpeakingRef.current = false; // Sync directly
-            URL.revokeObjectURL(audioUrl);
+            isSpeakingRef.current = false;
             currentAudioRef.current = null;
             resolve();
           }
@@ -1065,21 +1065,16 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         const fallbackMs = Math.max(3000, text.length * 80 + 2000);
         const timeoutId = setTimeout(safeResolve, fallbackMs);
 
-        audio.onended = () => {
+        source.onended = () => {
           console.log('[TTS] Audio playback ended naturally');
           clearTimeout(timeoutId);
           safeResolve();
         };
 
-        audio.onerror = (e) => {
-          console.error('[TTS] Audio playback error:', e);
-          clearTimeout(timeoutId);
-          safeResolve();
-        };
-
-        await audio.play();
-        console.log('[TTS] audio.play() started successfully');
-        setShowTranscript(true);  // ← TEXT LEAK FIX: Only show text AFTER TTS starts
+        // start playback
+        source.start(0);
+        console.log('[TTS] source.start() executed successfully');
+        setShowTranscript(true);
         if (onAudioStart) onAudioStart();
       } catch (err: any) {
         console.error('[TTS] speakText error:', err);
@@ -1180,7 +1175,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // If AI starts speaking, interrupt it
       if (isSpeakingRef.current || currentAudioRef.current) {
         if (currentAudioRef.current) {
-          try { currentAudioRef.current.pause(); } catch {}
+          try { (currentAudioRef.current as any).stop(); } catch {}
           currentAudioRef.current = null;
         }
         setIsSpeaking(false);
@@ -1239,7 +1234,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const handleEndInterview = useCallback(async () => {
     stopListening();
     if (currentAudioRef.current) {
-      try { currentAudioRef.current.pause(); } catch {}
+      try { (currentAudioRef.current as any).stop(); } catch {}
       currentAudioRef.current = null;
     }
     cleanupAudio(); // Securely close audio hardware streams
@@ -1437,7 +1432,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       stopListening();
       cleanupAudio();
       if (currentAudioRef.current) {
-        try { currentAudioRef.current.pause(); } catch {}
+        try { (currentAudioRef.current as any).stop(); } catch {}
         currentAudioRef.current = null;
       }
       clearInterval(timerRef.current);
