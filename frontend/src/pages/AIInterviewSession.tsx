@@ -1036,10 +1036,18 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           resolve();
           return;
         }
-
         const audioUrl = URL.createObjectURL(audioBlob);
         
-        const audio = new Audio(audioUrl);
+        let audio = document.getElementById('tts-audio') as HTMLAudioElement;
+        if (!audio) {
+          audio = new Audio();
+          audio.id = 'tts-audio';
+          audio.style.display = 'none';
+          document.body.appendChild(audio);
+        }
+        audio.src = audioUrl;
+        audio.volume = 1.0;
+        audio.muted = false;
         currentAudioRef.current = audio;
 
         let resolved = false;
