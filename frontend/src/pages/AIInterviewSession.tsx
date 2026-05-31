@@ -626,7 +626,8 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
            toast.error("No camera or microphone found!");
            setPermissionsGranted(true);
         } else {
-           toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
+           window.webRtcErrorMsg = `${err.name}: ${err.message}`;
+           toast.error(`Permissions failed: ${err.name || err.message || "Unknown Error"}`);
            setPermissionsGranted(false);
         }
       }
