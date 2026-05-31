@@ -521,6 +521,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   const requestInProgressRef = useRef(false);
+  const requestInProgressRef = useRef(false);
   const requestPermissionsAndEnumerate = async () => {
     if (requestInProgressRef.current) return;
     requestInProgressRef.current = true;
@@ -533,44 +534,24 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
         return;
       }
       
-      let allDevices = [];
-      try {
-        allDevices = await navigator.mediaDevices.enumerateDevices();
-      } catch (e) {
-        console.warn("Initial enumerate failed", e);
-      }
-      const hasVideoHardware = allDevices.some(d => d.kind === 'videoinput');
-      const hasAudioHardware = allDevices.some(d => d.kind === 'audioinput');
-
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
       }
       
-      const constraints = {
-        video: hasVideoHardware ? (selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true) : false,
-        audio: hasAudioHardware ? (selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true) : false,
-      };
-      
       let stream;
       try {
+        // We wrap the ENTIRE hardware request in a strict 5-second timeout.
+        // We only request AUDIO first. This completely bypasses any Windows Camera deadlocks!
         stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia(constraints),
+          navigator.mediaDevices.getUserMedia({ audio: true, video: false }),
           new Promise((_, reject) => setTimeout(() => {
              const err = new Error("Hardware timeout");
              err.name = "TimeoutError";
              reject(err);
-          }, 5000))
+          }, 4000))
         ]);
-      } catch (err) {
-        console.warn("Failed with ideal constraints, trying fallback", err);
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia({ video: hasVideoHardware, audio: hasAudioHardware }),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
+      } catch (err: any) {
+        throw err; // cascade down to the main catch block
       }
       
       if (!isMountedRef.current) {
@@ -582,75 +563,69 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       setPermissionsGranted(true);
       setHardwareError('');
       
-      if (videoRef.current && videoRef.current.srcObject !== stream) {
-        videoRef.current.srcObject = stream;
-      }
-
-      // Re-enumerate safely now that permissions are granted
+      // Now that we have microphone permission, enumerateDevices is GUARANTEED to not hang
       try {
          const updatedDevices = await navigator.mediaDevices.enumerateDevices();
-         const videoDevices = updatedDevices.filter(d => d.kind === 'videoinput');
          const audioDevices = updatedDevices.filter(d => d.kind === 'audioinput');
-         setDevices({ video: videoDevices, audio: audioDevices });
+         setDevices({ video: [], audio: audioDevices });
+         if (!selectedAudioId && audioDevices.length > 0) {
+            setSelectedAudioId(audioDevices[0].deviceId);
+         }
       } catch(e) {}
 
-      if (hasAudioHardware) {
-        try {
-          if (!audioContextRef.current) {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            audioContextRef.current = new AudioContext();
-          }
-          if (audioContextRef.current.state === 'suspended') {
-             audioContextRef.current.resume();
-          }
-          const analyser = audioContextRef.current.createAnalyser();
-          analyser.fftSize = 256;
-          const source = audioContextRef.current.createMediaStreamSource(stream);
-          source.connect(analyser);
-
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
-
-          const checkVolume = () => {
-            if (!streamRef.current) return;
-            analyser.getByteFrequencyData(dataArray);
-            let sum = 0;
-            for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
-            const average = sum / bufferLength;
-            
-            const noiseFloor = 15;
-            const normalizedVolume = Math.max(0, average - noiseFloor);
-            
-            if (normalizedVolume > 0) setHasMicSignal(true);
-            if (amplitudeBarRef.current) {
-               const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
-               amplitudeBarRef.current.style.width = `${visualWidth}%`;
-            }
-            animationFrameRef.current = requestAnimationFrame(checkVolume);
-          };
-          checkVolume();
-        } catch (ampErr) {
-          console.warn("Could not setup audio amplitude meter:", ampErr);
-          setHasMicSignal(true);
+      // Amplitude setup
+      try {
+        if (!audioContextRef.current) {
+          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          audioContextRef.current = new AudioContext();
         }
-      } else {
+        if (audioContextRef.current.state === 'suspended') {
+           audioContextRef.current.resume();
+        }
+        const analyser = audioContextRef.current.createAnalyser();
+        analyser.fftSize = 256;
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const checkVolume = () => {
+          if (!streamRef.current) return;
+          analyser.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < bufferLength; i++) sum += dataArray[i];
+          const average = sum / bufferLength;
+          
+          const noiseFloor = 15;
+          const normalizedVolume = Math.max(0, average - noiseFloor);
+          
+          if (normalizedVolume > 0) setHasMicSignal(true);
+          if (amplitudeBarRef.current) {
+             const visualWidth = normalizedVolume > 0 ? Math.min(100, normalizedVolume * 3) : 0;
+             amplitudeBarRef.current.style.width = `${visualWidth}%`;
+          }
+          animationFrameRef.current = requestAnimationFrame(checkVolume);
+        };
+        checkVolume();
+      } catch (ampErr) {
+        console.warn("Could not setup audio amplitude meter:", ampErr);
         setHasMicSignal(true);
       }
 
     } catch (err: any) {
       console.error("Camera/Mic access denied:", err);
       if (err.name === "NotReadableError") {
-         setHardwareError("Camera or mic is in use by another application. Close other apps and refresh.");
-         toast.error("Camera or mic is currently in use by another application.");
-         // Do not bypass, if we can't read it we can't use it
+         setHardwareError("Microphone is in use by another application (like Zoom or Teams). Close them and refresh.");
+         toast.error("Microphone is currently in use by another application.");
          setPermissionsGranted(false);
       } else if (err.name === "NotFoundError") {
-         setHardwareError("No camera or microphone found!");
-         toast.error("No camera or microphone found!");
+         setHardwareError("No microphone found! Please plug in a microphone.");
+         toast.error("No microphone found!");
          setPermissionsGranted(true);
       } else if (err.name === "TimeoutError") {
-         setHardwareError("Hardware deadlocked. Chrome's camera driver crashed. You MUST restart your browser.");
-         toast.error("Hardware took too long to respond. Please restart your browser completely.");
+         setHardwareError("Hardware deadlocked. Your Windows audio driver is unresponsive.");
+         toast.error("Hardware took too long to respond.");
          setPermissionsGranted(false);
       } else {
          setHardwareError(`${err.name}: ${err.message}`);
@@ -680,7 +655,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVideoId, selectedAudioId]);
+  }, [selectedAudioId]); // Removed selectedVideoId dependency to prevent infinite loops if camera is disabled
 
   const handleStartWrapper = () => {
     // 1. Stop local tracks immediately
