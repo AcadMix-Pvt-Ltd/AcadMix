@@ -604,12 +604,31 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       };
       checkVolume();
 
-    } catch (err) {
-      console.error("Camera/Mic access denied:", err);
-      toast.error('Please grant camera and microphone permissions to proceed.');
-      setPermissionsGranted(false);
-    }
-  };
+    } catch (err: any) {
+        console.error("Camera/Mic access denied:", err);
+        if (err.name === "NotReadableError") {
+           toast.error("Camera or mic is currently in use by another application.");
+           setPermissionsGranted(true);
+        } else if (err.name === "NotFoundError") {
+           toast.error("No camera or microphone found!");
+           setPermissionsGranted(true);
+        } else {
+           toast.error("Please grant camera and microphone permissions to proceed.");
+           setPermissionsGranted(false);
+        }
+      }
+
+      // Always enumerate devices so dropdowns work even if stream failed
+      try {
+        const allDevices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = allDevices.filter(d => d.kind === 'videoinput');
+        const audioDevices = allDevices.filter(d => d.kind === 'audioinput');
+        
+        setDevices({ video: videoDevices, audio: audioDevices });
+      } catch (e) {
+        console.error("Enumerate failed", e);
+      }
+    };
 
   useEffect(() => {
     requestPermissionsAndEnumerate();
@@ -622,7 +641,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedVideoId, selectedAudioId]);
+  }, []);
 
   const handleStartWrapper = () => {
     // 1. Stop local tracks immediately
