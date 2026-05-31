@@ -10,38 +10,32 @@ from app.core.config import settings
 
 logger = logging.getLogger("acadmix.voice_service")
 
-# ── Professional Interview Voice Pool ──
-# Curated set of clear, authoritative, professional ElevenLabs voices
-# suitable for mock interview scenarios (mix of male & female).
+# ── Professional Interview Voice Pool (Cartesia) ──
+# Curated set of clear, authoritative voices for mock interviews
 INTERVIEW_VOICES = [
-    {"id": "EXAVITQu4vr4xnSDxMaL", "name": "Bella",   "gender": "female"},  # Confident, clear
-    {"id": "ErXwobaYiN019PkySvjV", "name": "Antoni",  "gender": "male"},    # Authoritative
-    {"id": "VR6AewLTigWG4xSOukaG", "name": "Arnold",  "gender": "male"},    # Deep, commanding
-    {"id": "pNInz6obpgDQGcFmaJgB", "name": "Adam",    "gender": "male"},    # Professional, neutral
+    {"id": "f9fc912e-52f0-448a-8bfa-47e9ca75f25a", "name": "Marilyn",  "gender": "female"},
+    {"id": "42f14755-88c3-4124-aae3-5cc3a9618e8f", "name": "Jan",      "gender": "male"},
+    {"id": "02aeee94-c02b-456e-be7a-659672acf82d", "name": "Benito",   "gender": "male"},
+    {"id": "225ba8cf-9fc2-4371-a78c-fe38ba38898a", "name": "Anneliese","gender": "female"},
 ]
 
 # Default voice (first in pool)
-DEFAULT_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
+DEFAULT_VOICE_ID = "f9fc912e-52f0-448a-8bfa-47e9ca75f25a"
 
 
 def get_random_interview_voice() -> str:
-    """Pick a random professional voice for each interview session (Legacy)."""
+    """Pick a random professional voice for each interview session."""
     voice = random.choice(INTERVIEW_VOICES)
     logger.info(f"Selected interview voice: {voice['name']} ({voice['gender']})")
     return voice["id"]
 
 def get_persona_voice(interview_type: str) -> str:
-    """Map the interview type to a specific ElevenLabs Persona voice."""
-    # "pNInz6obpgDQGcFmaJgB" = Adam (Technical)
-    # "EXAVITQu4vr4xnSDxMaL" = Bella (HR)
-    # "ErXwobaYiN019PkySvjV" = Antoni (Behavioral)
-    # "VR6AewLTigWG4xSOukaG" = Arnold (Full Mock / VP)
-    
+    """Map the interview type to a specific Cartesia voice."""
     mapping = {
-        "technical": "pNInz6obpgDQGcFmaJgB",
-        "hr": "EXAVITQu4vr4xnSDxMaL",
-        "behavioral": "ErXwobaYiN019PkySvjV",
-        "mixed": "VR6AewLTigWG4xSOukaG"
+        "technical": "42f14755-88c3-4124-aae3-5cc3a9618e8f", # Jan
+        "hr": "f9fc912e-52f0-448a-8bfa-47e9ca75f25a",       # Marilyn
+        "behavioral": "225ba8cf-9fc2-4371-a78c-fe38ba38898a", # Anneliese
+        "mixed": "02aeee94-c02b-456e-be7a-659672acf82d"      # Benito
     }
     
     voice_id = mapping.get(interview_type.lower(), DEFAULT_VOICE_ID)
@@ -51,35 +45,40 @@ def get_persona_voice(interview_type: str) -> str:
 
 async def text_to_speech_stream(text: str, voice_id: str | None = None) -> AsyncGenerator[bytes, None]:
     """
-    Convert text to speech using ElevenLabs and yield audio/mpeg byte chunks as they arrive.
+    Convert text to speech using Cartesia and yield audio/mpeg byte chunks.
     """
-    if not settings.ELEVENLABS_API_KEY:
-        logger.error("ElevenLabs API Key not configured")
-        raise HTTPException(status_code=500, detail="ElevenLabs API Key is not configured in settings")
+    if not settings.CARTESIA_API_KEY:
+        logger.error("Cartesia API Key not configured")
+        raise HTTPException(status_code=500, detail="Cartesia API Key is not configured in settings")
 
     # Auto-select a random professional voice if none specified
     if not voice_id:
         voice_id = get_random_interview_voice()
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}/stream"
+    url = "https://api.cartesia.ai/tts/bytes"
     headers = {
-        "xi-api-key": settings.ELEVENLABS_API_KEY,
-        "Content-Type": "application/json",
-        "accept": "audio/mpeg"
+        "Cartesia-Version": "2024-06-10",
+        "X-API-Key": settings.CARTESIA_API_KEY,
+        "Content-Type": "application/json"
     }
     payload = {
-        "text": text,
-        "model_id": "eleven_flash_v2_5",
-        "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75
+        "model_id": "sonic-english",
+        "transcript": text,
+        "voice": {
+            "mode": "id",
+            "id": voice_id
+        },
+        "output_format": {
+            "container": "mp3",
+            "encoding": "mp3",
+            "sample_rate": 44100
         }
     }
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.post(url, headers=headers, json=payload)
         if response.status_code != 200:
-            logger.error(f"ElevenLabs TTS failed: {response.status_code} - {response.text[:300]}")
+            logger.error(f"Cartesia TTS failed: {response.status_code} - {response.text[:300]}")
             raise HTTPException(status_code=response.status_code, detail=f"Voice synthesis failed: {response.text[:200]}")
         
         yield response.content
