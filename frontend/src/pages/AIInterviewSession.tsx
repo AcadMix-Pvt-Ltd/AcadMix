@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
+import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera, VideoCameraSlash, ArrowElbowLeftUp, LockKey } from '@phosphor-icons/react';
 import { interviewAPI, resumeAPI, resumeVaultAPI } from '../services/api';
 import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
@@ -459,6 +459,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [hasResume, setHasResume] = useState<boolean | null>(null); // null = loading
   const [isUploading, setIsUploading] = useState(false);
+  const [showTroubleshooter, setShowTroubleshooter] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef(null);
   const audioContextRef = useRef(null);
@@ -656,10 +657,40 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
               <div className="relative w-full aspect-video bg-slate-100 rounded-2xl overflow-hidden border border-slate-200/60 shadow-inner flex items-center justify-center">
                 {permissionsGranted ? (
                    <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
+                ) : showTroubleshooter ? (
+                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center text-center p-6 w-full h-full bg-indigo-50/50">
+                     <motion.div 
+                       animate={{ y: [-10, 0, -10], x: [-10, 0, -10] }} 
+                       transition={{ repeat: Infinity, duration: 1.5 }}
+                       className="absolute top-6 left-6 text-indigo-500 drop-shadow-md"
+                     >
+                       <ArrowElbowLeftUp size={48} weight="duotone" />
+                     </motion.div>
+                     <div className="space-y-5 max-w-sm mt-4">
+                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-sm font-bold text-slate-700">
+                         1. Look up! Click the <LockKey size={18} weight="fill" className="inline text-slate-400 -mt-1 mx-1"/> lock icon near the URL bar.
+                       </motion.p>
+                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="text-sm font-bold text-slate-700">
+                         2. Switch Camera & Microphone to <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">'Allow'</span>.
+                       </motion.p>
+                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.4 }} className="text-sm font-bold text-indigo-600">
+                         3. Reload the page and let's go!
+                       </motion.p>
+                     </div>
+                   </motion.div>
                 ) : (
                    <div className="flex flex-col items-center text-slate-400">
-                     <VideoCameraSlash size={48} weight="thin" className="mb-2 opacity-50 text-amber-500" />
-                     <span className="text-sm font-bold uppercase tracking-wider text-slate-500">Awaiting Permissions</span>
+                     <VideoCameraSlash size={48} weight="thin" className="mb-3 opacity-50 text-indigo-400" />
+                     <span className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">Awaiting Permissions</span>
+                     <button 
+                       onClick={() => {
+                         requestPermissionsAndEnumerate();
+                         setShowTroubleshooter(true);
+                       }}
+                       className="px-5 py-2.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-xl text-xs font-bold transition-colors shadow-sm"
+                     >
+                       Fix Permissions
+                     </button>
                    </div>
                 )}
                 {/* Overlay status */}
@@ -978,8 +1009,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (!mediaStreamRef.current) {
       try {
         const constraints = {
-          audio: sessionMicIdRef.current ? { deviceId: { exact: sessionMicIdRef.current } } : true,
-          video: sessionVideoIdRef.current ? { deviceId: { exact: sessionVideoIdRef.current } } : true
+          audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
+          video: sessionVideoIdRef.current ? { deviceId: { ideal: sessionVideoIdRef.current } } : true
         };
         console.log('[MIC] Requesting getUserMedia with constraints:', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
