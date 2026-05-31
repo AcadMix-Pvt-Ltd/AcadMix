@@ -520,6 +520,12 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   };
 
   const requestPermissionsAndEnumerate = async () => {
+    if (!navigator.mediaDevices) {
+      toast.error('Hardware access blocked. Use HTTPS or localhost.');
+      setPermissionsGranted(false);
+      return;
+    }
+
     try {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(t => t.stop());
@@ -613,7 +619,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
            toast.error("No camera or microphone found!");
            setPermissionsGranted(true);
         } else {
-           toast.error("Please grant camera and microphone permissions to proceed.");
+           toast.error(`Permissions failed: ${err.name || err.message || 'Unknown Error'}`);
            setPermissionsGranted(false);
         }
       }
