@@ -200,9 +200,9 @@ const UploadZone = ({ file, setFile, targetRole, setTargetRole, jd, setJd, loadi
             <label className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1.5 block flex items-center gap-1.5">
               <MagnifyingGlass size={12} weight="bold" /> Job Description <span className="normal-case font-medium">(optional)</span>
             </label>
-            <textarea value={jd} onChange={e => setJd(e.target.value)}
+            <input value={jd} onChange={e => setJd(e.target.value)}
               placeholder="Paste the JD here for precise keyword matching..."
-              className="soft-input w-full text-sm resize-none" rows={2} />
+              className="soft-input w-full text-sm" />
           </div>
         </div>
 
