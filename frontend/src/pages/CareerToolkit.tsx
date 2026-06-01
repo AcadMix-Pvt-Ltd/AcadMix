@@ -798,169 +798,509 @@ const CareerPathTab = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   8. COMPANY INTEL TAB
+   8. COMPANY INTEL TAB — Master → Detail Layout
    ═══════════════════════════════════════════════════════════════ */
+
+/* ── Detail Sub-Components ─────────────────────────────────── */
+
+const IntelOverviewPane = ({ co }: { co: any }) => (
+  <div className="space-y-5">
+    {/* Company Description */}
+    <div className="soft-card p-5">
+      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{co.description || `${co.name} is a leading company in the ${co.category} sector.`}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+        {co.headquarters && <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">HQ</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.headquarters}</p></div>}
+        {co.founded && <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Founded</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.founded}</p></div>}
+        {co.employee_count && <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Employees</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.employee_count}</p></div>}
+        {co.glassdoor_rating && <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Glassdoor</p><p className="text-xs font-bold text-amber-600 dark:text-amber-400 mt-1">⭐ {co.glassdoor_rating}/5</p></div>}
+      </div>
+    </div>
+
+    {/* Work Culture */}
+    {co.work_culture && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Work Culture</h4>
+        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{co.work_culture}</p>
+      </div>
+    )}
+
+    {/* Tech Stack */}
+    {co.tech_stack?.length > 0 && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Tech Stack</h4>
+        <div className="flex flex-wrap gap-1.5">{co.tech_stack.map((t: string, i: number) => <span key={i} className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">{t}</span>)}</div>
+      </div>
+    )}
+
+    {/* Quick Stats Row */}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="soft-card p-4 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Avg Package</p>
+        <p className="text-lg font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{co.avg_package_lpa} <span className="text-xs font-bold text-slate-400">LPA</span></p>
+      </div>
+      {co.dream_package_lpa && (
+        <div className="soft-card p-4 text-center">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Dream Package</p>
+          <p className="text-lg font-extrabold text-purple-600 dark:text-purple-400 mt-1">{co.dream_package_lpa} <span className="text-xs font-bold text-slate-400">LPA</span></p>
+        </div>
+      )}
+      <div className="soft-card p-4 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Selection Rate</p>
+        <p className="text-lg font-extrabold text-blue-600 dark:text-blue-400 mt-1">{co.selection_rate || 'N/A'}</p>
+      </div>
+    </div>
+  </div>
+);
+
+const IntelRolesPane = ({ co }: { co: any }) => {
+  const roles = co.roles_offered || [];
+  return (
+    <div className="space-y-4">
+      {roles.length > 0 ? roles.map((role: any, i: number) => (
+        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }} className="soft-card p-5">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">{role.title}</h4>
+              <p className="text-xs text-slate-400 mt-0.5">{role.description}</p>
+            </div>
+            <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 shrink-0 ml-3">{role.package_lpa} <span className="text-[10px] text-slate-400">LPA</span></span>
+          </div>
+          {role.skills_required?.length > 0 && (
+            <div className="mb-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Skills Required</p>
+              <div className="flex flex-wrap gap-1">{role.skills_required.map((s: string, j: number) => <span key={j} className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400">{s}</span>)}</div>
+            </div>
+          )}
+          {role.growth_path && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.03]">
+              <span className="font-bold text-teal-500">Growth:</span> {role.growth_path}
+            </p>
+          )}
+        </motion.div>
+      )) : (
+        <div className="soft-card p-8 text-center">
+          <p className="text-sm text-slate-400">Role details not available yet.</p>
+        </div>
+      )}
+
+      {/* Career Growth Timeline */}
+      {co.career_growth?.length > 0 && (
+        <div className="soft-card p-5">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Career Growth Timeline</h4>
+          <div className="space-y-2">
+            {co.career_growth.map((g: any, i: number) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-extrabold text-white">{g.years}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{g.role}</p>
+                </div>
+                <span className="text-xs font-bold text-emerald-500 shrink-0">{g.salary_range}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const IntelInterviewPane = ({ co }: { co: any }) => (
+  <div className="space-y-5">
+    {/* Interview Rounds Timeline */}
+    <div className="soft-card p-5">
+      <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-4">Interview Rounds</h4>
+      <div className="space-y-3">
+        {(co.interview_rounds || []).map((r: string, i: number) => {
+          const strategy = co.round_strategy?.[i];
+          return (
+            <div key={i} className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 rounded-full bg-teal-500 text-white text-xs font-extrabold flex items-center justify-center shrink-0">{i + 1}</div>
+                {i < co.interview_rounds.length - 1 && <div className="w-0.5 h-6 bg-slate-200 dark:bg-slate-700 mt-1" />}
+              </div>
+              <div className="flex-1 pb-2">
+                <p className="font-bold text-sm text-slate-800 dark:text-white">{r}</p>
+                {strategy?.what_to_prepare && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{strategy.what_to_prepare}</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Tips */}
+    {co.tips?.length > 0 && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Prep Tips</h4>
+        <ul className="space-y-2">{co.tips.map((t: string, i: number) => <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2"><CaretRight size={10} weight="bold" className="text-teal-500 mt-0.5 shrink-0" />{t}</li>)}</ul>
+      </div>
+    )}
+
+    {/* Common Rejection Reasons */}
+    {co.common_rejection_reasons?.length > 0 && (
+      <div className="soft-card p-5 border-red-100 dark:border-red-500/10">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-red-500 dark:text-red-400 mb-3">Common Rejection Reasons</h4>
+        <ul className="space-y-2">{co.common_rejection_reasons.map((r: string, i: number) => <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2"><Warning size={12} className="text-red-500 mt-0.5 shrink-0" />{r}</li>)}</ul>
+      </div>
+    )}
+
+    {/* Selection Rate & Difficulty */}
+    <div className="grid grid-cols-2 gap-3">
+      <div className="soft-card p-4 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Difficulty</p>
+        <p className={`text-sm font-extrabold mt-1 ${co.difficulty === 'very hard' ? 'text-red-500' : co.difficulty === 'hard' ? 'text-orange-500' : co.difficulty === 'moderate' ? 'text-amber-500' : 'text-emerald-500'}`}>{co.difficulty}</p>
+      </div>
+      <div className="soft-card p-4 text-center">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Prep Time</p>
+        <p className="text-sm font-extrabold text-blue-600 dark:text-blue-400 mt-1">{co.preparation_time_weeks} weeks</p>
+      </div>
+    </div>
+  </div>
+);
+
+const IntelPrepPane = ({ co, branch }: { co: any; branch: string }) => (
+  <div className="space-y-5">
+    {/* Key Topics */}
+    <div className="soft-card p-5">
+      <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Key Topics</h4>
+      <div className="flex flex-wrap gap-1.5">{(co.key_topics || []).map((t: string, i: number) => <span key={i} className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">{t}</span>)}</div>
+    </div>
+
+    {/* Week-by-week Plan */}
+    {co.preparation_plan?.length > 0 && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Week-by-Week Plan</h4>
+        <div className="space-y-2">
+          {co.preparation_plan.map((p: any, i: number) => (
+            <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-teal-50/50 dark:bg-teal-500/5 border border-teal-100/50 dark:border-teal-500/10">
+              <div className="w-8 h-8 rounded-lg bg-teal-500 flex items-center justify-center shrink-0">
+                <span className="text-[10px] font-extrabold text-white">W{p.week || i + 1}</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{p.focus}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Branch-Specific Playbook */}
+    {co.branch_playbooks?.[branch] && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">{branch} Branch Playbook</h4>
+        <div className="flex flex-wrap gap-1.5">{co.branch_playbooks[branch].map((t: string, i: number) => <span key={i} className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-cyan-50 dark:bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">{t}</span>)}</div>
+      </div>
+    )}
+  </div>
+);
+
+const IntelQuestionsPane = ({ co }: { co: any }) => {
+  const categorized = co.past_questions_categorized || {};
+  const flatQuestions = co.past_questions || [];
+  const hasCategorized = Object.keys(categorized).length > 0;
+  const categoryColors: Record<string, string> = {
+    aptitude: 'bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400',
+    coding: 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+    technical: 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
+    hr: 'bg-pink-50 dark:bg-pink-500/15 text-pink-600 dark:text-pink-400',
+  };
+
+  return (
+    <div className="space-y-4">
+      {hasCategorized ? (
+        Object.entries(categorized).map(([cat, questions]: [string, any]) => (
+          <div key={cat} className="soft-card p-5">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded-lg text-[10px] font-extrabold ${categoryColors[cat] || 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>{cat}</span>
+            </h4>
+            <ul className="space-y-1.5">
+              {(questions as string[]).map((q: string, i: number) => (
+                <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                  <span className="text-amber-500 shrink-0">→</span>{q}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      ) : flatQuestions.length > 0 ? (
+        <div className="soft-card p-5">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Past Questions</h4>
+          <ul className="space-y-1.5">
+            {flatQuestions.map((q: string, i: number) => (
+              <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                <span className="text-amber-500 shrink-0">→</span>{q}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="soft-card p-8 text-center"><p className="text-sm text-slate-400">No past questions available yet.</p></div>
+      )}
+    </div>
+  );
+};
+
+const IntelEligibilityPane = ({ co }: { co: any }) => (
+  <div className="space-y-5">
+    {/* Eligibility */}
+    {co.eligibility && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Eligibility Criteria</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.entries(co.eligibility).map(([k, v]: [string, any]) => (
+            <div key={k} className="rounded-xl bg-slate-50 dark:bg-white/[0.03] p-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{k.replace(/_/g, ' ')}</p>
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-1">{Array.isArray(v) ? v.join(', ') : String(v)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {/* Bond / Service Agreement */}
+    {co.bond && (
+      <div className="soft-card p-5 border-amber-100 dark:border-amber-500/10">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400 mb-3">Bond / Service Agreement</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-500/5">
+            <p className="text-[10px] font-black uppercase text-slate-400">Duration</p>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.bond.duration}</p>
+          </div>
+          <div className="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-500/5">
+            <p className="text-[10px] font-black uppercase text-slate-400">Penalty</p>
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.bond.penalty}</p>
+          </div>
+        </div>
+        {co.bond.details && <p className="text-xs text-slate-500 dark:text-slate-400">{co.bond.details}</p>}
+      </div>
+    )}
+
+    {/* Training */}
+    {co.training && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Training Program</h4>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase text-slate-400">Duration</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.training.duration}</p></div>
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase text-slate-400">Location</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.training.location}</p></div>
+          {co.training.stipend && <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.03]"><p className="text-[10px] font-black uppercase text-slate-400">Stipend</p><p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">{co.training.stipend}</p></div>}
+        </div>
+        {co.training.details && <p className="text-xs text-slate-500 dark:text-slate-400">{co.training.details}</p>}
+      </div>
+    )}
+
+    {/* Work Locations, WFH, Benefits, Bench Risk */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {co.work_locations?.length > 0 && (
+        <div className="soft-card p-5">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Work Locations</h4>
+          <div className="flex flex-wrap gap-1">{co.work_locations.map((l: string, i: number) => <span key={i} className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500">{l}</span>)}</div>
+        </div>
+      )}
+      {co.wfh_policy && (
+        <div className="soft-card p-5">
+          <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">WFH Policy</h4>
+          <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{co.wfh_policy}</p>
+        </div>
+      )}
+    </div>
+
+    {co.benefits?.length > 0 && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Benefits & Perks</h4>
+        <div className="flex flex-wrap gap-1.5">{co.benefits.map((b: string, i: number) => <span key={i} className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{b}</span>)}</div>
+      </div>
+    )}
+
+    {co.bench_risk && (
+      <div className="soft-card p-5">
+        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2">Bench Risk</h4>
+        <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{co.bench_risk}</p>
+      </div>
+    )}
+  </div>
+);
+
+
+/* ── Detail Tabs Container ─────────────────────────────────── */
+const DETAIL_TABS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'roles', label: 'Roles & Packages' },
+  { id: 'interview', label: 'Interview Process' },
+  { id: 'prep', label: 'Prep Strategy' },
+  { id: 'questions', label: 'Past Questions' },
+  { id: 'eligibility', label: 'Eligibility & Logistics' },
+];
+
+const CompanyDetailPanel = ({ co, branch, onBack }: { co: any; branch: string; onBack: () => void }) => {
+  const [detailTab, setDetailTab] = useState('overview');
+  const diffColors: Record<string, string> = { 'easy-moderate': 'text-emerald-600 bg-emerald-50 dark:bg-emerald-500/15', moderate: 'text-amber-600 bg-amber-50 dark:bg-amber-500/15', hard: 'text-orange-600 bg-orange-50 dark:bg-orange-500/15', 'very hard': 'text-red-600 bg-red-50 dark:bg-red-500/15' };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <button onClick={onBack} className="lg:hidden w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          <CaretRight size={16} weight="bold" className="rotate-180" />
+        </button>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-extrabold text-base" style={{ backgroundColor: co.logo_color }}>
+          {co.name.slice(0, 2).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-extrabold text-lg text-slate-800 dark:text-white">{co.name}</h3>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className="text-xs text-slate-400">{co.category}</span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${diffColors[co.difficulty] || 'bg-slate-100 text-slate-500'}`}>{co.difficulty}</span>
+            <span className="text-xs font-bold text-emerald-500">💰 {co.avg_package_lpa} LPA</span>
+          </div>
+        </div>
+        {co.website && (
+          <a href={co.website} target="_blank" rel="noopener noreferrer" className="hidden sm:flex text-[11px] font-bold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-teal-500 transition-colors">
+            Visit Website →
+          </a>
+        )}
+      </div>
+
+      {/* Detail Tab Switcher */}
+      <div className="flex overflow-x-auto gap-1 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-xl mb-5 hide-scrollbar">
+        {DETAIL_TABS.map(tab => (
+          <button key={tab.id} onClick={() => setDetailTab(tab.id)}
+            className={`flex-none px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              detailTab === tab.id
+                ? 'bg-white dark:bg-teal-500/15 text-teal-600 dark:text-teal-300 shadow-sm'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+            }`}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Detail Content */}
+      <div className="flex-1 overflow-y-auto">
+        <AnimatePresence mode="wait">
+          <motion.div key={detailTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
+            {detailTab === 'overview' && <IntelOverviewPane co={co} />}
+            {detailTab === 'roles' && <IntelRolesPane co={co} />}
+            {detailTab === 'interview' && <IntelInterviewPane co={co} />}
+            {detailTab === 'prep' && <IntelPrepPane co={co} branch={branch} />}
+            {detailTab === 'questions' && <IntelQuestionsPane co={co} />}
+            {detailTab === 'eligibility' && <IntelEligibilityPane co={co} />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+
+/* ── Main CompanyIntelTab ─────────────────────────────────── */
 const CompanyIntelTab = () => {
-  const [companies, setCompanies] = useState([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
-  const [branch, setBranch] = useState('ALL');
+  const [branch, setBranch] = useState('CSE');
   const [difficultyFilter, setDifficultyFilter] = useState('');
 
   useEffect(() => {
     setLoading(true);
     careerAPI.companyIntel({ branch: branch === 'ALL' ? undefined : branch, difficulty: difficultyFilter || undefined })
-      .then(r => { setCompanies(r.data?.companies || []); setLoading(false); })
+      .then(r => {
+        const list = r.data?.companies || [];
+        setCompanies(list);
+        if (list.length > 0 && !selected) setSelected(list[0].name);
+        setLoading(false);
+      })
       .catch(() => setLoading(false));
   }, [branch, difficultyFilter]);
 
-  const diffColors = { 'easy-moderate': 'text-emerald-600', moderate: 'text-amber-600', hard: 'text-orange-600', 'very hard': 'text-red-600' };
-  const categories = ['all', ...new Set(companies.map(c => c.category))];
-  const filtered = filter === 'all' ? companies : companies.filter(c => c.category === filter);
+  const categories = ['all', ...new Set(companies.map((c: any) => c.category))];
+  const filtered = filter === 'all' ? companies : companies.filter((c: any) => c.category === filter);
+  const selectedCompany = companies.find((c: any) => c.name === selected);
+
+  const diffColors: Record<string, string> = { 'easy-moderate': 'text-emerald-600', moderate: 'text-amber-600', hard: 'text-orange-600', 'very hard': 'text-red-600' };
 
   if (loading) return <LoadingState text="Loading company data..." />;
 
   return (
     <motion.div variants={containerV} initial="hidden" animate="show" className="space-y-5">
+      {/* Header */}
       <motion.div variants={itemV} className="flex items-center gap-3 mb-1">
         <div className="w-10 h-10 bg-gradient-to-br from-rose-500 to-orange-600 rounded-xl flex items-center justify-center">
           <Buildings size={20} weight="fill" className="text-white" />
         </div>
         <div>
           <h3 className="text-lg font-extrabold text-slate-800 dark:text-white">Company Intel</h3>
-          <p className="text-xs text-slate-400">Interview rounds, packages & prep tips for {companies.length} companies</p>
+          <p className="text-xs text-slate-400">Comprehensive placement data for {companies.length} companies</p>
         </div>
       </motion.div>
 
-      {/* Filter */}
+      {/* Filters */}
       <motion.div variants={itemV} className="flex gap-2 flex-wrap items-center">
-        <select value={branch} onChange={(e) => setBranch(e.target.value)} className="soft-input text-xs font-bold w-36">
-          {['ALL', 'CSE', 'ECE', 'EEE', 'MECH', 'CIVIL'].map(b => <option key={b}>{b}</option>)}
+        <select value={branch} onChange={(e) => setBranch(e.target.value)} className="soft-input text-xs font-bold w-28">
+          {['CSE', 'ECE', 'EEE', 'MECH', 'CIVIL', 'ALL'].map(b => <option key={b}>{b}</option>)}
         </select>
-        <select value={difficultyFilter} onChange={(e) => setDifficultyFilter(e.target.value)} className="soft-input text-xs font-bold w-44">
+        <select value={difficultyFilter} onChange={(e) => setDifficultyFilter(e.target.value)} className="soft-input text-xs font-bold w-36">
           <option value="">All difficulty</option>
           <option value="easy">Easy-moderate</option>
           <option value="moderate">Moderate</option>
           <option value="hard">Hard</option>
         </select>
         {categories.map(c => (
-          <button key={c} onClick={() => setFilter(c)}
+          <button key={c as string} onClick={() => setFilter(c as string)}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === c ? 'bg-teal-500 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}>
-            {c === 'all' ? 'All' : c}
+            {c === 'all' ? 'All' : c as string}
           </button>
         ))}
       </motion.div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filtered.map((co, i) => (
-          <motion.div key={co.name} variants={itemV} className="soft-card overflow-hidden">
-            <button onClick={() => setExpanded(expanded === co.name ? null : co.name)} className="w-full p-5 text-left">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-extrabold text-sm" style={{ backgroundColor: co.logo_color }}>
-                    {co.name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">{co.name}</h4>
-                    <p className="text-xs text-slate-400">{co.category}</p>
-                  </div>
+      {/* Master → Detail Layout */}
+      <div className="flex gap-5 min-h-[600px]">
+        {/* Left: Company List */}
+        <div className={`${selectedCompany ? 'hidden lg:block' : ''} w-full lg:w-80 shrink-0 space-y-2 overflow-y-auto max-h-[700px] pr-1`}>
+          {filtered.map((co: any) => (
+            <motion.button key={co.name} variants={itemV}
+              onClick={() => setSelected(co.name)}
+              className={`w-full p-4 rounded-2xl text-left transition-all border ${
+                selected === co.name
+                  ? 'bg-teal-50/50 dark:bg-teal-500/5 border-teal-200 dark:border-teal-500/25 shadow-sm'
+                  : 'soft-card hover:border-slate-300 dark:hover:border-slate-600'
+              }`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shrink-0" style={{ backgroundColor: co.logo_color }}>
+                  {co.name.slice(0, 2).toUpperCase()}
                 </div>
-                <CaretDown size={16} weight="bold" className={`text-slate-400 transition-transform ${expanded === co.name ? 'rotate-180' : ''}`} />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white truncate">{co.name}</h4>
+                  <p className="text-[11px] text-slate-400 truncate">{co.category}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-xs">
+              <div className="flex items-center gap-2 mt-2.5 text-[11px]">
                 <span className="font-bold text-emerald-500">💰 {co.avg_package_lpa} LPA</span>
                 <span className={`font-bold ${diffColors[co.difficulty] || 'text-slate-500'}`}>📊 {co.difficulty}</span>
-                <span className="text-slate-400">⏱️ {co.preparation_time_weeks}w prep</span>
+                <span className="text-slate-400">⏱ {co.preparation_time_weeks}w</span>
               </div>
-            </button>
+            </motion.button>
+          ))}
+        </div>
 
-            <AnimatePresence>
-              {expanded === co.name && (
-                <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                  <div className="px-5 pb-5 space-y-4 border-t border-slate-100 dark:border-white/5 pt-4">
-                    {co.dream_package_lpa && (
-                      <p className="text-xs font-bold text-purple-500">🎯 Dream: {co.dream_package_lpa} LPA</p>
-                    )}
-
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-2">Interview Rounds</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {co.interview_rounds.map((r, j) => (
-                          <span key={j} className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                            <span className="w-4 h-4 rounded-full bg-teal-500 text-white text-[9px] flex items-center justify-center font-extrabold shrink-0">{j + 1}</span> {r}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-2">Key Topics</p>
-                      <div className="flex flex-wrap gap-1">{co.key_topics.map((t, j) => <span key={j} className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">{t}</span>)}</div>
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase mb-2">Prep Tips</p>
-                      <ul className="space-y-1.5">{co.tips.map((t, j) => <li key={j} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-1.5"><CaretRight size={10} weight="bold" className="text-teal-500 mt-0.5 shrink-0" />{t}</li>)}</ul>
-                    </div>
-
-                    {co.past_questions?.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Past Questions</p>
-                        <ul className="space-y-1">{co.past_questions.map((q, j) => <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"><span className="text-amber-500">→</span>{q}</li>)}</ul>
-                      </div>
-                    )}
-
-                    {co.selection_rate && <p className="text-xs font-bold text-slate-400 mt-2">Selection Rate: {co.selection_rate}</p>}
-
-                    {co.eligibility && (
-                      <div>
-                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Eligibility</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {Object.entries(co.eligibility).map(([k, v]) => (
-                            <div key={k} className="rounded-xl bg-slate-50 dark:bg-white/[0.03] p-3">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{k}</p>
-                              <p className="text-xs font-bold text-slate-600 dark:text-slate-300 mt-1">{Array.isArray(v) ? v.join(', ') : String(v)}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {co.branch_playbooks?.[branch] && (
-                      <div>
-                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">{branch} Prep Playbook</p>
-                        <div className="flex flex-wrap gap-1">{co.branch_playbooks[branch].map((t, j) => <span key={j} className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/15 text-cyan-600 dark:text-cyan-300">{t}</span>)}</div>
-                      </div>
-                    )}
-
-                    {co.common_rejection_reasons?.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Common Rejection Reasons</p>
-                        <ul className="space-y-1">{co.common_rejection_reasons.map((q, j) => <li key={j} className="text-xs text-slate-500 dark:text-slate-400 flex items-start gap-1.5"><Warning size={11} className="text-rose-500 mt-0.5 shrink-0" />{q}</li>)}</ul>
-                      </div>
-                    )}
-
-                    {co.preparation_plan?.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Preparation Plan</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                          {co.preparation_plan.map((p, j) => <div key={j} className="rounded-xl bg-teal-50 dark:bg-teal-500/10 p-3"><p className="text-[10px] font-black text-teal-600">Week {p.week}</p><p className="text-xs font-semibold text-teal-700 dark:text-teal-300 mt-1">{p.focus}</p></div>)}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
+        {/* Right: Detail Panel */}
+        <div className={`${!selectedCompany ? 'hidden lg:flex' : ''} flex-1 min-w-0`}>
+          {selectedCompany ? (
+            <CompanyDetailPanel co={selectedCompany} branch={branch} onBack={() => setSelected(null)} />
+          ) : (
+            <div className="flex items-center justify-center h-full soft-card rounded-2xl">
+              <div className="text-center">
+                <Buildings size={48} weight="duotone" className="text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-400">Select a company to view details</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </motion.div>
   );
 };
-
 // Embedded natively via ResumeATSContent
 
 /* ═══════════════════════════════════════════════════════════════
