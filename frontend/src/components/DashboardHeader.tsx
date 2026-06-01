@@ -47,7 +47,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
-  const iconBaseClass = "w-11 h-11 flex items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-sm hover:bg-slate-50 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all cursor-pointer";
+  const iconBaseClass = "w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50/80 border border-slate-200 shadow-sm hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all cursor-pointer";
 
   return (
     <header className="glass-header z-40 relative">
