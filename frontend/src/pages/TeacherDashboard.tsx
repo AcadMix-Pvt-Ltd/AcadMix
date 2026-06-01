@@ -16,6 +16,7 @@ import FacultyAnnouncements from '../components/faculty/FacultyAnnouncements';
 import InsightsChat from '../components/insights/InsightsChat';
 import InsightsCanvas from '../components/insights/InsightsCanvas';
 import FacultyCourseSetup from '../components/faculty/FacultyCourseSetup';
+import FacultyCourseMaterials from '../components/faculty/FacultyCourseMaterials';
 import CampusMap from '../components/campus/CampusMap';
 
 
@@ -223,6 +224,7 @@ const TeacherDashboard = ({ navigate, user, onLogout }) => {
               { id: 'teaching', label: 'Teaching Work' },
               { id: 'cia', label: 'CIA Marks' },
               { id: 'outcomes', label: 'Course Setup' },
+              { id: 'materials', label: 'Materials' },
               { id: 'mentees', label: 'Mentees' },
               { id: 'leave', label: 'Leave' },
               { id: 'calendar', label: 'Calendar' },
@@ -415,6 +417,14 @@ const TeacherDashboard = ({ navigate, user, onLogout }) => {
           <motion.div data-testid="outcomes-content" variants={containerVariants} initial="hidden" animate="show">
             <motion.div variants={itemVariants}>
               <FacultyCourseSetup onDirtyChange={(dirty) => setIsOutcomesDirty(dirty)} />
+            </motion.div>
+          </motion.div>
+        )}
+
+        {activeTab === 'materials' && (
+          <motion.div data-testid="materials-content" variants={containerVariants} initial="hidden" animate="show">
+            <motion.div variants={itemVariants}>
+              <FacultyCourseMaterials />
             </motion.div>
           </motion.div>
         )}

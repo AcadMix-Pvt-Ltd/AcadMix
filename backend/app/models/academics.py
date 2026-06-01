@@ -23,6 +23,22 @@ class CourseCategoryEnum(str, enum.Enum):
     aec               = "aec"    # Ability Enhancement Course
     mdc               = "mdc"    # Multidisciplinary Course (NEP specific)
 
+class CourseMaterial(Base, SoftDeleteMixin):
+    __tablename__ = "course_materials"
+    id = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False)
+    course_id = Column(String, ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    faculty_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    material_type = Column(String, nullable=False) # 'file' or 'link'
+    file_url = Column(String, nullable=True)
+    web_link = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index("ix_course_material_course", "course_id"),
+    )
 
 class Course(Base, SoftDeleteMixin):
     __tablename__ = "courses"

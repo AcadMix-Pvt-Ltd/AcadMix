@@ -326,6 +326,12 @@ export const syllabusAPI = {
   principalCoverage: () => api.get('/principal/syllabus/coverage'),
 };
 
+export const materialsAPI = {
+  list: (courseId) => api.get(`/materials/${courseId}`),
+  upload: (courseId, formData) => api.post(`/materials/${courseId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (materialId) => api.delete(`/materials/${materialId}`),
+};
+
 // Leave Management
 export const leaveAPI = {
   apply: (data) => api.post('/leave/apply', data),

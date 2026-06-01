@@ -8,7 +8,7 @@ from app.routers import (
     leaderboard, dashboards, marks_extra, timetable_extra, announcements, challenges, industry, tpo, fees, webhooks,
     interview, resume, hostel, career_tools, iot_webhooks, transport, transport_admin, library,
     visitors, websocket, notifications, audit, insights, pre_enroll, modules, resume_vault, outcomes, assessments, placement_prep, accreditation,
-    campus, flashcards, ai_study, validation, hr_payroll, sso, billing
+    campus, flashcards, ai_study, validation, hr_payroll, sso, billing, materials
 )
 from app.api.v1.endpoints import syllabus as syllabus_endpoints
 from app.api.v1.endpoints import simulation as simulation_endpoints
@@ -75,6 +75,7 @@ api_router.include_router(syllabus_endpoints.router, tags=["syllabus"])
 api_router.include_router(cia.router, tags=["cia"])
 api_router.include_router(marks.router, tags=["marks"])
 api_router.include_router(websocket.router, tags=["websocket"])
+api_router.include_router(materials.router, tags=["materials"])
 
 # Sub-prefixes — these routers use relative paths, so we add auth/code here
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
