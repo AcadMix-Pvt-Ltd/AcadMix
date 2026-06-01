@@ -135,7 +135,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
           {/* User Profile Card */}
           <button
             onClick={() => setShowProfile(true)}
-            className="hidden sm:flex items-center gap-3 bg-white hover:bg-slate-50 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
+            className="hidden sm:flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
             <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center flex-shrink-0">
               <Avatar 
