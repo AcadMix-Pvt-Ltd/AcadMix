@@ -138,6 +138,7 @@ class ChallengeRunTest(BaseModel):
 
 class ViolationReport(BaseModel):
     violation_type: str = "tab_switch"  # tab_switch, fullscreen_exit, window_blur
+    evidence: Optional[str] = None      # Base64 image data URL
 
 
 class ResultRequest(BaseModel):

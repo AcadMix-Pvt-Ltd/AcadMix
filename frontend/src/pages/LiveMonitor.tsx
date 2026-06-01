@@ -4,6 +4,7 @@ import { Users, CheckCircle, Clock, Warning, Eye, Camera, CircleNotch, DownloadS
 import PageHeader from '../components/PageHeader';
 import { quizzesAPI } from '../services/api';
 import { useLiveMonitor } from '../hooks/useQuizzes';
+import { useWebSocket } from '../hooks/useWebSocket';
 import * as XLSX from 'xlsx';
 
 /* ── Reusable Confirm Modal ──────────────────────────────────────────────── */
@@ -82,6 +83,21 @@ const LiveMonitor: React.FC<LiveMonitorProps> = ({ quiz, navigate, user }) => {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const { data: students = [], isLoading: loading, refetch: fetchLive } = useLiveMonitor(quiz?.id);
+  const [liveEvents, setLiveEvents] = useState<any[]>([]);
+  const [selectedEvidence, setSelectedEvidence] = useState<string | null>(null);
+
+  const { data: wsData } = useWebSocket(`/ws/quiz/${quiz?.id}/monitor`, {
+    enabled: !!quiz?.id && !quizEnded
+  });
+
+  useEffect(() => {
+    if (wsData && wsData.event === 'violation') {
+      showToast(`Violation detected for student ${wsData.student_id}`, 'warning');
+      setLiveEvents(prev => [wsData, ...prev]);
+      // Refetch stats immediately
+      fetchLive();
+    }
+  }, [wsData]);
 
   const showToast = (msg: string, type = 'success') => {
     setToast({ msg, type });
@@ -159,6 +175,18 @@ const LiveMonitor: React.FC<LiveMonitorProps> = ({ quiz, navigate, user }) => {
         iconClass="text-red-500"
         iconBg="bg-red-50 dark:bg-red-500/15"
       />
+
+      {/* ── Evidence Viewer Modal ── */}
+      <AnimatePresence>
+        {selectedEvidence && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedEvidence(null)}>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative bg-[#151B2B] rounded-2xl p-4 max-w-4xl w-full" onClick={e => e.stopPropagation()}>
+              <button onClick={() => setSelectedEvidence(null)} className="absolute top-4 right-4 text-white/70 hover:text-white bg-black/40 p-2 rounded-full"><X size={24} weight="bold" /></button>
+              <img src={selectedEvidence.startsWith('http') ? selectedEvidence : `http://localhost:8000${selectedEvidence}`} alt="Violation Evidence" className="w-full rounded-xl" />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Toast */}
       <AnimatePresence>
@@ -254,8 +282,16 @@ const LiveMonitor: React.FC<LiveMonitorProps> = ({ quiz, navigate, user }) => {
                       <p className="text-xs font-medium text-slate-400 mt-0.5">{student.status === 'active' ? `Started ${student.startTime}` : `Done ${student.submitTime}`}</p>
                     </td>
                     <td className="text-center p-4">
-                      {student.violations > 0 ? <span className={`soft-badge ${student.violations >= 2 ? 'bg-red-100 text-red-600' : 'bg-amber-50 text-amber-600'}`}>{student.violations}</span>
-                        : <span className="text-emerald-500 font-bold">OK</span>}
+                      {student.violations > 0 ? (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <span className={`soft-badge ${student.violations >= 2 ? 'bg-red-100 text-red-600' : 'bg-amber-50 text-amber-600'}`}>{student.violations}</span>
+                          {liveEvents.find(e => e.student_id === student.id && e.evidence_url) && (
+                            <button onClick={() => setSelectedEvidence(liveEvents.find(e => e.student_id === student.id && e.evidence_url).evidence_url)} className="flex items-center gap-1 text-xs font-bold text-indigo-500 hover:text-indigo-600">
+                              <Camera size={14} weight="duotone" /> Evidence
+                            </button>
+                          )}
+                        </div>
+                      ) : <span className="text-emerald-500 font-bold">OK</span>}
                     </td>
                     <td className="text-center p-4"><span className={`soft-badge ${student.status === 'active' ? 'bg-emerald-50 text-emerald-600 animate-pulse' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>{student.status}</span></td>
                   </tr>

@@ -12,6 +12,12 @@ from app.core.audit import log_audit
 from app import models
 import app.schemas as server_schemas
 from app.schemas import *
+import os
+import uuid
+import base64
+import json
+from app.routers import websocket as ws_router
+from app.services.llm_gateway import gateway
 
 router = APIRouter()
 
@@ -75,21 +81,89 @@ async def log_violation(attempt_id: str, req: ViolationReport = ViolationReport(
     attempt = result.scalars().first()
     if not attempt:
         raise HTTPException(status_code=404, detail="Attempt not found")
+        
+    evidence_url = None
+    suspicion_score = 1.0
+    violation_type = req.violation_type
+
+    if req.evidence and req.evidence.startswith("data:image/"):
+        try:
+            header, encoded = req.evidence.split(",", 1)
+            ext = header.split(";")[0].split("/")[1]
+            file_id = str(uuid.uuid4())
+            filename = f"{file_id}.{ext}"
+            
+            upload_dir = os.path.join(os.getcwd(), "uploads", "proctoring")
+            os.makedirs(upload_dir, exist_ok=True)
+            filepath = os.path.join(upload_dir, filename)
+            
+            with open(filepath, "wb") as f:
+                f.write(base64.b64decode(encoded))
+            
+            evidence_url = f"/api/uploads/proctoring/{filename}"
+            
+            # Hybrid Object Detection via Gemini
+            try:
+                with open(filepath, "rb") as f:
+                    img_bytes = f.read()
+                
+                vision_prompt = [{"role": "user", "content": "Analyze this image. Is there a mobile phone, book, or another person visible? Reply strictly in JSON format like {\"phone_detected\": false, \"book_detected\": false, \"multiple_people\": false, \"confidence\": 0.9}."}]
+                vision_result = await gateway.complete(
+                    "proctoring_vision", 
+                    messages=vision_prompt, 
+                    json_mode=True, 
+                    media_bytes=img_bytes, 
+                    mime_type=f"image/{ext}"
+                )
+                data = json.loads(vision_result)
+                
+                if data.get("phone_detected") or data.get("book_detected") or data.get("multiple_people"):
+                    suspicion_score = 5.0
+                    if data.get("phone_detected"):
+                        violation_type = "mobile_phone_detected"
+                    elif data.get("book_detected"):
+                        violation_type = "book_detected"
+                    else:
+                        violation_type = "multiple_people_detected"
+            except Exception as e:
+                # Silently fail vision API, keep standard score
+                import logging
+                logging.getLogger("acadmix.ws").warning(f"Vision API failed: {e}")
+        except Exception as e:
+            import logging
+            logging.getLogger("acadmix.ws").warning(f"Image decode failed: {e}")
+            
     violation = models.ProctoringViolation(
         attempt_id=attempt_id,
-        violation_type=req.violation_type,
-        suspicion_score=1.0,
+        violation_type=violation_type,
+        suspicion_score=suspicion_score,
+        evidence_url=evidence_url
     )
     session.add(violation)
-    await log_audit(session, user["id"], "proctoring_violation", "create", {"attempt_id": attempt_id, "type": req.violation_type})
+    await log_audit(session, user["id"], "proctoring_violation", "create", {"attempt_id": attempt_id, "type": violation_type})
     await session.commit()
+    
+    # Broadcast Live Event to Faculty Dashboard
+    try:
+        await ws_router.broadcast_quiz_event(attempt.quiz_id, {
+            "event": "violation",
+            "student_id": attempt.student_id,
+            "type": violation_type,
+            "evidence_url": evidence_url,
+            "suspicion_score": suspicion_score,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as e:
+        import logging
+        logging.getLogger("acadmix.ws").error(f"WS Broadcast failed: {e}")
+    
     # Count total violations for this attempt
     count_r = await session.execute(
         select(models.ProctoringViolation).where(models.ProctoringViolation.attempt_id == attempt_id)
     )
     total = len(count_r.scalars().all())
     
-    return {"message": "Violation logged", "total_violations": total}
+    return {"message": "Violation logged", "total_violations": total, "evidence_url": evidence_url}
 
 
 @router.post("/attempts/{attempt_id}/submit")

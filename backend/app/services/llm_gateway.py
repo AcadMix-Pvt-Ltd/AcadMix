@@ -177,6 +177,16 @@ ROUTES: Dict[str, Dict[str, Any]] = {
         "timeout": 30.0,
         "description": "Predicts NIRF Peer Perception score based on other institutional metrics",
     },
+
+    # ── Proctoring Vision: Gemini 2.5 Flash via Vertex AI ─────────────────
+    "proctoring_vision": {
+        "provider": "vertex",
+        "model": None,
+        "temperature": 0.1,
+        "max_tokens": 200,
+        "timeout": 15.0,
+        "description": "Vision analysis for detecting phones/books in webcam snapshots",
+    },
 }
 
 
@@ -193,6 +203,7 @@ def _resolve_models():
     ROUTES["erp_summary"]["model"] = getattr(settings, "VERTEX_MODEL_LITE", "gemini-2.0-flash-lite")
     ROUTES["assessment_gen"]["model"] = getattr(settings, "VERTEX_MODEL_FLASH", "gemini-2.0-flash-001")
     ROUTES["nirf_perception"]["model"] = getattr(settings, "VERTEX_MODEL_FLASH", "gemini-2.5-flash-preview-04-17")
+    ROUTES["proctoring_vision"]["model"] = getattr(settings, "VERTEX_MODEL_FLASH", "gemini-2.5-flash")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

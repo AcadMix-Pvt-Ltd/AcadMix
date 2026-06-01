@@ -52,6 +52,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.future import select
 from sqlalchemy.exc import IntegrityError
 
@@ -678,6 +679,10 @@ async def domain_exception_handler(request: Request, exc: DomainException):
     )
 
 # ─── API Router ───────────────────────────────────────────────────────────────
+import os
+os.makedirs("uploads/proctoring", exist_ok=True)
+app.mount("/api/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 from app.api.v1.router import api_router  # noqa: E402
 
 # Mount at /api/v1 (canonical) + /api (backwards-compatible alias)
