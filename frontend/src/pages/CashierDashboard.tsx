@@ -1,4 +1,5 @@
 import React from 'react';
+import UserProfileModal from '../components/UserProfileModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { motion } from 'framer-motion';
 import { CreditCard, Moon, SignOut, Sun, UserCircle } from '@phosphor-icons/react';
@@ -6,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import FinanceCoreSuite from '../components/admin/FinanceCoreSuite';
 
 const CashierDashboard = ({ user, onLogout }) => {
+  const [showProfile, setShowProfile] = useState(false);
   const { isDark, toggle: toggleTheme } = useTheme();
 
   return (
@@ -14,8 +16,10 @@ const CashierDashboard = ({ user, onLogout }) => {
         user={user} 
         title="Cashier Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={() => {}} 
+        setShowProfile={setShowProfile} 
       />
+      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 200, damping: 20 }} className="mb-8">

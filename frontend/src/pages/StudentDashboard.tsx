@@ -85,6 +85,7 @@ const cardHover = {
 };
 
 const StudentDashboard = ({ navigate, user, onLogout }: any) => {
+  const [showProfile, setShowProfile] = useState(false);
   const isHostelVisible = useIsModuleVisible("hostel");
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('student_tab') || 'overview');
   useEffect(() => { sessionStorage.setItem('student_tab', activeTab); }, [activeTab]);
@@ -268,8 +269,10 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
         user={user} 
         title="Student Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={() => {}} 
+        setShowProfile={setShowProfile} 
       />
+      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ── Hero Greeting + CGPA ───────────────────────── */}

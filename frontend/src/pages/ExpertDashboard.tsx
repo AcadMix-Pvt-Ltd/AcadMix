@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import UserProfileModal from '../components/UserProfileModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -37,6 +38,7 @@ const getGreeting = () => {
 };
 
 const ExpertDashboard = ({ navigate, user, onLogout }) => {
+  const [showProfile, setShowProfile] = useState(false);
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('expert_tab') || 'overview');
   useEffect(() => { sessionStorage.setItem('expert_tab', activeTab); }, [activeTab]);
   
@@ -104,8 +106,10 @@ const ExpertDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Expert Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={() => {}} 
+        setShowProfile={setShowProfile} 
       />
+      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         
