@@ -2,17 +2,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { X, UserCircle, Buildings, GraduationCap, ChalkboardTeacher, ShieldCheck } from '@phosphor-icons/react';
+import Avatar from 'boring-avatars';
 
 const UserProfileModal = ({ user, onClose }) => {
-  // Determine role icon and color based on role
-  let Icon = UserCircle;
   let colorClass = "text-indigo-500";
   let bgClass = "bg-indigo-50 dark:bg-indigo-500/10";
   
-  if (user?.role === 'student') { Icon = GraduationCap; colorClass = "text-cyan-500"; bgClass = "bg-cyan-50 dark:bg-cyan-500/10"; }
-  else if (user?.role === 'teacher' || user?.role === 'hod') { Icon = ChalkboardTeacher; colorClass = "text-blue-500"; bgClass = "bg-blue-50 dark:bg-blue-500/10"; }
-  else if (user?.role === 'industry') { Icon = Buildings; colorClass = "text-purple-500"; bgClass = "bg-purple-50 dark:bg-purple-500/10"; }
-  else if (user?.role === 'admin' || user?.role === 'nodal') { Icon = ShieldCheck; colorClass = "text-rose-500"; bgClass = "bg-rose-50 dark:bg-rose-500/10"; }
+  if (user?.role === 'student') { bgClass = "bg-cyan-50 dark:bg-cyan-500/10"; }
+  else if (user?.role === 'teacher' || user?.role === 'hod') { bgClass = "bg-blue-50 dark:bg-blue-500/10"; }
+  else if (user?.role === 'industry') { bgClass = "bg-purple-50 dark:bg-purple-500/10"; }
+  else if (user?.role === 'admin' || user?.role === 'nodal') { bgClass = "bg-rose-50 dark:bg-rose-500/10"; }
 
   const formatKeyName = (key) => key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
@@ -35,8 +34,13 @@ const UserProfileModal = ({ user, onClose }) => {
               <X size={20} weight="bold" />
             </button>
             <div className="flex items-center gap-5">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 ${bgClass}`}>
-                <Icon size={40} weight="duotone" className={colorClass} />
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden shadow-sm ${bgClass}`}>
+                <Avatar 
+                  size={80} 
+                  name={user?.name || "User"} 
+                  variant="beam" 
+                  colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} 
+                />
               </div>
               <div>
                 <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white shrink-0">{user?.name}</h2>
