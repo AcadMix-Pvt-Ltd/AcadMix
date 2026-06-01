@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bank, Bell, Sun, Moon, SignOut, Info, Briefcase } from '@phosphor-icons/react';
+import { Bank, Bell, Sun, Moon, SignOut, Info, Briefcase, UserCircle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { notificationsAPI } from '../services/api';
@@ -137,7 +137,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
             className="hidden sm:flex items-center gap-3 bg-white hover:bg-slate-50 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
             <div className="w-9 h-9 rounded-[10px] bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-              <Bank size={18} weight="bold" className="text-indigo-600 dark:text-indigo-400" />
+              <UserCircle size={20} weight="bold" className="text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="text-left">
               <p className="text-[15px] font-extrabold text-slate-800 dark:text-slate-100 leading-tight tracking-tight">
@@ -154,7 +154,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
             className={`sm:hidden ${iconBaseClass} text-indigo-500`}
             aria-label="Profile Menu"
           >
-            <Bank size={20} weight="duotone" />
+            <UserCircle size={22} weight="duotone" />
           </button>
 
           {/* Sign Out */}
