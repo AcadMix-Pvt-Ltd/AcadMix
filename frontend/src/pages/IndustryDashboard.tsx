@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import { 
@@ -26,7 +25,6 @@ const staggerContainer = {
 export default function IndustryDashboard({ navigate, user, onLogout }) {
   const { isDark, toggle: toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
-  const [showProfile, setShowProfile] = useState(false);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -105,7 +103,7 @@ export default function IndustryDashboard({ navigate, user, onLogout }) {
         user={user} 
         title="Industry Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       {/* ── Main Layout ─────────────────────── */}

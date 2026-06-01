@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, GraduationCap, ChartBar, CalendarDots, ClockCountdown, Chalkboard, SignOut, Sun, Moon, FileText, ChatCircleDots, CaretDown, Warning, CheckCircle, XCircle, Clock, BookOpen, UserCircle, Download, Bell, MapPin } from '@phosphor-icons/react';
 import { parentAPI, grievanceAPI } from '../services/api';
@@ -46,7 +45,6 @@ const statusColor = (status) => {
 
 const ParentDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('parent_tab') || 'overview');
-  const [showProfile, setShowProfile] = useState(false);
   useEffect(() => { sessionStorage.setItem('parent_tab', activeTab); }, [activeTab]);
 
   const { isDark, toggle: toggleTheme } = useTheme();
@@ -217,7 +215,7 @@ const ParentDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Parent Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -633,7 +631,6 @@ const ParentDashboard = ({ navigate, user, onLogout }) => {
           </motion.div>
         )}
         <AnimatePresence>
-        {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </div>
     </div>

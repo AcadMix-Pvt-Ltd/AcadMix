@@ -30,7 +30,6 @@ import InsightsCanvas from "../components/insights/InsightsCanvas";
 import InsightsChat from "../components/insights/InsightsChat";
 import { useTheme } from "../contexts/ThemeContext";
 import DashboardSkeleton from "../components/DashboardSkeleton";
-import UserProfileModal from "../components/UserProfileModal";
 import CampusMap from "../components/campus/CampusMap";
 import EventApprovalPanel from "../components/campus/EventApprovalPanel";
 import {
@@ -77,7 +76,6 @@ const PrincipalDashboard = ({ navigate, user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const { isDark, toggle: toggleTheme } = useTheme();
-  const [showProfile, setShowProfile] = useState(false);
 
   // Tab Data States
   const [pendingLeaves, setPendingLeaves] = useState([]);
@@ -339,7 +337,7 @@ const PrincipalDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Principal Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

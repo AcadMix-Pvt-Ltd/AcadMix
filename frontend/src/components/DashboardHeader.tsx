@@ -9,7 +9,7 @@ import { notificationsAPI } from '../services/api';
  * Reusable Dashboard Header matching the premium UI pattern.
  * Squircle buttons (rounded-2xl) and a fully pill-shaped profile container.
  */
-const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
+const DashboardHeader = ({ user, title, onLogout, onProfileClick }) => {
   const { isDark, toggle: toggleTheme } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -134,7 +134,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
 
           {/* User Profile Card */}
           <button
-            onClick={() => setShowProfile(true)}
+            onClick={onProfileClick}
             className="hidden sm:flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
             <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -156,7 +156,7 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
           </button>
           
           <button
-            onClick={() => setShowProfile(true)}
+            onClick={onProfileClick}
             className={`sm:hidden ${iconBaseClass} text-indigo-500`}
             aria-label="Profile Menu"
           >

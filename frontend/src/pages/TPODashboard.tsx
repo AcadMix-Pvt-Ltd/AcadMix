@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Buildings, Briefcase, FileText, ChartLineUp, SignOut, DownloadSimple, Users, Trophy, Plus, Sun, Moon, Bell, Info, BookOpen, UserCircle, X, Upload, Table, CalendarBlank, MapPin, CurrencyDollar, GraduationCap, CheckCircle, WarningCircle, SpinnerGap, PencilSimple, Sparkle, Trash, Database, Brain, ShieldCheck } from '@phosphor-icons/react';
 import { tpoAPI, notificationsAPI, insightsAPI } from '../services/api';
@@ -979,7 +978,6 @@ const ApplicationsContent = () => {
 // ─── Main Dashboard ────────────────────────────────────────────
 const TPODashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('tpo_tab') || 'overview');
-  const [showProfile, setShowProfile] = useState(false);
   const [driveRefreshKey, setDriveRefreshKey] = useState(0);
   useEffect(() => { sessionStorage.setItem('tpo_tab', activeTab); }, [activeTab]);
   const { isDark, toggle: toggleTheme } = useTheme();
@@ -1068,7 +1066,7 @@ const TPODashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="TPO Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -1185,7 +1183,6 @@ const TPODashboard = ({ navigate, user, onLogout }) => {
           </motion.div>
         )}
         <AnimatePresence>
-        {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </div>
     </div>

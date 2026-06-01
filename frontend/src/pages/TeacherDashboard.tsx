@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, NotePencil, ChartLine, Users, Eye, SignOut, Clipboard, Calendar, CalendarDots, PencilLine, Bell, GraduationCap, ArrowRight, Exam, Fire, Sun, Moon, Notebook, UserCircle, Sparkle, Trash, MapPin } from '@phosphor-icons/react';
 import { analyticsAPI, insightsAPI } from '../services/api';
@@ -55,7 +54,6 @@ const timeAgo = (ts) => {
 
 const TeacherDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('teacher_tab') || 'overview');
-  const [showProfile, setShowProfile] = useState(false);
   const [isOutcomesDirty, setIsOutcomesDirty] = useState(false);
 
   const handleTabChange = (targetTab) => {
@@ -202,7 +200,7 @@ const TeacherDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Teacher Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Users, ChartBar, GraduationCap, SignOut, Database, Sun, Moon, Bell, Info, UserCircle, Sparkle, Trash, MapPin, Buildings } from '@phosphor-icons/react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -190,7 +189,6 @@ const AdminCommandCenter = ({ navigate, setActiveTab }) => {
 
 const AdminDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'command-center');
-  const [showProfile, setShowProfile] = useState(false);
   useEffect(() => { sessionStorage.setItem('admin_tab', activeTab); }, [activeTab]);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -285,7 +283,7 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Admin Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -745,7 +743,6 @@ const AdminDashboard = ({ navigate, user, onLogout }) => {
         )}
 
         <AnimatePresence>
-        {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </div>
     </div>

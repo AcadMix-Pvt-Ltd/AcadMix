@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import UserProfileModal from '../components/UserProfileModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { motion } from 'framer-motion';
 import { Buildings, SignOut, Sun, Moon, MapPin, Users, ChartLine, Bell } from '@phosphor-icons/react';
@@ -8,7 +7,6 @@ import CampusMap from '../components/campus/CampusMap';
 import EventApprovalPanel from '../components/campus/EventApprovalPanel';
 
 const DirectorDashboard = ({ navigate, user, onLogout }: any) => {
-  const [showProfile, setShowProfile] = useState(false);
   const { isDark, toggle: toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -24,9 +22,8 @@ const DirectorDashboard = ({ navigate, user, onLogout }: any) => {
         user={user} 
         title="Director Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
-      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">

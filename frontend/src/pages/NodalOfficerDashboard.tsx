@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import UserProfileModal from '../components/UserProfileModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Storefront, Checks, FileText, MagnifyingGlass, Megaphone, ShieldCheck, Sun, Moon, SignOut, UserCircle, Bell, Briefcase, Info, Sparkle, Trash } from '@phosphor-icons/react';
@@ -76,7 +75,6 @@ const NotifBell = () => {
 };
 
 const NodalOfficerDashboard = ({ navigate, user, onLogout }) => {
-  const [showProfile, setShowProfile] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [complianceSubTab, setComplianceSubTab] = useState('naac');
   const [activeCollegeId, setActiveCollegeId] = useState('');
@@ -283,9 +281,8 @@ const NodalOfficerDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="NodalOfficer Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
-      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

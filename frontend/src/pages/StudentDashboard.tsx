@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
 import { useQuery } from '@tanstack/react-query';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Trophy, ChartLine, Fire, BookOpen, Calendar, Target, SignOut, Terminal, ArrowRight, GraduationCap, Play, Medal, Lightning, Warning, Bell, Exam, Briefcase, Sun, Moon, CalendarDots, Chalkboard, UserCircle, ListBullets, Microphone, House, FileText, Toolbox, Bus, MapPin, Cpu } from '@phosphor-icons/react';
 import { analyticsAPI, interviewAPI, resumeAPI, notificationsAPI } from '../services/api';
@@ -85,7 +84,6 @@ const cardHover = {
 };
 
 const StudentDashboard = ({ navigate, user, onLogout }: any) => {
-  const [showProfile, setShowProfile] = useState(false);
   const isHostelVisible = useIsModuleVisible("hostel");
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('student_tab') || 'overview');
   useEffect(() => { sessionStorage.setItem('student_tab', activeTab); }, [activeTab]);
@@ -269,9 +267,8 @@ const StudentDashboard = ({ navigate, user, onLogout }: any) => {
         user={user} 
         title="Student Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('student-profile')} 
       />
-      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

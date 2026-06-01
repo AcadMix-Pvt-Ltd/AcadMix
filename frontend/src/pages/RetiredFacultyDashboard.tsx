@@ -23,7 +23,6 @@ import {
 import { retiredFacultyAPI, authAPI, setAuthToken } from "../services/api";
 import { useTheme } from "../contexts/ThemeContext";
 import DashboardSkeleton from "../components/DashboardSkeleton";
-import UserProfileModal from "../components/UserProfileModal";
 import CampusMap from '../components/campus/CampusMap';
 
 
@@ -384,7 +383,6 @@ const RetiredFacultyDashboard = ({ navigate, user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const { isDark, toggle: toggleTheme } = useTheme();
-  const [showProfile, setShowProfile] = useState(false);
 
   const [roles, setRoles] = useState([]);
   const [research, setResearch] = useState([]);
@@ -477,7 +475,7 @@ const RetiredFacultyDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="RetiredFaculty Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">

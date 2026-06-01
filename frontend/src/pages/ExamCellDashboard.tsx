@@ -50,7 +50,6 @@ const ExamCellDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(
     () => sessionStorage.getItem("examcell_tab") || "overview",
   );
-  const [showProfile, setShowProfile] = useState(false);
   useEffect(() => {
     sessionStorage.setItem("examcell_tab", activeTab);
   }, [activeTab]);
@@ -294,7 +293,7 @@ const ExamCellDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="ExamCell Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

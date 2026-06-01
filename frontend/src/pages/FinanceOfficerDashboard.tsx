@@ -1,5 +1,4 @@
 import React from 'react';
-import UserProfileModal from '../components/UserProfileModal';
 import DashboardHeader from '../components/DashboardHeader';
 import { motion } from 'framer-motion';
 import { Bank, Moon, SignOut, Sun, UserCircle } from '@phosphor-icons/react';
@@ -7,7 +6,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import FinanceCoreSuite from '../components/admin/FinanceCoreSuite';
 
 const FinanceOfficerDashboard = ({ user, onLogout }) => {
-  const [showProfile, setShowProfile] = useState(false);
   const { isDark, toggle: toggleTheme } = useTheme();
 
   return (
@@ -16,9 +14,8 @@ const FinanceOfficerDashboard = ({ user, onLogout }) => {
         user={user} 
         title="FinanceOfficer Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
-      {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
 
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

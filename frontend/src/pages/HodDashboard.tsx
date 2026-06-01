@@ -93,7 +93,6 @@ const HodDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(
     () => sessionStorage.getItem("hod_tab") || "overview",
   );
-  const [showProfile, setShowProfile] = useState(false);
   useEffect(() => {
     sessionStorage.setItem("hod_tab", activeTab);
   }, [activeTab]);
@@ -541,7 +540,7 @@ const HodDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Hod Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">

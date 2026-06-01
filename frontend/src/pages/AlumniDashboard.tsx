@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import DashboardHeader from '../components/DashboardHeader';
-import UserProfileModal from '../components/UserProfileModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Briefcase, GraduationCap, CalendarBlank, SignOut, Sun, Moon, Bell, Info, Medal, ChatDots, MapPin, LinkedinLogo, CheckCircle, UserCircle } from '@phosphor-icons/react';
 import { alumniAPI } from '../services/api';
@@ -282,7 +281,6 @@ const EventsContent = () => (
 // ─── Main Dashboard ────────────────────────────────────────────
 const AlumniDashboard = ({ navigate, user, onLogout }) => {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('alumni_tab') || 'overview');
-  const [showProfile, setShowProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -313,7 +311,7 @@ const AlumniDashboard = ({ navigate, user, onLogout }) => {
         user={user} 
         title="Alumni Dashboard" 
         onLogout={onLogout} 
-        setShowProfile={setShowProfile} 
+        onProfileClick={() => navigate('faculty-profile')} 
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -362,7 +360,6 @@ const AlumniDashboard = ({ navigate, user, onLogout }) => {
           </motion.div>
         )}
         <AnimatePresence>
-        {showProfile && <UserProfileModal user={user} onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </div>
     </div>
