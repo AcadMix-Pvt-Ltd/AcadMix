@@ -1708,6 +1708,678 @@ COMPANY_INTEL = [
         "benefits": ["Health Insurance", "Cab Facility", "Meal Card", "Relocation Allowance", "Capgemini University Learning", "Performance Bonus", "Gratuity", "Parental Leave", "Employee Referral Bonus"],
         "bench_risk": "Low to Moderate — Capgemini's large project pipeline usually ensures allocation within 2-4 weeks. Extended bench (1-2 months) may occur for niche technology roles.",
     },
+{
+        "name": "IBM",
+        "logo_color": "#0530AD",
+        "category": "IT Services & Consulting",
+        "avg_package_lpa": "4.25 - 7.5",
+        "dream_package_lpa": "10 - 12 (GBS/Research)",
+        "interview_rounds": ["Cognitive Assessment", "Coding Assessment", "English Language Test", "Technical Interview", "HR Interview"],
+        "difficulty": "moderate",
+        "preparation_time_weeks": 4,
+        "key_topics": ["Cognitive Ability", "Basic DSA", "DBMS", "Cloud", "English Proficiency"],
+        "tips": [
+            "IBM's cognitive assessment (game-based) requires focus and quick reflexes.",
+            "English language test is strict; practice basic grammar and spoken English.",
+            "Focus on emerging tech (AI, Cloud, Quantum) basics for the technical round.",
+            "Projects matter heavily in the interview."
+        ],
+        "past_questions": ["What is cloud computing?", "Write a program to reverse a string without built-in functions.", "Explain Joins in SQL.", "Why IBM?"],
+        "selection_rate": "~30% of eligible",
+        "description": "IBM is a global technology and consulting corporation known for its hardware, software, cloud computing, and AI (Watson).",
+        "headquarters": "Armonk, New York, USA (India HQ: Bangalore)",
+        "founded": 1911,
+        "employee_count": "280,000+",
+        "website": "https://www.ibm.com/in-en/employment/",
+        "glassdoor_rating": 3.9,
+        "work_culture": "Professional, research-oriented culture with a strong emphasis on continuous learning and diversity. Good work-life balance compared to typical IT services.",
+        "roles_offered": [
+            {
+                "title": "Associate System Engineer",
+                "package_lpa": "4.25 - 4.5",
+                "description": "Entry-level development and testing role across global business services.",
+                "skills_required": ["Java/Python", "SQL", "Cloud Basics", "Communication"],
+                "growth_path": "ASE → Staff Engineer → Advisory Engineer → Senior Engineer"
+            },
+            {
+                "title": "Data Scientist / AI Engineer (Entry Level)",
+                "package_lpa": "7 - 9",
+                "description": "Works on AI/ML models, data pipelines, and analytics for enterprise clients.",
+                "skills_required": ["Python", "Machine Learning", "SQL", "Data Structures"],
+                "growth_path": "Data Scientist → Senior Data Scientist → Lead Data Scientist"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Game-based cognitive tests: pattern matching, grid solving, numerical reasoning.", "English: grammar correction, reading comprehension."],
+            "coding": ["Reverse a string", "Find missing number in array", "Check anagrams"],
+            "technical": ["Explain Cloud Deployment Models", "What is an RDBMS?", "Difference between abstract class and interface"],
+            "hr": ["Why do you want to join IBM?", "Describe a time you solved a complex problem."]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": "IBM typically does not have a formal bond for campus hires."
+        },
+        "training": {
+            "duration": "2 months",
+            "location": "Virtual / Bangalore / Pune",
+            "stipend": "Full salary",
+            "details": "Initial training covers corporate culture, agile methodologies, and specific tech stack alignment based on business unit."
+        },
+        "work_locations": ["Bangalore", "Pune", "Hyderabad", "Noida", "Chennai", "Kolkata"],
+        "tech_stack": ["Java", "Python", "Node.js", "IBM Cloud", "AWS", "Red Hat OpenShift", "DB2", "AI/ML"],
+        "wfh_policy": "Hybrid — typically 3 days in office. Strict return-to-office mandates have been rolled out recently.",
+        "career_growth": [
+            {"years": "0-2", "role": "Associate System Engineer", "salary_range": "4.25 - 6 LPA"},
+            {"years": "2-5", "role": "Staff Engineer", "salary_range": "7 - 12 LPA"},
+            {"years": "5-8", "role": "Advisory Engineer", "salary_range": "13 - 20 LPA"}
+        ],
+        "benefits": ["Health Insurance", "Relocation Support", "Learning Certifications", "Employee Assistance Program"],
+        "bench_risk": "Low"
+    },
+    {
+        "name": "LTIMindtree",
+        "logo_color": "#002F6C",
+        "category": "IT Services",
+        "avg_package_lpa": "4 - 5.5",
+        "dream_package_lpa": "6.5 - 8",
+        "interview_rounds": ["Online Assessment", "Spoken English Test", "Technical Interview", "HR Interview"],
+        "difficulty": "moderate",
+        "preparation_time_weeks": 3,
+        "key_topics": ["Aptitude", "SQL", "Java/Python Basics", "Core CS"],
+        "tips": [
+            "Online assessment focuses heavily on quantitative aptitude and logical reasoning.",
+            "Technical round expects solid understanding of your final year project.",
+            "They frequently ask puzzle questions in HR/Technical rounds."
+        ],
+        "past_questions": ["SQL query for second highest salary", "Difference between TRUNCATE and DELETE", "Explain SDLC"],
+        "selection_rate": "~35% of eligible",
+        "description": "LTIMindtree is a global technology consulting and digital solutions company formed by the merger of L&T Infotech and Mindtree.",
+        "headquarters": "Mumbai, India",
+        "founded": 1996,
+        "employee_count": "80,000+",
+        "website": "https://www.ltimindtree.com/",
+        "glassdoor_rating": 3.6,
+        "work_culture": "Fast-growing, performance-oriented culture. Offers good exposure to digital transformation projects.",
+        "roles_offered": [
+            {
+                "title": "Graduate Engineer Trainee",
+                "package_lpa": "4",
+                "description": "Application development and maintenance across various verticals.",
+                "skills_required": ["Java/Python", "SQL", "Aptitude"],
+                "growth_path": "GET → Software Engineer → Senior SE → Tech Lead"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Time and work problems", "Number series", "Syllogism"],
+            "coding": ["Palindrome string", "Factorial using recursion"],
+            "technical": ["What is normalization?", "Explain OOP concepts with examples", "Difference between TCP and UDP"],
+            "hr": ["Why LTIMindtree?", "Are you willing to relocate?"]
+        },
+        "bond": {
+            "duration": "1 year",
+            "penalty": "₹50,000",
+            "details": "Standard 1-year service agreement from DOJ."
+        },
+        "training": {
+            "duration": "2 months",
+            "location": "Pune / Chennai / Mumbai (Orchard program)",
+            "stipend": "Full salary",
+            "details": "The 'Orchard' learning program is known for being rigorous with frequent assessments."
+        },
+        "work_locations": ["Mumbai", "Pune", "Bangalore", "Chennai", "Hyderabad"],
+        "tech_stack": ["Java", ".NET", "Python", "Cloud (AWS/Azure)", "Data Engineering"],
+        "wfh_policy": "Hybrid — 3 days office.",
+        "career_growth": [
+            {"years": "0-2", "role": "Software Engineer", "salary_range": "4 - 5.5 LPA"},
+            {"years": "2-5", "role": "Senior Software Engineer", "salary_range": "6 - 10 LPA"}
+        ],
+        "benefits": ["Health Insurance", "Meal Allowances", "Certifications Reimbursement"],
+        "bench_risk": "Moderate"
+    },
+    {
+        "name": "Texas Instruments",
+        "logo_color": "#CC0000",
+        "category": "Core ECE/EEE",
+        "avg_package_lpa": "15 - 20",
+        "dream_package_lpa": "25 - 35",
+        "interview_rounds": ["Online Technical Test", "2-3 Technical Interviews (Analog/Digital/Software)", "HR Interview"],
+        "difficulty": "very hard",
+        "preparation_time_weeks": 8,
+        "key_topics": ["Analog Electronics", "Digital Design", "Network Theory", "Signals & Systems", "C Programming"],
+        "tips": [
+            "For Analog roles: Mastery of Op-Amps, RC circuits, and network theorems is non-negotiable.",
+            "For Digital roles: Verilog, logic gates, setup/hold times, and FSMs are heavily tested.",
+            "Be prepared to draw and analyze circuits on a whiteboard.",
+            "Strong fundamentals in C (pointers, bitwise operators) required for embedded roles."
+        ],
+        "past_questions": ["Draw the frequency response of a given RC circuit", "Design a 101 sequence detector", "Explain setup and hold time violations"],
+        "selection_rate": "~2% of eligible",
+        "description": "Texas Instruments (TI) is a global semiconductor company that designs and manufactures analog and embedded processing chips.",
+        "headquarters": "Dallas, Texas, USA (India HQ: Bangalore)",
+        "founded": 1930,
+        "employee_count": "33,000+",
+        "website": "https://careers.ti.com/",
+        "glassdoor_rating": 4.1,
+        "work_culture": "Deeply technical and research-oriented. High emphasis on engineering excellence and innovation. Exceptional work-life balance for the semiconductor industry.",
+        "roles_offered": [
+            {
+                "title": "Analog Design Engineer",
+                "package_lpa": "20 - 30",
+                "description": "Design and verify analog ICs, power management chips, and signal chain products.",
+                "skills_required": ["Network Theory", "Analog Circuits", "CMOS Design", "Control Systems"],
+                "growth_path": "Design Engineer → Senior Engineer → Member Group Technical Staff (MGTS)"
+            },
+            {
+                "title": "Digital Design/Verification Engineer",
+                "package_lpa": "20 - 30",
+                "description": "RTL design, SoC verification, and physical design of digital ICs.",
+                "skills_required": ["Digital Electronics", "Verilog/VHDL", "Computer Architecture", "Scripting"],
+                "growth_path": "Design Engineer → Senior Engineer → MGTS"
+            },
+            {
+                "title": "Embedded Software Engineer",
+                "package_lpa": "15 - 25",
+                "description": "Develop firmware, device drivers, and OS ports for TI microcontrollers.",
+                "skills_required": ["C Programming", "Microprocessors", "OS Concepts", "Data Structures"],
+                "growth_path": "Software Engineer → Senior SE → MGTS"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Usually no separate aptitude round, purely technical assessment."],
+            "coding": ["Implement a circular buffer in C", "Bit manipulation: count set bits", "Pointer arithmetic outputs"],
+            "technical": ["Derive the transfer function of this active filter", "Design a Moore FSM for sequence '1101'", "Explain the working of a Buck Converter", "Draw CMOS implementation of a NAND gate"],
+            "hr": ["Why Texas Instruments?", "Tell me about a time you failed in a lab project.", "Are you planning for higher studies?"]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": ""
+        },
+        "training": {
+            "duration": "3-6 months (on-the-job)",
+            "location": "Bangalore",
+            "stipend": "Full salary",
+            "details": "Direct project allocation with intensive mentoring by senior engineers (MGTS/SMTS)."
+        },
+        "work_locations": ["Bangalore"],
+        "tech_stack": ["Cadence", "Synopsys Tools", "Verilog/SystemVerilog", "C/C++", "Python", "MATLAB", "SPICE"],
+        "wfh_policy": "Hybrid. Hardware testing requires on-site presence.",
+        "career_growth": [
+            {"years": "0-3", "role": "Engineer", "salary_range": "15 - 25 LPA"},
+            {"years": "3-7", "role": "Senior Engineer", "salary_range": "25 - 40 LPA"},
+            {"years": "7-12", "role": "MGTS / SMTS", "salary_range": "40 - 70 LPA"}
+        ],
+        "benefits": ["Premium Health Coverage", "Profit Sharing Plan", "ESPP", "Relocation Support", "Excellent Lab Facilities"],
+        "bench_risk": "None"
+    },
+    {
+        "name": "Larsen & Toubro (L&T)",
+        "logo_color": "#F3E500",
+        "category": "Core Civil/Mech",
+        "avg_package_lpa": "6 - 7",
+        "dream_package_lpa": "8 - 10",
+        "interview_rounds": ["Online Assessment (Aptitude + Technical)", "Group Discussion / Extempore", "Technical Interview", "HR Interview"],
+        "difficulty": "moderate",
+        "preparation_time_weeks": 4,
+        "key_topics": ["Core Subject Fundamentals (Civil/Mech/Elec)", "Strength of Materials", "Fluid Mechanics", "Project Management Basics", "Aptitude"],
+        "tips": [
+            "Be prepared for questions based on your industrial training/internships.",
+            "Aptitude test is known for strict cutoffs.",
+            "Willingness to relocate to remote project sites is often a deciding factor.",
+            "Brush up on basic IS codes (for Civil) and manufacturing processes (for Mech)."
+        ],
+        "past_questions": ["Draw SFD and BMD for a cantilever beam", "Explain the Carnot cycle", "What is the difference between CPM and PERT?", "Are you willing to work on-site?"],
+        "selection_rate": "~20% of eligible",
+        "description": "Larsen & Toubro is an Indian multinational conglomerate, spanning engineering, construction, manufacturing, technology, and financial services.",
+        "headquarters": "Mumbai, India",
+        "founded": 1938,
+        "employee_count": "50,000+ (Core EPC)",
+        "website": "https://www.larsentoubro.com/corporate/careers/",
+        "glassdoor_rating": 3.8,
+        "work_culture": "Traditional engineering culture. High discipline, challenging project environments, and vast scale of operations. Long working hours are common on project sites.",
+        "roles_offered": [
+            {
+                "title": "Graduate Engineer Trainee (GET) - Civil/Mech/Electrical",
+                "package_lpa": "6",
+                "description": "Site execution, planning, design, or quality control for mega infrastructure/construction projects.",
+                "skills_required": ["Core Technical Concepts", "AutoCAD/StaadPro (Civil)", "SolidWorks/ANSYS (Mech)", "Project Management Basics"],
+                "growth_path": "GET → Senior Engineer → Assistant Construction Manager → Construction Manager"
+            },
+            {
+                "title": "Post Graduate Engineer Trainee (PGET)",
+                "package_lpa": "7 - 8",
+                "description": "Specialized roles in design and engineering centers (mostly for M.Tech graduates).",
+                "skills_required": ["Advanced Design", "Finite Element Analysis", "Structural Engineering"],
+                "growth_path": "PGET → Lead Design Engineer → Engineering Manager"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Standard quantitative, logical, and verbal sections. Includes data interpretation related to engineering costs/time."],
+            "coding": ["Usually none for core branches (unless applying to LTIMindtree/L&T Tech Services)."],
+            "technical": ["What is the grade of concrete used for RCC?", "Explain the difference between 2-stroke and 4-stroke engines", "How do you calculate the safe bearing capacity of soil?", "Explain your final year project."],
+            "hr": ["Why L&T?", "Are you ready to work in remote project locations?", "How do you handle conflict with site laborers?"]
+        },
+        "bond": {
+            "duration": "None (For GETs)",
+            "penalty": "N/A",
+            "details": "L&T usually doesn't have a bond for GETs, but check the offer letter as some specialized verticals might."
+        },
+        "training": {
+            "duration": "1 month orientation + 11 months on-the-job",
+            "location": "L&T Leadership Development Academy (Lonavala) or Chennai, followed by site posting",
+            "stipend": "Full GET stipend",
+            "details": "Comprehensive orientation followed by rigorous on-the-job training at project sites."
+        },
+        "work_locations": ["Pan India (Often remote project sites)", "Mumbai", "Chennai", "Hazira", "Faridabad"],
+        "tech_stack": ["AutoCAD", "STAAD.Pro", "Revit", "ANSYS", "SolidWorks", "Primavera", "MS Project"],
+        "wfh_policy": "On-site fully. Design office roles might have limited hybrid flexibility.",
+        "career_growth": [
+            {"years": "0-1", "role": "GET", "salary_range": "6 LPA"},
+            {"years": "1-4", "role": "Senior Engineer", "salary_range": "7 - 10 LPA"},
+            {"years": "4-8", "role": "Assistant Manager", "salary_range": "11 - 16 LPA"}
+        ],
+        "benefits": ["Site Allowances", "Accommodation (at sites)", "Health Insurance", "Subsidized Food (at sites)"],
+        "bench_risk": "Low"
+    },
+    {
+        "name": "Tata Motors",
+        "logo_color": "#0033A0",
+        "category": "Core Mech/Auto",
+        "avg_package_lpa": "7 - 8",
+        "dream_package_lpa": "9 - 10",
+        "interview_rounds": ["Online Test (Aptitude + Core)", "Psychometric Test", "Technical Interview", "HR Interview"],
+        "difficulty": "moderate",
+        "preparation_time_weeks": 4,
+        "key_topics": ["IC Engines", "Automobile Engineering", "Strength of Materials", "Thermodynamics", "Manufacturing Processes"],
+        "tips": [
+            "Deep knowledge of your final year project/Baja SAE/Supra experience is highly valued.",
+            "Familiarity with Electric Vehicle (EV) technology gives a massive edge.",
+            "Expect practical questions on manufacturing and quality control (Six Sigma, Kaizen)."
+        ],
+        "past_questions": ["Explain the working of a differential", "What is the difference between torque and power?", "Explain EV battery management basics"],
+        "selection_rate": "~25% of eligible",
+        "description": "Tata Motors is India's leading automotive manufacturer, producing commercial, passenger, and electric vehicles.",
+        "headquarters": "Mumbai, India",
+        "founded": 1945,
+        "employee_count": "75,000+",
+        "website": "https://www.tatamotors.com/careers/",
+        "glassdoor_rating": 3.9,
+        "work_culture": "Ethical, employee-friendly Tata culture. Strong focus on R&D, especially in the EV segment. Manufacturing plants have typical shop-floor environments.",
+        "roles_offered": [
+            {
+                "title": "Graduate Engineer Trainee (GET)",
+                "package_lpa": "7.5",
+                "description": "Roles in R&D, Manufacturing, Quality, or Supply Chain. Shift from ICE to EV technologies.",
+                "skills_required": ["Core Mechanical Concepts", "Automobile Systems", "EV Basics", "CAD/CAE"],
+                "growth_path": "GET → Assistant Manager → Deputy Manager → Manager"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Quantitative, logical, and verbal.", "Psychometric tests to evaluate cultural fit and behavioral traits."],
+            "coding": ["Not applicable for core mechanical roles."],
+            "technical": ["Draw the P-V and T-S diagram for Otto cycle", "Explain different types of welding", "What are the components of an EV powertrain?", "Questions on CAD models or Baja/Formula Student cars"],
+            "hr": ["Why Tata Motors?", "Where do you see the auto industry in 5 years?", "Are you comfortable working in a manufacturing plant?"]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": "Typically no bond."
+        },
+        "training": {
+            "duration": "6 months",
+            "location": "Pune / Jamshedpur / Lucknow",
+            "stipend": "Full GET stipend",
+            "details": "Classroom training followed by rotations across different departments (shop floor, quality, design) before final allocation."
+        },
+        "work_locations": ["Pune", "Jamshedpur", "Lucknow", "Sanand", "Dharwad", "Pantnagar"],
+        "tech_stack": ["CATIA", "AutoCAD", "MATLAB", "Simulink", "ANSYS", "Siemens NX"],
+        "wfh_policy": "On-site. R&D roles in Pune might have slight flexibility.",
+        "career_growth": [
+            {"years": "0-1", "role": "GET", "salary_range": "7.5 LPA"},
+            {"years": "1-4", "role": "Assistant Manager", "salary_range": "8.5 - 12 LPA"},
+            {"years": "4-8", "role": "Manager", "salary_range": "13 - 18 LPA"}
+        ],
+        "benefits": ["Tata Group Discounts", "Health Insurance", "Company Township Accommodation (in some plants)", "Subsidized Transport/Canteen"],
+        "bench_risk": "None"
+    },
+    {
+        "name": "Cisco",
+        "logo_color": "#1BA0D7",
+        "category": "Product/Tech",
+        "avg_package_lpa": "15 - 18",
+        "dream_package_lpa": "20 - 24",
+        "interview_rounds": ["Online Assessment", "Technical Round 1", "Technical Round 2", "Managerial/HR Round"],
+        "difficulty": "hard",
+        "preparation_time_weeks": 8,
+        "key_topics": ["Computer Networks (OSI, TCP/IP, Routing)", "C/C++/Python", "Operating Systems", "DSA", "System Design (Basic)"],
+        "tips": [
+            "Networking knowledge must be exceptionally strong (OSI, TCP/IP, Subnetting, Routing protocols).",
+            "Cisco tests C/C++ concepts thoroughly, especially pointers and memory management.",
+            "CCNA certification is a huge plus.",
+            "Prepare for embedded systems questions if applying for hardware/embedded roles."
+        ],
+        "past_questions": ["Explain the 3-way handshake in TCP", "Difference between Hub, Switch, and Router", "Implement a linked list in C", "What happens when you type google.com?"],
+        "selection_rate": "~2% of applicants",
+        "description": "Cisco is the worldwide leader in IT, networking, and cybersecurity solutions.",
+        "headquarters": "San Jose, California, USA (India HQ: Bangalore)",
+        "founded": 1984,
+        "employee_count": "80,000+",
+        "website": "https://jobs.cisco.com/",
+        "glassdoor_rating": 4.2,
+        "work_culture": "Highly flexible, inclusive, and relaxed culture. Consistently ranked as a great place to work. Great focus on employee well-being and open communication.",
+        "roles_offered": [
+            {
+                "title": "Software Engineer (Network/Cloud/Security)",
+                "package_lpa": "15 - 20",
+                "description": "Develop and test networking protocols, SDN, cloud platforms, or security software.",
+                "skills_required": ["C/C++/Python", "Networking", "OS", "DSA"],
+                "growth_path": "Software Engineer I → SE II → Senior SE → Technical Leader"
+            },
+            {
+                "title": "Hardware Engineer",
+                "package_lpa": "15 - 20",
+                "description": "Design and verify ASICs, FPGAs, and board-level hardware for routers and switches.",
+                "skills_required": ["Digital Electronics", "Verilog/VHDL", "Computer Architecture"],
+                "growth_path": "Hardware Engineer I → HE II → Senior HE → Technical Leader"
+            },
+            {
+                "title": "Consulting Engineer (CX)",
+                "package_lpa": "12 - 15",
+                "description": "Customer Experience role involving network design, implementation, and troubleshooting for enterprise clients.",
+                "skills_required": ["CCNA level networking", "Communication", "Troubleshooting"],
+                "growth_path": "Consulting Engineer I → CE II → Senior CE"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Basic quantitative and logical reasoning in the initial OA."],
+            "coding": ["Reverse bits of an integer", "Find loop in a linked list", "String manipulation"],
+            "technical": ["Detailed explanation of BGP and OSPF", "Subnetting calculations", "How does ARP work?", "Explain virtual memory"],
+            "hr": ["Why networking?", "Tell me about a time you worked in a team.", "Where do you see yourself in 3 years?"]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": ""
+        },
+        "training": {
+            "duration": "3 months",
+            "location": "Bangalore",
+            "stipend": "Full salary",
+            "details": "Robust onboarding program (CSAP for sales/consulting, direct team integration for engineering). Mentorship is highly emphasized."
+        },
+        "work_locations": ["Bangalore", "Pune", "Gurgaon"],
+        "tech_stack": ["C", "C++", "Python", "Go", "BGP/OSPF", "Linux Internals", "Docker/Kubernetes"],
+        "wfh_policy": "Highly flexible hybrid model. Cisco is very supportive of remote work.",
+        "career_growth": [
+            {"years": "0-2", "role": "Software Engineer I", "salary_range": "15 - 20 LPA"},
+            {"years": "2-5", "role": "Software Engineer II", "salary_range": "20 - 30 LPA"},
+            {"years": "5-8", "role": "Senior Software Engineer", "salary_range": "30 - 45 LPA"}
+        ],
+        "benefits": ["Premium Health Insurance", "ESPP", "Generous Time Off", "Wellness Days", "Fitness Reimbursement"],
+        "bench_risk": "None"
+    },
+{
+        "name": "Hexaware",
+        "logo_color": "#00AEEF",
+        "category": "IT Services",
+        "avg_package_lpa": "3.5 - 5",
+        "dream_package_lpa": "6 - 8 (Premier/Maverick)",
+        "interview_rounds": ["Online Assessment", "Communication Test", "Technical Interview", "HR Interview"],
+        "difficulty": "easy-moderate",
+        "preparation_time_weeks": 3,
+        "key_topics": ["Aptitude", "English Communication", "SQL", "Java/.NET Basics"],
+        "tips": [
+            "Communication test (Versant) eliminates many candidates; practice speaking clearly.",
+            "Aptitude test focuses on speed.",
+            "Technical round is usually straightforward, focusing on core OOPs and project."
+        ],
+        "past_questions": ["Explain Polymorphism", "What are the different types of keys in SQL?", "Where do you see yourself in 3 years?"],
+        "selection_rate": "~40% of eligible",
+        "description": "Hexaware Technologies is an IT and business process outsourcing service provider specializing in cloud, automation, and customer experience.",
+        "headquarters": "Navi Mumbai, India",
+        "founded": 1990,
+        "employee_count": "30,000+",
+        "website": "https://hexaware.com/careers/",
+        "glassdoor_rating": 3.7,
+        "work_culture": "Employee-centric and agile culture. Known for rapid growth opportunities and a focus on automation-first approaches.",
+        "roles_offered": [
+            {
+                "title": "Graduate Engineer Trainee (GET)",
+                "package_lpa": "3.5 - 4",
+                "description": "Entry-level IT services role for application support and development.",
+                "skills_required": ["Basic Coding", "SQL", "Communication", "Aptitude"],
+                "growth_path": "GET → Software Engineer → Senior SE"
+            },
+            {
+                "title": "Premier / Maverick",
+                "package_lpa": "6 - 8",
+                "description": "Higher package role for students clearing advanced coding rounds.",
+                "skills_required": ["Intermediate DSA", "Full-Stack Basics", "Java/Python"],
+                "growth_path": "Premier GET → Senior SE → Tech Lead"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Number series, percentage, profit and loss."],
+            "coding": ["Find if a number is prime", "Sum of elements in an array"],
+            "technical": ["What is an abstract class?", "Explain DDL and DML commands in SQL"],
+            "hr": ["Why Hexaware?", "Are you willing to work in shifts?"]
+        },
+        "bond": {
+            "duration": "2 years",
+            "penalty": "₹1,00,000",
+            "details": "Service agreement is standard for freshers."
+        },
+        "training": {
+            "duration": "2 months",
+            "location": "Chennai / Mumbai / Pune",
+            "stipend": "Full salary",
+            "details": "Classroom and hands-on training with regular assessments."
+        },
+        "work_locations": ["Chennai", "Mumbai", "Pune", "Bangalore", "Noida"],
+        "tech_stack": ["Java", ".NET", "Python", "Automation Anywhere", "UiPath", "ServiceNow"],
+        "wfh_policy": "Hybrid.",
+        "career_growth": [
+            {"years": "0-2", "role": "Software Engineer", "salary_range": "3.5 - 5 LPA"},
+            {"years": "2-5", "role": "Senior Software Engineer", "salary_range": "5 - 8 LPA"}
+        ],
+        "benefits": ["Health Insurance", "Relocation Allowance", "Cab Facility"],
+        "bench_risk": "Moderate"
+    },
+    {
+        "name": "Qualcomm",
+        "logo_color": "#3253AD",
+        "category": "Core ECE/IT",
+        "avg_package_lpa": "18 - 25",
+        "dream_package_lpa": "30 - 35",
+        "interview_rounds": ["Online Assessment (Coding + Core)", "2-3 Technical Interviews", "HR Interview"],
+        "difficulty": "hard",
+        "preparation_time_weeks": 8,
+        "key_topics": ["C/C++", "Data Structures", "Digital Electronics", "Computer Architecture", "Wireless Communication"],
+        "tips": [
+            "For software roles, expect intense C/C++ questions (pointers, memory leaks, bitwise).",
+            "For hardware roles, digital logic, VLSI basics, and Verilog are crucial.",
+            "They dive deep into your resume projects."
+        ],
+        "past_questions": ["Implement malloc() and free()", "Explain the OSI model layers", "How does a cache work?"],
+        "selection_rate": "~2% of applicants",
+        "description": "Qualcomm is a multinational semiconductor and telecommunications equipment company, famous for its Snapdragon processors and 5G technology.",
+        "headquarters": "San Diego, California, USA (India HQ: Hyderabad)",
+        "founded": 1985,
+        "employee_count": "50,000+",
+        "website": "https://www.qualcomm.com/company/careers",
+        "glassdoor_rating": 4.1,
+        "work_culture": "Innovation-driven, highly technical. Great perks and compensation. Work-life balance can vary depending on project tape-out cycles.",
+        "roles_offered": [
+            {
+                "title": "Software Engineer",
+                "package_lpa": "18 - 25",
+                "description": "Embedded software, modem software, and android framework development.",
+                "skills_required": ["C/C++", "OS Internals", "Data Structures", "Networking Basics"],
+                "growth_path": "Engineer → Senior Engineer → Staff Engineer → Senior Staff Engineer"
+            },
+            {
+                "title": "Hardware Engineer",
+                "package_lpa": "18 - 25",
+                "description": "ASIC design, verification, and physical design.",
+                "skills_required": ["Digital Electronics", "Computer Architecture", "Verilog", "VLSI"],
+                "growth_path": "Engineer → Senior Engineer → Staff Engineer"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Usually minimal, focus is heavily on technical problem solving."],
+            "coding": ["Bit manipulation (e.g., toggle specific bits)", "Linked list reversals", "String manipulation in C"],
+            "technical": ["Explain virtual memory and page faults", "Design a FIFO", "What is setup and hold time?", "Explain TDMA/FDMA/CDMA concepts"],
+            "hr": ["Why Qualcomm?", "Discuss a time you faced a difficult technical challenge."]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": ""
+        },
+        "training": {
+            "duration": "On-the-job",
+            "location": "Hyderabad / Bangalore",
+            "stipend": "Full salary",
+            "details": "Direct team allocation with a mentor."
+        },
+        "work_locations": ["Hyderabad", "Bangalore", "Noida", "Chennai"],
+        "tech_stack": ["C", "C++", "Python", "Verilog", "Linux Kernel", "Android Framework"],
+        "wfh_policy": "Hybrid.",
+        "career_growth": [
+            {"years": "0-3", "role": "Engineer", "salary_range": "18 - 25 LPA"},
+            {"years": "3-7", "role": "Senior Engineer", "salary_range": "25 - 40 LPA"}
+        ],
+        "benefits": ["Premium Health Insurance", "RSUs", "ESPP", "Free Meals (some offices)"],
+        "bench_risk": "None"
+    },
+    {
+        "name": "Reliance Industries",
+        "logo_color": "#005CAB",
+        "category": "Core/Mass (Jio/RIL)",
+        "avg_package_lpa": "5 - 7",
+        "dream_package_lpa": "12 - 15 (Jio R&D)",
+        "interview_rounds": ["Online Assessment", "Technical Interview", "HR Interview"],
+        "difficulty": "moderate",
+        "preparation_time_weeks": 3,
+        "key_topics": ["Core Engineering (Mech/Chem/Civil)", "Java/Python (Jio)", "Aptitude", "Current Tech Trends"],
+        "tips": [
+            "For Jio: Focus on Java, networking, and standard software engineering practices.",
+            "For RIL Core (Refinery/Petrochem): Be ready for deep core engineering and safety questions.",
+            "Showcase long-term commitment and adaptability."
+        ],
+        "past_questions": ["Explain OOPS concepts", "What is distillation? (Chem)", "Explain the working of 4G LTE (Jio)"],
+        "selection_rate": "~25% of eligible",
+        "description": "Reliance Industries Limited (RIL) is a Fortune 500 company and the largest private sector corporation in India, with major businesses in energy, petrochemicals, retail, and telecommunications (Jio).",
+        "headquarters": "Mumbai, India",
+        "founded": 1958,
+        "employee_count": "340,000+",
+        "website": "https://careers.ril.com/",
+        "glassdoor_rating": 3.8,
+        "work_culture": "Scale-driven, fast-paced, and demanding. Offers immense exposure to mega-scale projects (refineries, pan-India telecom). Hierarchical but rewarding.",
+        "roles_offered": [
+            {
+                "title": "Graduate Engineer Trainee (Core)",
+                "package_lpa": "5.5 - 7",
+                "description": "Plant operations, maintenance, and project execution at refineries/manufacturing sites.",
+                "skills_required": ["Core Technical Knowledge", "Safety Standards", "Analytical Thinking"],
+                "growth_path": "GET → Manager → Senior Manager"
+            },
+            {
+                "title": "Software Engineer (Jio Platforms)",
+                "package_lpa": "7 - 12",
+                "description": "Development for Jio's digital ecosystem (apps, telecom backend, cloud).",
+                "skills_required": ["Java/Python", "DSA", "DBMS", "API Development"],
+                "growth_path": "Software Engineer → Senior SE → Tech Lead"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["Standard quantitative and logical reasoning."],
+            "coding": ["Array and String manipulation (for Jio roles)."],
+            "technical": ["Core branch subjects for RIL.", "For Jio: Java Spring Boot basics, SQL vs NoSQL, Networking basics."],
+            "hr": ["Are you willing to work in Jamnagar/Hazira? (For Core)", "Why Reliance?"]
+        },
+        "bond": {
+            "duration": "None for most roles",
+            "penalty": "N/A",
+            "details": ""
+        },
+        "training": {
+            "duration": "6 months (GET program)",
+            "location": "Reliance Corporate Park (Navi Mumbai) / Jamnagar",
+            "stipend": "Full stipend",
+            "details": "RIL's GET program is highly structured with classroom learning and on-the-job rotations."
+        },
+        "work_locations": ["Mumbai", "Jamnagar", "Hazira", "Bangalore", "Hyderabad (Jio)"],
+        "tech_stack": ["Java", "Python", "React", "AWS/Azure", "Big Data (for Jio)"],
+        "wfh_policy": "Mostly On-site.",
+        "career_growth": [
+            {"years": "0-1", "role": "GET", "salary_range": "5.5 - 7 LPA"},
+            {"years": "1-5", "role": "Manager", "salary_range": "8 - 14 LPA"}
+        ],
+        "benefits": ["Subsidized Township Housing (at plant locations)", "Health Insurance", "Reliance Employee Discounts"],
+        "bench_risk": "Low"
+    },
+    {
+        "name": "Samsung R&D",
+        "logo_color": "#1428A0",
+        "category": "Product/Tech",
+        "avg_package_lpa": "12 - 16",
+        "dream_package_lpa": "20 - 22 (SRIB)",
+        "interview_rounds": ["Samsung Global Coding Test (3 hours, 1 question)", "Technical Interview 1", "Technical Interview 2", "HR Interview"],
+        "difficulty": "hard",
+        "preparation_time_weeks": 8,
+        "key_topics": ["Advanced Data Structures", "Graph Algorithms", "Backtracking", "Dynamic Programming", "C/C++/Java"],
+        "tips": [
+            "The coding test is notoriously strict: 1 question, 3 hours, 50 test cases, NO STL allowed (must write own stack, queue, etc. in C/C++).",
+            "Master DFS, BFS, Backtracking, and Graph traversal.",
+            "Interviews focus heavily on the logic used in the coding test and CS fundamentals."
+        ],
+        "past_questions": ["Wormhole problem", "Endoscope problem", "Travelling Salesman variant (all standard Samsung test questions)"],
+        "selection_rate": "~1% of applicants",
+        "description": "Samsung R&D Institute (SRIB/SRID/SRIN) is Samsung's largest R&D facility outside Korea, focusing on AI, IoT, Networks, and Mobile software.",
+        "headquarters": "Suwon, South Korea (India HQ: Bangalore - SRIB, Delhi - SRID, Noida - SRIN)",
+        "founded": 1969,
+        "employee_count": "10,000+ in India R&D",
+        "website": "https://research.samsung.com/sri-b",
+        "glassdoor_rating": 3.8,
+        "work_culture": "Highly competitive, research-driven environment. Work hours can be long, especially before major product launches, but exposure to cutting-edge consumer tech is immense.",
+        "roles_offered": [
+            {
+                "title": "Software Engineer",
+                "package_lpa": "14 - 20",
+                "description": "Work on Android framework, Tizen OS, AI/Camera algorithms, or 5G/6G networks.",
+                "skills_required": ["Strong algorithmic thinking (Backtracking/Graphs)", "C/C++/Java", "OS Concepts", "System Architecture"],
+                "growth_path": "Software Engineer → Senior SE → Chief Engineer"
+            }
+        ],
+        "past_questions_categorized": {
+            "aptitude": ["None. The focus is entirely on the Global Coding Test."],
+            "coding": ["Implement custom Queue/Stack", "Find the shortest path in a grid with obstacles (BFS)", "Optimal resource allocation using Backtracking"],
+            "technical": ["Explain deadlock prevention", "How does the Android OS manage memory?", "Differences between C and C++ memory management", "Explain your approach to the coding test problem."],
+            "hr": ["Why Samsung?", "How do you handle high-pressure situations?", "Where do you see yourself in 3 years?"]
+        },
+        "bond": {
+            "duration": "None",
+            "penalty": "N/A",
+            "details": ""
+        },
+        "training": {
+            "duration": "1-2 months",
+            "location": "Bangalore / Delhi / Noida",
+            "stipend": "Full salary",
+            "details": "Bootcamp on internal frameworks, Tizen, and advanced algorithms."
+        },
+        "work_locations": ["Bangalore (SRIB)", "Delhi (SRID)", "Noida (SRIN)"],
+        "tech_stack": ["C", "C++", "Java", "Python", "Android SDK", "Tizen", "Machine Learning Frameworks"],
+        "wfh_policy": "Hybrid.",
+        "career_growth": [
+            {"years": "0-3", "role": "Software Engineer", "salary_range": "14 - 20 LPA"},
+            {"years": "3-7", "role": "Senior Software Engineer", "salary_range": "20 - 35 LPA"}
+        ],
+        "benefits": ["Premium Health Insurance", "Free Meals", "Product Discounts", "Relocation Allowance"],
+        "bench_risk": "None"
+    },
 ]
 
 
