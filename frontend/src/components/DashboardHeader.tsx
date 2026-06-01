@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Bank, Bell, Sun, Moon, SignOut, Info, Briefcase, UserCircle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Avatar from 'boring-avatars';
 import { useTheme } from '../contexts/ThemeContext';
 import { notificationsAPI } from '../services/api';
 
@@ -136,8 +137,13 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
             onClick={() => setShowProfile(true)}
             className="hidden sm:flex items-center gap-3 bg-white hover:bg-slate-50 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
-            <div className="w-9 h-9 rounded-[10px] bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-              <UserCircle size={20} weight="bold" className="text-indigo-600 dark:text-indigo-400" />
+            <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center flex-shrink-0">
+              <Avatar 
+                size={36} 
+                name={user?.name || "User"} 
+                variant="beam" 
+                colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} 
+              />
             </div>
             <div className="text-left">
               <p className="text-[15px] font-extrabold text-slate-800 dark:text-slate-100 leading-tight tracking-tight">
