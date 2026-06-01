@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Bank, Bell, Sun, Moon, SignOut, Info, Briefcase, UserCircle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from 'boring-avatars';
@@ -48,6 +48,17 @@ const DashboardHeader = ({ user, title, onLogout, onProfileClick }) => {
   };
 
   const iconBaseClass = "w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50/80 border border-slate-200 shadow-sm hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all cursor-pointer";
+
+  // Generate a random seed for the boring avatar per session
+  const sessionAvatarSeed = useMemo(() => {
+    const key = 'student_avatar_seed';
+    let seed = sessionStorage.getItem(key);
+    if (!seed) {
+      seed = Math.random().toString(36).substring(7);
+      sessionStorage.setItem(key, seed);
+    }
+    return seed;
+  }, []);
 
   return (
     <header className="glass-header z-40 relative">
@@ -137,13 +148,21 @@ const DashboardHeader = ({ user, title, onLogout, onProfileClick }) => {
             onClick={onProfileClick}
             className="hidden sm:flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
-            <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center flex-shrink-0">
-              <Avatar 
-                size={36} 
-                name={user?.name || "User"} 
-                variant="beam" 
-                colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} 
-              />
+            <div className="w-9 h-9 rounded-[10px] overflow-hidden flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800">
+              {user?.role === 'student' ? (
+                <Avatar 
+                  size={36} 
+                  name={sessionAvatarSeed} 
+                  variant="beam" 
+                  colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} 
+                />
+              ) : (
+                <img 
+                  src={`https://avatar.iran.liara.run/public/${user?.gender?.toLowerCase() === 'female' ? 'girl' : 'boy'}?username=${user?.name || 'Faculty'}`} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
             <div className="text-left">
               <p className="text-[15px] font-extrabold text-slate-800 dark:text-slate-100 leading-tight tracking-tight">
