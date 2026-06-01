@@ -131,12 +131,12 @@ const DashboardHeader = ({ user, title, onLogout, setShowProfile }) => {
             {isDark ? <Sun size={20} weight="duotone" /> : <Moon size={20} weight="duotone" />}
           </motion.button>
 
-          {/* User Profile Pill */}
+          {/* User Profile Card */}
           <button
             onClick={() => setShowProfile(true)}
-            className="hidden sm:flex items-center gap-3 bg-slate-50/80 hover:bg-slate-100 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-full p-1 pr-5 cursor-pointer border border-slate-100/50 dark:border-slate-700/50"
+            className="hidden sm:flex items-center gap-3 bg-white hover:bg-slate-50 dark:bg-[#1A202C] dark:border-slate-700 dark:hover:bg-slate-800 transition-all rounded-2xl p-1 pr-5 cursor-pointer border border-slate-200 dark:border-slate-700/50 shadow-sm"
           >
-            <div className="w-9 h-9 rounded-2xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-[10px] bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
               <Bank size={18} weight="bold" className="text-indigo-600 dark:text-indigo-400" />
             </div>
             <div className="text-left">
