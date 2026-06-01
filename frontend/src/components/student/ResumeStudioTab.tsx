@@ -214,7 +214,7 @@ const ResumeStudioTab = ({ navigate }: any) => {
         </div>
         <div className="flex gap-2">
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => navigate('/profile', { state: { tab: 'resume' } })}
+            onClick={() => navigate('/student/profile', { state: { tab: 'resume' } })}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-colors border border-slate-200 dark:border-white/5">
             <PencilSimple size={15} weight="bold" />
             Edit Profile Data
@@ -251,7 +251,7 @@ const ResumeStudioTab = ({ navigate }: any) => {
           <div className="soft-card p-5">
             <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-3">Resume Data</h3>
             <DataSummary data={profileData} />
-            <button onClick={() => navigate('/profile', { state: { tab: 'resume' } })}
+            <button onClick={() => navigate('/student/profile', { state: { tab: 'resume' } })}
               className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 hover:bg-teal-100 dark:hover:bg-teal-500/15 transition-colors">
               <PencilSimple size={14} weight="bold" />
               Edit Resume Profile
