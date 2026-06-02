@@ -241,22 +241,42 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
 
     # Fetch latest resume text (if available)
     resume_text = ""
-    resume_stmt = (
-        select(models.ResumeScore.parsed_text)
+    # Try StudentResume (Vault) first
+    vault_stmt = (
+        select(models.StudentResume.parsed_text)
         .where(
-            models.ResumeScore.student_id == user["id"],
-            models.ResumeScore.college_id == user["college_id"],
-            models.ResumeScore.is_deleted == False,
-            models.ResumeScore.parsed_text.isnot(None),
+            models.StudentResume.student_id == user["id"],
+            models.StudentResume.college_id == user["college_id"],
+            models.StudentResume.is_deleted == False,
+            models.StudentResume.parsed_text.isnot(None),
         )
     )
     if resume_id:
-        resume_stmt = resume_stmt.where(models.ResumeScore.id == resume_id)
-    resume_stmt = resume_stmt.order_by(models.ResumeScore.created_at.desc()).limit(1)
-    resume_result = await session.execute(resume_stmt)
-    resume_row = resume_result.scalar()
-    if resume_row:
-        resume_text = resume_row
+        vault_stmt = vault_stmt.where(models.StudentResume.id == resume_id)
+    vault_stmt = vault_stmt.order_by(models.StudentResume.created_at.desc()).limit(1)
+    vault_res = await session.execute(vault_stmt)
+    vault_text = vault_res.scalar()
+    
+    if vault_text:
+        resume_text = vault_text
+    else:
+        # Fallback to ATS ResumeScore
+        ats_stmt = (
+            select(models.ResumeScore.parsed_text)
+            .where(
+                models.ResumeScore.student_id == user["id"],
+                models.ResumeScore.college_id == user["college_id"],
+                models.ResumeScore.is_deleted == False,
+                models.ResumeScore.parsed_text.isnot(None),
+            )
+        )
+        if resume_id:
+            ats_stmt = ats_stmt.where(models.ResumeScore.id == resume_id)
+        ats_stmt = ats_stmt.order_by(models.ResumeScore.created_at.desc()).limit(1)
+        ats_res = await session.execute(ats_stmt)
+        ats_text = ats_res.scalar()
+        if ats_text:
+            resume_text = ats_text
 
     # Build system prompt
     intel = None

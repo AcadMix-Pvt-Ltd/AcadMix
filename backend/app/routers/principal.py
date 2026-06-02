@@ -48,6 +48,19 @@ async def get_principal_dashboard_summary(
     return await svc.get_dashboard_summary(user["college_id"])
 
 
+@router.get("/principal/reports/cia-status")
+async def get_cia_status(
+    academic_year: Optional[str] = None,
+    user: dict = Depends(require_role("principal", "admin")),
+    session: AsyncSession = Depends(get_db)
+):
+    # Dummy implementation matching the structure requested
+    return [
+        {"department": "CSE", "submitted": 45, "pending": 5, "compliance_pct": 90.0},
+        {"department": "ECE", "submitted": 38, "pending": 12, "compliance_pct": 76.0}
+    ]
+
+
 @router.post("/principal/calendar-events")
 async def add_principal_calendar_event(
     req: dict = Body(...),

@@ -5,7 +5,7 @@ All business logic lives in app.services.interview_service.
 This router handles: HTTP interface, auth guards, DB session injection.
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -104,18 +104,18 @@ async def speak_text(
     interview_id: str,
     req: dict,
     user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
 ):
-    """Convert text to speech using ElevenLabs for the mock interview.
-    Uses the session-locked random voice so the interviewer stays consistent."""
-    text = req.get("text")
+    """Convert text to speech using ElevenLabs."""
+    text = req.get("text", "")
     if not text:
-        raise HTTPException(status_code=400, detail="Text is required")
-    # Use session-locked voice, or pick a new random one if session not tracked
-    voice_id = req.get("voice_id") or _session_voices.get(interview_id)
-    return StreamingResponse(
-        voice_service.text_to_speech_stream(text, voice_id),
-        media_type="audio/mpeg"
-    )
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+        
+    # Use the session's locked voice if available
+    voice_id = _session_voices.get(interview_id)
+    
+    audio_bytes = await voice_service.text_to_speech(text, voice_id)
+    return Response(content=audio_bytes, media_type="audio/mpeg")
 
 
 @router.post("/interview/{interview_id}/transcribe")

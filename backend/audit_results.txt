@@ -1,0 +1,11 @@
+MISSING ROUTES:
+[GET] /quizzes/user (Normalized: /api/quizzes/user)
+[GET] /examcell/approved-marks (Normalized: /api/examcell/approved-marks)
+[GET] /parent/academic-calendar (Normalized: /api/parent/academic-calendar)
+[GET] /principal/reports/cia-status (Normalized: /api/principal/reports/cia-status)
+[PUT] /principal/grievances/ (Normalized: /api/principal/grievances)
+[PUT] /hod/leave/ (Normalized: /api/hod/leave)
+[POST] /retired-faculty/events/ (Normalized: /api/retired-faculty/events)
+[POST] /admin/retired-faculty/ (Normalized: /api/admin/retired-faculty)
+[GET] /admin/retired-faculty/ (Normalized: /api/admin/retired-faculty)
+[PUT] /admin/retired-faculty/ (Normalized: /api/admin/retired-faculty)

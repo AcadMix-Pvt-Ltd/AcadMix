@@ -74,7 +74,8 @@ const StudentSubjects = () => {
   }
 
   return (
-    <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-5">
+    <>
+      <motion.div variants={containerVariants} initial="hidden" animate="show" className="space-y-5">
       {/* Summary */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="soft-card p-4 text-center">
@@ -189,7 +190,8 @@ const StudentSubjects = () => {
            </div>
         </div>
       )}
-    </motion.div>
+    </>
+  );
 };
 
 export default StudentSubjects;

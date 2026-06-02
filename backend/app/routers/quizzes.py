@@ -18,6 +18,7 @@ from app.schemas import *
 router = APIRouter()
 
 @router.get("/quizzes")
+@router.get("/quizzes/user")
 async def list_quizzes(status: Optional[str] = None, user: dict = Depends(get_current_user), session: AsyncSession = Depends(get_db)):
     stmt = select(models.Quiz).where(models.Quiz.college_id == user["college_id"])
     if status:

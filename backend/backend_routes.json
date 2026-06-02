@@ -1,0 +1,8878 @@
+[
+  {
+    "path": "/api/v1/simulate/verilog",
+    "name": "simulate_verilog",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/mous",
+    "name": "get_industry_mous",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/mous",
+    "name": "create_industry_mou",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/curriculum-feedback",
+    "name": "create_curriculum_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/employer-feedback",
+    "name": "create_employer_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/projects",
+    "name": "get_industry_projects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/projects",
+    "name": "create_industry_project",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/drives",
+    "name": "request_placement_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/dashboard",
+    "name": "get_industry_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/industry/training-programs",
+    "name": "create_training_program",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/challenges",
+    "name": "get_challenges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/challenges/stats",
+    "name": "get_challenge_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/challenges/run",
+    "name": "run_challenge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/challenges/submit",
+    "name": "submit_challenge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/announcements",
+    "name": "list_announcements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/announcements",
+    "name": "create_announcement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/announcements/{announcement_id}",
+    "name": "delete_announcement",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/timetable",
+    "name": "get_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/timetable",
+    "name": "save_timetable_slot",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/timetable/{slot_id}",
+    "name": "delete_timetable_slot",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/my-assignments",
+    "name": "my_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/submissions",
+    "name": "list_submissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/dashboard/student",
+    "name": "student_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/dashboard/teacher",
+    "name": "teacher_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/dashboard/admin",
+    "name": "admin_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/dashboard/hod",
+    "name": "hod_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/dashboard/exam_cell",
+    "name": "exam_cell_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/insights/query",
+    "name": "query_insights",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/insights/pins",
+    "name": "create_pin",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/insights/pins",
+    "name": "get_pins",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/insights/pins/{pin_id}",
+    "name": "delete_pin",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/outcomes",
+    "name": "get_outcomes_matrix",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/co-po-mapping",
+    "name": "batch_upsert_matrix",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/ai-generate-outcomes",
+    "name": "ai_generate_outcomes",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/generate-assessment",
+    "name": "api_generate_assessment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/commit-assessment",
+    "name": "api_commit_assessment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/leaderboard",
+    "name": "get_leaderboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/analytics/student/{student_id}",
+    "name": "student_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/analytics/teacher/class-results",
+    "name": "class_results_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/analytics/teacher/quiz-results/{quiz_id}",
+    "name": "get_quiz_detailed_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/results/semester/{student_id}",
+    "name": "get_semester_results",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/results/semester",
+    "name": "create_semester_result",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/attempts/{attempt_id}/answer",
+    "name": "submit_answer",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/attempts/{attempt_id}/violation",
+    "name": "log_violation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/attempts/{attempt_id}/submit",
+    "name": "submit_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/attempts/{attempt_id}/result",
+    "name": "get_attempt_result",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/attempts",
+    "name": "list_attempts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/companies",
+    "name": "get_companies",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/companies",
+    "name": "create_company",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives",
+    "name": "get_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives",
+    "name": "create_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}",
+    "name": "update_drive",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/applicants",
+    "name": "get_applicants",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/shortlist",
+    "name": "shortlist_bulk",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/results",
+    "name": "log_result",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/select",
+    "name": "select_candidate",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/statistics",
+    "name": "get_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/restrictions",
+    "name": "get_restrictions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/restrictions/student/{student_id}",
+    "name": "get_student_restrictions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/restrictions",
+    "name": "add_restriction",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/restrictions/{restriction_id}",
+    "name": "remove_restriction",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/upload-students",
+    "name": "upload_students",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/preview-excel",
+    "name": "preview_excel",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/due",
+    "name": "get_my_due_fees",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/history",
+    "name": "get_payment_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/create-order",
+    "name": "create_fee_order",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/verify-payment",
+    "name": "verify_fee_payment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/receipts/verify/{token}",
+    "name": "verify_public_receipt",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/fees/receipts/{receipt_no}",
+    "name": "get_receipt",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/fees/invoices/bulk",
+    "name": "create_bulk_invoices",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/summary",
+    "name": "finance_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/students/search",
+    "name": "finance_student_search",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/students/{student_id}/ledger",
+    "name": "finance_student_ledger",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/invoices/{invoice_id}/cancel",
+    "name": "cancel_invoice",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/fee-structures",
+    "name": "list_fee_structures",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/fee-structures",
+    "name": "create_fee_structure",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/fee-structures/{structure_id}",
+    "name": "update_fee_structure",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/fee-structures/{structure_id}",
+    "name": "delete_fee_structure",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/fee-structures/{structure_id}/items",
+    "name": "add_fee_structure_item",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/allocations/targets",
+    "name": "allocation_targets",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/allocations/generate",
+    "name": "generate_fee_allocations",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/work-queue",
+    "name": "finance_work_queue",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/receipts/search",
+    "name": "finance_receipt_search",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/receipts/{receipt_no}/cancel",
+    "name": "finance_cancel_receipt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/receipts/{receipt_no}/reissue",
+    "name": "finance_reissue_receipt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/receipts/{receipt_no}/print",
+    "name": "finance_record_receipt_print",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/reports",
+    "name": "finance_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/concessions",
+    "name": "create_concession",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/concessions/{concession_id}/review",
+    "name": "review_concession",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/refunds",
+    "name": "create_refund",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/finance/refunds/{refund_id}/review",
+    "name": "review_refund",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/sessions/current",
+    "name": "current_cashier_session",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/sessions/open",
+    "name": "open_cashier_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/sessions/close",
+    "name": "close_cashier_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/collections",
+    "name": "collect_cashier_fee",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/day-close",
+    "name": "cashier_day_close",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/cashier/sessions/history",
+    "name": "cashier_session_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/summary",
+    "name": "hr_payroll_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/staff/search",
+    "name": "search_staff",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/staff",
+    "name": "upsert_staff_profile",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/staff/{staff_id}/salary",
+    "name": "upsert_salary_structure",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/runs",
+    "name": "list_payroll_runs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/runs/generate",
+    "name": "generate_payroll_run",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/runs/{run_id}",
+    "name": "get_payroll_run",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/runs/{run_id}/lock",
+    "name": "lock_payroll_run",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hr-payroll/payslips/{payslip_id}",
+    "name": "get_payslip",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/quota",
+    "name": "get_interview_quota",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/start",
+    "name": "start_interview",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/{interview_id}/message",
+    "name": "send_message",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/{interview_id}/end",
+    "name": "end_interview",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/history",
+    "name": "get_interview_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/readiness",
+    "name": "get_interview_readiness",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/{interview_id}",
+    "name": "get_interview_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/{interview_id}/speak",
+    "name": "speak_text",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/interview/{interview_id}/transcribe",
+    "name": "transcribe_audio",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/resume/upload",
+    "name": "upload_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/resume/{resume_id}/score",
+    "name": "score_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/resume/history",
+    "name": "get_resume_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/resume/latest",
+    "name": "get_latest_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/aptitude",
+    "name": "get_aptitude_questions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/company",
+    "name": "get_company_prep",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/experiences",
+    "name": "get_company_experiences",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/sql-problems",
+    "name": "get_sql_problems",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/sql-problems/{problem_id}",
+    "name": "get_sql_problem",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/aptitude/attempt",
+    "name": "log_aptitude_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/sql/attempt",
+    "name": "log_sql_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/progress/{student_id}",
+    "name": "get_student_progress",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placement-prep/sql/execute",
+    "name": "execute_sql_backend",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/templates",
+    "name": "list_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/templates",
+    "name": "create_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/buildings",
+    "name": "list_buildings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/buildings",
+    "name": "create_building",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/buildings/{hostel_id}/rooms",
+    "name": "list_rooms",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/buildings/{hostel_id}/rooms/bulk",
+    "name": "bulk_create_rooms",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/rooms/{room_id}/grid",
+    "name": "get_room_grid",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/rooms/{room_id}/beds/{bed_id}/toggle-premium",
+    "name": "toggle_premium",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/rooms/{room_id}/beds/{bed_id}/status",
+    "name": "set_bed_status",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/available",
+    "name": "get_available_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/buildings/{hostel_id}/floors",
+    "name": "get_hostel_floors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/beds/lock",
+    "name": "lock_bed",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/beds/confirm",
+    "name": "confirm_booking",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/my-allocation",
+    "name": "get_my_allocation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/gatepasses/apply",
+    "name": "apply_gatepass",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/gatepasses/my",
+    "name": "my_gatepasses",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/gatepasses/pending",
+    "name": "pending_gatepasses",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/gatepasses/{gatepass_id}/review",
+    "name": "review_gatepass",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/hostel/reconcile-admissions",
+    "name": "reconcile_admissions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hostel/warden/dashboard",
+    "name": "warden_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/library/search",
+    "name": "search_books",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/library/books/{book_id}",
+    "name": "get_book_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/library/books",
+    "name": "add_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/books/{book_id}",
+    "name": "update_book",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/library/books/{book_id}/copies",
+    "name": "add_copies",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/checkout",
+    "name": "checkout_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/return",
+    "name": "return_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/renew",
+    "name": "renew_checkout",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/kiosk/scan",
+    "name": "kiosk_scan",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/reserve",
+    "name": "reserve_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/my-account",
+    "name": "get_my_account",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/library/fines/{fine_id}/pay",
+    "name": "pay_fine",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/library/dashboard",
+    "name": "librarian_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/career/cover-letter",
+    "name": "generate_cover_letter",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/jd-analyze",
+    "name": "analyze_job_description",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/cold-email",
+    "name": "draft_cold_email",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/skill-gap",
+    "name": "analyze_skill_gap",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/hr-questions",
+    "name": "generate_hr_questions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/dsa-recommend",
+    "name": "recommend_dsa_problems",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/career-paths",
+    "name": "explore_career_paths",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/career/company-intel",
+    "name": "get_company_intel",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/career/resume/templates",
+    "name": "get_resume_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/upload",
+    "name": "upload_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/",
+    "name": "list_resumes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/primary",
+    "name": "get_primary_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/{resume_id}/primary",
+    "name": "set_primary_resume",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/{resume_id}",
+    "name": "delete_resume",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/resume-vault/{resume_id}/download",
+    "name": "download_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/naac/summary/{college_id}",
+    "name": "get_naac_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/naac/evidence/{college_id}/{criterion_id}",
+    "name": "get_naac_evidence",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/nba/attainment/{department_id}",
+    "name": "get_nba_matrix",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/nba/success-rate/{college_id}",
+    "name": "get_nba_success_rate",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/nba/faculty-cadre/{college_id}",
+    "name": "get_nba_faculty_cadre",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/nep/status/{college_id}",
+    "name": "get_nep_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/calculate/course/{course_id}",
+    "name": "trigger_course_calculation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/calculate/department/{department_id}",
+    "name": "trigger_department_calculation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/surveys",
+    "name": "create_survey_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/surveys/{college_id}",
+    "name": "list_surveys",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/placements",
+    "name": "create_placement_record",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/placements/{college_id}",
+    "name": "list_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/reports/generate",
+    "name": "generate_accreditation_report",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/reports/nirf-preview/{college_id}",
+    "name": "get_nirf_preview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/accreditation/reports/status/{job_id}",
+    "name": "get_report_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/validation/health-check",
+    "name": "validation_health_check",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/validation/qlm",
+    "name": "update_qlm",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/validation/qlm/copy-from-year",
+    "name": "copy_qlm",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/validation/threshold",
+    "name": "update_threshold",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/ami/context-map",
+    "name": "get_admin_ami_context_map",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/ami/query",
+    "name": "query_admin_ami",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/ami/action-preview",
+    "name": "preview_admin_ami_action",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/reports/faculty-research",
+    "name": "get_faculty_research_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/staff-profiles/pending",
+    "name": "get_pending_staff_profiles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/staff-profiles/{user_id}/review",
+    "name": "review_staff_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/registration-windows/{window_id}/unregistered",
+    "name": "get_unregistered_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/activity-reports",
+    "name": "get_activity_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/dashboard-stats",
+    "name": "get_admin_dashboard_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/reports/alumni-outcomes",
+    "name": "get_alumni_outcomes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/parents/link",
+    "name": "link_parent_student",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/parents/links",
+    "name": "list_parent_links",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/grievances",
+    "name": "admin_grievances",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/grievances/{grievance_id}/resolve",
+    "name": "resolve_grievance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/reports/retired-faculty-research",
+    "name": "get_retired_faculty_research_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/reports/consultancy",
+    "name": "get_consultancy_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/export",
+    "name": "export_college_data",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/college/settings",
+    "name": "get_college_settings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/college/settings",
+    "name": "update_college_settings",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/gdpr-forget/{target_user_id}",
+    "name": "anonymize_user_data",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/hostel/reconcile-admissions",
+    "name": "reconcile_admissions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/profile",
+    "name": "get_faculty_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/profile",
+    "name": "update_faculty_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/teachers",
+    "name": "list_department_teachers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/assignments",
+    "name": "list_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/assignments",
+    "name": "create_assignment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/assignments/{assignment_id}",
+    "name": "delete_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/students/{student_id}/progression",
+    "name": "get_student_progression",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/my-mentees",
+    "name": "get_my_mentees",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/activities",
+    "name": "request_activity_permission",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/activities/{activity_id}/close",
+    "name": "close_activity",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/out-of-campus",
+    "name": "request_out_of_campus",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/free-periods",
+    "name": "request_free_period",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/my-tasks",
+    "name": "get_my_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/my-evaluations",
+    "name": "get_faculty_evaluations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/question-papers",
+    "name": "faculty_submit_qp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/question-papers",
+    "name": "faculty_get_qps",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/study-materials",
+    "name": "faculty_submit_mat",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/study-materials",
+    "name": "faculty_get_mats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/at-risk-students",
+    "name": "get_at_risk_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/class-in-charge",
+    "name": "get_class_in_charges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/class-in-charge",
+    "name": "create_class_in_charge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/class-in-charge/{assignment_id}",
+    "name": "delete_class_in_charge",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/mentors",
+    "name": "get_mentor_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/mentors",
+    "name": "create_mentor_assignments",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/assignments/mentors/{assignment_id}",
+    "name": "deactivate_mentor_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/progression",
+    "name": "create_progression",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/progression/{prog_id}",
+    "name": "delete_progression",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/activity-permissions/{permission_id}/review",
+    "name": "review_activity_permission",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/tasks",
+    "name": "create_hod_task",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/tasks",
+    "name": "get_hod_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/tasks/{task_id}",
+    "name": "update_hod_task",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/meetings",
+    "name": "create_meeting",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/meetings",
+    "name": "get_hod_meetings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/meetings/{meeting_id}/minutes",
+    "name": "update_meeting_minutes",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/free-period-requests",
+    "name": "get_pending_free_period_requests",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/free-period-requests/{req_id}",
+    "name": "review_free_period_request",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/student/my-mentor",
+    "name": "get_my_mentor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/students/search",
+    "name": "search_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/students/{student_id}/profile",
+    "name": "student_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/drives",
+    "name": "get_eligible_student_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/placement-drives",
+    "name": "get_student_placement_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/drives/{drive_id}/apply",
+    "name": "apply_for_placement_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/drives/{drive_id}/withdraw",
+    "name": "withdraw_application",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/student/applications",
+    "name": "get_student_application_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/alumni-jobs",
+    "name": "browse_alumni_jobs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/alumni-mentors",
+    "name": "browse_available_mentors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/alumni-mentorship/request",
+    "name": "request_mentorship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/scholarships",
+    "name": "get_available_scholarships",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/scholarships/apply",
+    "name": "apply_scholarship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/scholarships/my-applications",
+    "name": "get_my_scholarship_apps",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/study-materials",
+    "name": "get_student_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/resume-profile",
+    "name": "get_resume_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/resume-profile",
+    "name": "update_resume_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/student/verify-social-profile",
+    "name": "verify_social_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/resume/generate-docx",
+    "name": "generate_resume_docx",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/resume/generate",
+    "name": "generate_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/students/ping-activity",
+    "name": "ping_student_activity",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/students/mood",
+    "name": "log_student_mood",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/settings",
+    "name": "get_college_settings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/settings",
+    "name": "update_college_settings",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/schedule",
+    "name": "create_exam_schedule",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/schedule",
+    "name": "get_exam_schedules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/schedule/{id}/publish",
+    "name": "toggle_exam_schedule_publish",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/schedule/{id}",
+    "name": "delete_exam_schedule",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/student/exam-schedule",
+    "name": "get_student_exam_schedule",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/dashboard-stats",
+    "name": "get_examcell_dashboard_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/hall-ticket",
+    "name": "get_hall_ticket",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/endterm",
+    "name": "save_endterm",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/endterm",
+    "name": "list_endterm",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/publish/{entry_id}",
+    "name": "publish_results",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/upload",
+    "name": "upload_examcell_file",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/academic-calendars",
+    "name": "create_academic_calendar",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/academic-calendars",
+    "name": "list_academic_calendars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/academic-calendar",
+    "name": "get_student_academic_calendar",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/academic-calendars/{calendar_id}/year-view",
+    "name": "get_calendar_year_view",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/subject-allocation",
+    "name": "create_subject_allocation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/subject-allocation",
+    "name": "list_subject_allocations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/subject-allocation/{assignment_id}",
+    "name": "delete_subject_allocation",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/my-subjects",
+    "name": "get_my_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/subjects",
+    "name": "get_student_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/permissions/summary",
+    "name": "permissions_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/roles",
+    "name": "list_roles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/roles",
+    "name": "create_role",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/roles/{role_id}",
+    "name": "update_role",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/roles/{role_id}",
+    "name": "delete_role",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/sections",
+    "name": "list_sections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/sections",
+    "name": "create_section",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/sections/{sec_id}",
+    "name": "update_section",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/sections/{sec_id}",
+    "name": "delete_section",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/retired-faculty/{user_id}/advisory-roles",
+    "name": "create_advisory_role",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/retired-faculty/available-lecturers",
+    "name": "get_available_retired_lecturers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/retired-faculty/{user_id}/entitlements",
+    "name": "get_retired_faculty_entitlements_admin",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/retired-faculty/{user_id}/entitlements",
+    "name": "update_retired_faculty_entitlements",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/dashboard",
+    "name": "get_retired_faculty_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/my-roles",
+    "name": "get_my_advisory_roles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/research",
+    "name": "get_my_research",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/research",
+    "name": "create_research",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/consultancy",
+    "name": "get_my_consultancy",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/consultancy",
+    "name": "create_consultancy",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/my-entitlements",
+    "name": "get_my_entitlements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/retired-faculty/events/{event_id}/register",
+    "name": "register_for_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/grievances",
+    "name": "submit_grievance",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/grievances/my",
+    "name": "my_grievances",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/feedback",
+    "name": "submit_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/feedback/history",
+    "name": "get_my_feedback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/feedback-summary",
+    "name": "get_faculty_feedback_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/feedback/detailed",
+    "name": "get_admin_feedback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/institution-profile",
+    "name": "get_institution_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/institution-profile",
+    "name": "update_institution_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/dashboard",
+    "name": "get_principal_dashboard_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/calendar-events",
+    "name": "add_principal_calendar_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/academic-performance",
+    "name": "get_academic_performance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/attendance-compliance",
+    "name": "get_attendance_compliance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/staff-profiles",
+    "name": "get_staff_profiles_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/grievances/{grievance_id}/reassign",
+    "name": "reassign_grievance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/infrastructure",
+    "name": "get_principal_infrastructure",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/extension-activities",
+    "name": "get_extension_activities",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/placement",
+    "name": "get_principal_placement",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/reports/annual",
+    "name": "get_annual_report_consolidation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/leave/pending",
+    "name": "get_pending_hod_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/activity-reports",
+    "name": "get_principal_activity_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/tasks",
+    "name": "get_all_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/meetings",
+    "name": "get_all_meetings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/experts/assign",
+    "name": "assign_expert",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/my-assignments",
+    "name": "get_my_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/dashboard",
+    "name": "get_expert_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/question-papers/{paper_id}/review",
+    "name": "review_question_paper",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/question-papers",
+    "name": "get_expert_question_papers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/evaluations",
+    "name": "submit_teaching_evaluation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/study-materials",
+    "name": "get_expert_study_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/expert/study-materials/{mat_id}/review",
+    "name": "review_study_material",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/experts",
+    "name": "get_admin_experts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni/batch-graduate",
+    "name": "batch_graduate",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni/pending",
+    "name": "get_pending_alumni",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni/{alumni_id}/verify",
+    "name": "verify_alumni_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni/contributions",
+    "name": "add_alumni_contribution",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni-events",
+    "name": "create_alumni_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni-events/{event_id}",
+    "name": "update_alumni_event",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni-events/{event_id}/attendance",
+    "name": "mark_event_attendance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/alumni/achievements/{achievement_id}/verify",
+    "name": "verify_achievement",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/profile",
+    "name": "get_my_alumni_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/profile",
+    "name": "update_alumni_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/directory",
+    "name": "browse_alumni_directory",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/job-postings",
+    "name": "post_job_referral",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/job-postings",
+    "name": "my_job_postings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/mentorship/{id}/respond",
+    "name": "respond_to_mentorship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/mentorship/{id}/session-note",
+    "name": "add_session_note",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/events",
+    "name": "list_alumni_events",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/events/{event_id}/register",
+    "name": "rsvp_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/achievements",
+    "name": "submit_achievement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/progression/higher-studies",
+    "name": "update_higher_studies",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/alumni/feedback",
+    "name": "submit_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placements/student",
+    "name": "student_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/placements/drives/{drive_id}/apply",
+    "name": "apply_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placements/drives/{drive_id}/ats-score",
+    "name": "get_ats_score",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placements",
+    "name": "create_placement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/placements",
+    "name": "list_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/applicants",
+    "name": "get_drive_applicants",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/shortlist",
+    "name": "bulk_shortlist",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/results",
+    "name": "append_round_result",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/drives/{drive_id}/select",
+    "name": "select_candidate",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/statistics",
+    "name": "get_tpo_statistics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/statistics/export",
+    "name": "export_tpo_statistics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/alumni-jobs",
+    "name": "get_tpo_alumni_jobs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/tpo/alumni-jobs/{job_id}/moderate",
+    "name": "moderate_alumni_job",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/hall-tickets/generate",
+    "name": "generate_hall_tickets",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registration-window",
+    "name": "create_registration_window",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registration-window",
+    "name": "get_registration_windows",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registration-window/{window_id}/toggle",
+    "name": "toggle_registration_window",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/student/register-courses",
+    "name": "register_courses",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/my-registrations",
+    "name": "get_my_registrations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registrations",
+    "name": "view_course_registrations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registrations/{reg_id}/approve",
+    "name": "approve_registration",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registrations/bulk-approve",
+    "name": "bulk_approve_registrations",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/registrations/manual-add",
+    "name": "manual_add_registration",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/teaching-records",
+    "name": "get_teaching_records",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/teaching-plan",
+    "name": "save_teaching_plan",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/class-record",
+    "name": "save_class_record",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/teaching-records/{record_id}",
+    "name": "update_teaching_record",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/timetable/slots",
+    "name": "upsert_timetable_slots",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/timetable",
+    "name": "get_department_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/timetable/generate",
+    "name": "generate_timetable",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/timetable/today",
+    "name": "get_faculty_today_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/timetable",
+    "name": "get_student_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/timetable/conflicts",
+    "name": "get_timetable_conflicts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/timetable/{department_id}/approve",
+    "name": "approve_timetable",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes",
+    "name": "list_quizzes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes",
+    "name": "create_quiz",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}",
+    "name": "get_quiz",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/live/{quiz_id}",
+    "name": "live_quiz_monitor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}",
+    "name": "update_quiz",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}",
+    "name": "delete_quiz",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}/publish",
+    "name": "publish_quiz",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}/extend-time",
+    "name": "extend_quiz_time",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}/end",
+    "name": "end_quiz_now",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/{quiz_id}/start",
+    "name": "start_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/quizzes/attempts/{attempt_id}/telemetry/violation",
+    "name": "log_telemetry_violation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/departments",
+    "name": "list_departments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/departments",
+    "name": "create_department",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/departments/{dept_id}",
+    "name": "update_department",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/departments/{dept_id}",
+    "name": "delete_department",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/{user_id}/permissions",
+    "name": "get_user_permissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/{user_id}/permissions",
+    "name": "set_user_permissions",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/{user_id}/permissions",
+    "name": "patch_user_permissions",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/users",
+    "name": "list_users",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "name": "get_user",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/users",
+    "name": "create_user",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "name": "update_user",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/users/{user_id}",
+    "name": "delete_user",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/bulk-import",
+    "name": "bulk_import_users",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/{user_id}/reset-password",
+    "name": "reset_user_password",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/users/export",
+    "name": "export_users",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children",
+    "name": "get_parent_children",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/academics",
+    "name": "parent_child_academics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/attendance",
+    "name": "parent_child_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/timetable",
+    "name": "parent_child_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/subjects",
+    "name": "parent_child_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/exam-schedule",
+    "name": "parent_child_exam_schedule",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/leaves",
+    "name": "parent_child_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/faculty-contacts",
+    "name": "parent_child_faculty",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/mentor",
+    "name": "parent_child_mentor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/progress-report",
+    "name": "parent_progress_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/notification-preferences",
+    "name": "update_notification_prefs",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/ward-info",
+    "name": "get_ward_info",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/attendance",
+    "name": "get_ward_attendance_generic",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/scholarships",
+    "name": "get_ward_scholarships",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/placements",
+    "name": "get_ward_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/grades",
+    "name": "get_ward_grades",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/health/",
+    "name": "health",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/health/ready",
+    "name": "readiness",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/health/db",
+    "name": "health_db",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/health/gpu",
+    "name": "health_gpu",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/health/test-sentry",
+    "name": "test_sentry",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/leave/apply",
+    "name": "apply_leave",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/leave/{leave_id}/cancel",
+    "name": "cancel_leave",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/leave/my",
+    "name": "get_my_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/leave/pending",
+    "name": "get_pending_faculty_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/leave/student-pending",
+    "name": "get_pending_student_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/leave/{leave_id}/review",
+    "name": "review_leave_route",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/leave/{leave_id}/review-cancellation",
+    "name": "review_leave_cancellation_route",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/free-periods",
+    "name": "get_free_period_pool",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/free-periods/{slot_id}/assign",
+    "name": "assign_substitute_faculty",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/free-periods/{slot_id}/assign",
+    "name": "revert_substitute_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/attendance/today",
+    "name": "get_today_attendance_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/attendance/mark",
+    "name": "mark_attendance_batch",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/attendance",
+    "name": "get_student_consolidated_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/attendance/detail",
+    "name": "get_student_attendance_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/student/attendance/calendar",
+    "name": "get_student_attendance_calendar",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/attendance/defaulters",
+    "name": "get_attendance_defaulters",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/override-attendance",
+    "name": "override_student_attendance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/syllabus/{course_id}",
+    "name": "get_syllabus",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/syllabus/{course_id}",
+    "name": "upsert_syllabus",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/courses/{course_id}/parse-syllabus",
+    "name": "parse_syllabus_pdf",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/syllabus/topics-by-subject/{subject_code}",
+    "name": "get_topics_by_subject",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/syllabus/coverage",
+    "name": "get_hod_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/principal/syllabus/coverage",
+    "name": "get_principal_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-templates",
+    "name": "create_cia_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-templates",
+    "name": "list_cia_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-templates/{template_id}",
+    "name": "update_cia_template",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-templates/{template_id}",
+    "name": "delete_cia_template",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-config",
+    "name": "create_cia_config",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-config",
+    "name": "list_cia_configs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-config/{config_id}/enable-consolidation",
+    "name": "toggle_cia_consolidation",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/subjects/{subject_code}/cia-template",
+    "name": "get_subject_cia_template",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/faculty/cia-dashboard",
+    "name": "get_faculty_cia_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/cia-config-coverage",
+    "name": "get_cia_config_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/students",
+    "name": "get_students_for_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/entry/{assignment_id}/{exam_type}",
+    "name": "get_mark_entry",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/entry",
+    "name": "save_mark_entry",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/entry/{entry_id}/submit",
+    "name": "submit_marks",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/marks/entry/{entry_id}/review",
+    "name": "review_marks",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/examcell/marks/approved",
+    "name": "get_approved_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/marks/entry/upload",
+    "name": "upload_marks_file",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/student/cia-marks",
+    "name": "get_student_cia_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/parent/children/{student_id}/cia-marks",
+    "name": "parent_child_cia_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/hod/cia/status",
+    "name": "get_cia_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/ws/ticket",
+    "name": "create_ws_ticket",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/ws/stats",
+    "name": "ws_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/materials/{course_id}",
+    "name": "list_course_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/materials/{course_id}",
+    "name": "upload_course_material",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/materials/{material_id}",
+    "name": "delete_course_material",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/login",
+    "name": "login",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/register",
+    "name": "register",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/me",
+    "name": "get_me",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/logout",
+    "name": "logout",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/refresh",
+    "name": "refresh_access_token",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/logout/all",
+    "name": "logout_all",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/auth/heartbeat",
+    "name": "heartbeat",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/login/{provider}",
+    "name": "sso_login",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/sso/callback/{provider}",
+    "name": "sso_callback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/billing/checkout",
+    "name": "create_checkout_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/billing/webhook",
+    "name": "stripe_webhook",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/code/execute",
+    "name": "execute_code",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/code/review",
+    "name": "request_code_review",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/code/review_status/{task_id}",
+    "name": "get_review_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/code/coach",
+    "name": "request_code_coach",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/webhooks/whatsapp",
+    "name": "whatsapp_webhook",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/webhooks/whatsapp",
+    "name": "whatsapp_verify",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/webhooks/whatsapp/test",
+    "name": "whatsapp_test",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/bus/location",
+    "name": "bus_location_ping",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/bus/telemetry",
+    "name": "ais140_telemetry",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/bus/sos",
+    "name": "ais140_sos",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/bus/geofence",
+    "name": "bus_geofence_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/vending/transaction",
+    "name": "vending_transaction",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/iot/vending/health",
+    "name": "vending_health_ping",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/routes",
+    "name": "list_routes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/enroll",
+    "name": "enroll_in_route",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/my-enrollment",
+    "name": "my_enrollment",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/live/{route_id}",
+    "name": "get_live_position",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/status/{route_id}",
+    "name": "get_bus_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/pass",
+    "name": "get_bus_pass",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/history",
+    "name": "trip_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/devices",
+    "name": "register_device",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/devices",
+    "name": "list_devices",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/routes",
+    "name": "create_route",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/routes/{route_id}",
+    "name": "update_route",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/routes",
+    "name": "list_admin_routes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/assign-driver",
+    "name": "assign_driver",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/dashboard",
+    "name": "fleet_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/trips",
+    "name": "trip_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/start-trip",
+    "name": "start_trip",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/end-trip",
+    "name": "end_trip",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/clear-stop",
+    "name": "clear_stop",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/transport/scan-boarding",
+    "name": "scan_boarding",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/simulate/start",
+    "name": "simulate_start",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/simulate/advance",
+    "name": "simulate_advance",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/transport/simulate/end",
+    "name": "simulate_end",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/dashboard",
+    "name": "visitor_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/search",
+    "name": "search_visitors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/check-in",
+    "name": "check_in_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/{visit_id}/check-in",
+    "name": "check_in_pre_approved",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/check-out",
+    "name": "check_out_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/pre-approve",
+    "name": "pre_approve_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/{visit_id}/review",
+    "name": "review_visit",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/active",
+    "name": "get_active_visitors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/pending",
+    "name": "get_pending_visits",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/pre-approved",
+    "name": "get_pre_approved_visits",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/my-expected",
+    "name": "get_my_expected",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/visitors/log",
+    "name": "get_visit_log",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications",
+    "name": "get_notifications",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/{notification_id}/read",
+    "name": "mark_read",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/read-all",
+    "name": "mark_all_read",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/subscribe",
+    "name": "subscribe_push",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/notifications/unsubscribe",
+    "name": "unsubscribe_push",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/audit/logs",
+    "name": "get_audit_logs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/audit/export",
+    "name": "export_audit_logs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/status",
+    "name": "get_pre_enroll_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/request-otp",
+    "name": "request_otp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/verify-otp",
+    "name": "verify_otp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/available",
+    "name": "get_available_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/buildings/{hostel_id}/floors",
+    "name": "get_hostel_floors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/rooms/{room_id}/grid",
+    "name": "get_room_grid",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/beds/lock",
+    "name": "lock_bed",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/beds/confirm",
+    "name": "confirm_booking",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/pre-enroll/hostel/my-allocation",
+    "name": "get_my_allocation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/college/modules",
+    "name": "get_modules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/college/modules/{module_name}/enable",
+    "name": "enable_module",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/college/modules/{module_name}/visible",
+    "name": "set_module_visibility",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/buildings",
+    "name": "get_campus_buildings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/events",
+    "name": "get_campus_events",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/events",
+    "name": "create_campus_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/events/{event_id}/approve",
+    "name": "approve_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/events/{event_id}/reject",
+    "name": "reject_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/layout",
+    "name": "get_campus_layout",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/layout",
+    "name": "update_campus_layout",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/buildings",
+    "name": "create_building",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/buildings/{building_id}",
+    "name": "update_building",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/campus/buildings/{building_id}",
+    "name": "delete_building",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/colleges",
+    "name": "get_nodal_colleges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/reports/attendance-compliance",
+    "name": "get_nodal_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/reports/results-status",
+    "name": "get_nodal_results",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/reports/cia-submission",
+    "name": "get_nodal_cia_submission",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/reports/faculty-profiles",
+    "name": "get_nodal_faculty_profiles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/reports/accreditation",
+    "name": "get_nodal_accreditation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/activity-reports",
+    "name": "get_nodal_activities",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/activity-reports/{report_id}/acknowledge",
+    "name": "ack_nodal_activity",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/circulars",
+    "name": "create_circular",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/circulars",
+    "name": "get_nodal_circulars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/submission-requirements",
+    "name": "create_sub_req",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/submissions/status",
+    "name": "get_nodal_subs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/experts/assign",
+    "name": "nodal_expert_assign",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/inspections",
+    "name": "nodal_inspection",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/nodal/inspections",
+    "name": "get_nodal_inspections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/circulars/{circular_id}/acknowledge",
+    "name": "admin_ack_circular",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/circulars",
+    "name": "admin_get_circulars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/submissions",
+    "name": "admin_get_submissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/submissions/{requirement_id}",
+    "name": "admin_submit_req",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/inspections",
+    "name": "admin_get_inspections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/admin/inspections/{inspection_id}/respond",
+    "name": "admin_respond_insp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/platform/overview",
+    "name": "platform_overview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges",
+    "name": "list_colleges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges",
+    "name": "create_college",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges/{college_id}",
+    "name": "update_college",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges/{college_id}",
+    "name": "deactivate_college",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges/{college_id}/stats",
+    "name": "college_deep_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges/{college_id}/modules",
+    "name": "get_college_modules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/colleges/{college_id}/modules",
+    "name": "toggle_modules",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels",
+    "name": "list_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels",
+    "name": "create_hostel",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels/{hostel_id}/floor-layout/{floor}",
+    "name": "get_floor_layout",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels/{hostel_id}/floor-layouts",
+    "name": "get_all_floor_layouts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels/{hostel_id}/floor-layout/{floor}",
+    "name": "save_floor_layout",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/hostels/{hostel_id}/rooms",
+    "name": "list_hostel_rooms",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/rooms",
+    "name": "create_room",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/rooms/{room_id}/beds",
+    "name": "get_room_beds",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/rooms/{room_id}/beds",
+    "name": "save_room_beds",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/room-templates",
+    "name": "list_room_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/room-templates",
+    "name": "create_room_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/rooms/{room_id}/apply-template/{template_id}",
+    "name": "apply_template_to_room",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/superadmin/billing/overview",
+    "name": "billing_overview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcard-decks",
+    "name": "get_flashcard_decks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcard-decks",
+    "name": "create_flashcard_deck",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcard-decks/{deck_id}/cards",
+    "name": "get_flashcards",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcard-decks/{deck_id}/cards",
+    "name": "create_flashcard",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcard-decks/{deck_id}/due",
+    "name": "get_due_flashcards",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcards/{card_id}/review",
+    "name": "submit_flashcard_review",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/flashcards-api/flashcards/generate-from-material",
+    "name": "generate_flashcards",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/v1/study-api/study-assistant/chat",
+    "name": "chat_with_study_assistant",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/simulate/verilog",
+    "name": "simulate_verilog",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/mous",
+    "name": "get_industry_mous",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/industry/mous",
+    "name": "create_industry_mou",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/curriculum-feedback",
+    "name": "create_curriculum_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/employer-feedback",
+    "name": "create_employer_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/projects",
+    "name": "get_industry_projects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/industry/projects",
+    "name": "create_industry_project",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/drives",
+    "name": "request_placement_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/industry/dashboard",
+    "name": "get_industry_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/industry/training-programs",
+    "name": "create_training_program",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/challenges",
+    "name": "get_challenges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/challenges/stats",
+    "name": "get_challenge_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/challenges/run",
+    "name": "run_challenge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/challenges/submit",
+    "name": "submit_challenge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/announcements",
+    "name": "list_announcements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/announcements",
+    "name": "create_announcement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/announcements/{announcement_id}",
+    "name": "delete_announcement",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/timetable",
+    "name": "get_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/timetable",
+    "name": "save_timetable_slot",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/timetable/{slot_id}",
+    "name": "delete_timetable_slot",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/marks/my-assignments",
+    "name": "my_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/marks/submissions",
+    "name": "list_submissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/dashboard/student",
+    "name": "student_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/dashboard/teacher",
+    "name": "teacher_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/dashboard/admin",
+    "name": "admin_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/dashboard/hod",
+    "name": "hod_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/dashboard/exam_cell",
+    "name": "exam_cell_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/insights/query",
+    "name": "query_insights",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/insights/pins",
+    "name": "create_pin",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/insights/pins",
+    "name": "get_pins",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/insights/pins/{pin_id}",
+    "name": "delete_pin",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/outcomes",
+    "name": "get_outcomes_matrix",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/co-po-mapping",
+    "name": "batch_upsert_matrix",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/ai-generate-outcomes",
+    "name": "ai_generate_outcomes",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/generate-assessment",
+    "name": "api_generate_assessment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/commit-assessment",
+    "name": "api_commit_assessment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/leaderboard",
+    "name": "get_leaderboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/analytics/student/{student_id}",
+    "name": "student_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/analytics/teacher/class-results",
+    "name": "class_results_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/analytics/teacher/quiz-results/{quiz_id}",
+    "name": "get_quiz_detailed_analytics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/results/semester/{student_id}",
+    "name": "get_semester_results",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/results/semester",
+    "name": "create_semester_result",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/attempts/{attempt_id}/answer",
+    "name": "submit_answer",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/attempts/{attempt_id}/violation",
+    "name": "log_violation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/attempts/{attempt_id}/submit",
+    "name": "submit_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/attempts/{attempt_id}/result",
+    "name": "get_attempt_result",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/attempts",
+    "name": "list_attempts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/companies",
+    "name": "get_companies",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/companies",
+    "name": "create_company",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives",
+    "name": "get_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives",
+    "name": "create_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}",
+    "name": "update_drive",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/applicants",
+    "name": "get_applicants",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/shortlist",
+    "name": "shortlist_bulk",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/results",
+    "name": "log_result",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/select",
+    "name": "select_candidate",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/statistics",
+    "name": "get_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/restrictions",
+    "name": "get_restrictions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/restrictions/student/{student_id}",
+    "name": "get_student_restrictions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/restrictions",
+    "name": "add_restriction",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/tpo/restrictions/{restriction_id}",
+    "name": "remove_restriction",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/upload-students",
+    "name": "upload_students",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/preview-excel",
+    "name": "preview_excel",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/fees/due",
+    "name": "get_my_due_fees",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/fees/history",
+    "name": "get_payment_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/fees/create-order",
+    "name": "create_fee_order",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/fees/verify-payment",
+    "name": "verify_fee_payment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/fees/receipts/verify/{token}",
+    "name": "verify_public_receipt",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/fees/receipts/{receipt_no}",
+    "name": "get_receipt",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/fees/invoices/bulk",
+    "name": "create_bulk_invoices",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/summary",
+    "name": "finance_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/students/search",
+    "name": "finance_student_search",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/students/{student_id}/ledger",
+    "name": "finance_student_ledger",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/invoices/{invoice_id}/cancel",
+    "name": "cancel_invoice",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/fee-structures",
+    "name": "list_fee_structures",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/fee-structures",
+    "name": "create_fee_structure",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/fee-structures/{structure_id}",
+    "name": "update_fee_structure",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/finance/fee-structures/{structure_id}",
+    "name": "delete_fee_structure",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/finance/fee-structures/{structure_id}/items",
+    "name": "add_fee_structure_item",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/allocations/targets",
+    "name": "allocation_targets",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/allocations/generate",
+    "name": "generate_fee_allocations",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/work-queue",
+    "name": "finance_work_queue",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/receipts/search",
+    "name": "finance_receipt_search",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/receipts/{receipt_no}/cancel",
+    "name": "finance_cancel_receipt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/receipts/{receipt_no}/reissue",
+    "name": "finance_reissue_receipt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/receipts/{receipt_no}/print",
+    "name": "finance_record_receipt_print",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/reports",
+    "name": "finance_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/finance/concessions",
+    "name": "create_concession",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/concessions/{concession_id}/review",
+    "name": "review_concession",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/finance/refunds",
+    "name": "create_refund",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/finance/refunds/{refund_id}/review",
+    "name": "review_refund",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/cashier/sessions/current",
+    "name": "current_cashier_session",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/cashier/sessions/open",
+    "name": "open_cashier_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/cashier/sessions/close",
+    "name": "close_cashier_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/cashier/collections",
+    "name": "collect_cashier_fee",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/cashier/day-close",
+    "name": "cashier_day_close",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/cashier/sessions/history",
+    "name": "cashier_session_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/summary",
+    "name": "hr_payroll_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/staff/search",
+    "name": "search_staff",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/staff",
+    "name": "upsert_staff_profile",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/staff/{staff_id}/salary",
+    "name": "upsert_salary_structure",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/runs",
+    "name": "list_payroll_runs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/runs/generate",
+    "name": "generate_payroll_run",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/runs/{run_id}",
+    "name": "get_payroll_run",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/runs/{run_id}/lock",
+    "name": "lock_payroll_run",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hr-payroll/payslips/{payslip_id}",
+    "name": "get_payslip",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/interview/quota",
+    "name": "get_interview_quota",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/interview/start",
+    "name": "start_interview",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/interview/{interview_id}/message",
+    "name": "send_message",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/interview/{interview_id}/end",
+    "name": "end_interview",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/interview/history",
+    "name": "get_interview_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/interview/readiness",
+    "name": "get_interview_readiness",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/interview/{interview_id}",
+    "name": "get_interview_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/interview/{interview_id}/speak",
+    "name": "speak_text",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/interview/{interview_id}/transcribe",
+    "name": "transcribe_audio",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/resume/upload",
+    "name": "upload_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/resume/{resume_id}/score",
+    "name": "score_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/resume/history",
+    "name": "get_resume_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/resume/latest",
+    "name": "get_latest_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/aptitude",
+    "name": "get_aptitude_questions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/company",
+    "name": "get_company_prep",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/experiences",
+    "name": "get_company_experiences",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/sql-problems",
+    "name": "get_sql_problems",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/sql-problems/{problem_id}",
+    "name": "get_sql_problem",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/aptitude/attempt",
+    "name": "log_aptitude_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/sql/attempt",
+    "name": "log_sql_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/progress/{student_id}",
+    "name": "get_student_progress",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placement-prep/sql/execute",
+    "name": "execute_sql_backend",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/templates",
+    "name": "list_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/templates",
+    "name": "create_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/buildings",
+    "name": "list_buildings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/buildings",
+    "name": "create_building",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/buildings/{hostel_id}/rooms",
+    "name": "list_rooms",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/buildings/{hostel_id}/rooms/bulk",
+    "name": "bulk_create_rooms",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/rooms/{room_id}/grid",
+    "name": "get_room_grid",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/rooms/{room_id}/beds/{bed_id}/toggle-premium",
+    "name": "toggle_premium",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/hostel/rooms/{room_id}/beds/{bed_id}/status",
+    "name": "set_bed_status",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/hostel/available",
+    "name": "get_available_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/buildings/{hostel_id}/floors",
+    "name": "get_hostel_floors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/beds/lock",
+    "name": "lock_bed",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/beds/confirm",
+    "name": "confirm_booking",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/my-allocation",
+    "name": "get_my_allocation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/gatepasses/apply",
+    "name": "apply_gatepass",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/gatepasses/my",
+    "name": "my_gatepasses",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/gatepasses/pending",
+    "name": "pending_gatepasses",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hostel/gatepasses/{gatepass_id}/review",
+    "name": "review_gatepass",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/hostel/reconcile-admissions",
+    "name": "reconcile_admissions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hostel/warden/dashboard",
+    "name": "warden_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/library/search",
+    "name": "search_books",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/library/books/{book_id}",
+    "name": "get_book_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/library/books",
+    "name": "add_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/books/{book_id}",
+    "name": "update_book",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/library/books/{book_id}/copies",
+    "name": "add_copies",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/checkout",
+    "name": "checkout_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/return",
+    "name": "return_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/renew",
+    "name": "renew_checkout",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/kiosk/scan",
+    "name": "kiosk_scan",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/reserve",
+    "name": "reserve_book",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/my-account",
+    "name": "get_my_account",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/library/fines/{fine_id}/pay",
+    "name": "pay_fine",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/library/dashboard",
+    "name": "librarian_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/career/cover-letter",
+    "name": "generate_cover_letter",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/jd-analyze",
+    "name": "analyze_job_description",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/cold-email",
+    "name": "draft_cold_email",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/skill-gap",
+    "name": "analyze_skill_gap",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/hr-questions",
+    "name": "generate_hr_questions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/dsa-recommend",
+    "name": "recommend_dsa_problems",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/career-paths",
+    "name": "explore_career_paths",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/career/company-intel",
+    "name": "get_company_intel",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/career/resume/templates",
+    "name": "get_resume_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/upload",
+    "name": "upload_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/",
+    "name": "list_resumes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/primary",
+    "name": "get_primary_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/{resume_id}/primary",
+    "name": "set_primary_resume",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/{resume_id}",
+    "name": "delete_resume",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/resume-vault/{resume_id}/download",
+    "name": "download_resume",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/naac/summary/{college_id}",
+    "name": "get_naac_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/naac/evidence/{college_id}/{criterion_id}",
+    "name": "get_naac_evidence",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/nba/attainment/{department_id}",
+    "name": "get_nba_matrix",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/nba/success-rate/{college_id}",
+    "name": "get_nba_success_rate",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/nba/faculty-cadre/{college_id}",
+    "name": "get_nba_faculty_cadre",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/nep/status/{college_id}",
+    "name": "get_nep_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/calculate/course/{course_id}",
+    "name": "trigger_course_calculation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/accreditation/calculate/department/{department_id}",
+    "name": "trigger_department_calculation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/accreditation/surveys",
+    "name": "create_survey_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/accreditation/surveys/{college_id}",
+    "name": "list_surveys",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/placements",
+    "name": "create_placement_record",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/accreditation/placements/{college_id}",
+    "name": "list_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/reports/generate",
+    "name": "generate_accreditation_report",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/accreditation/reports/nirf-preview/{college_id}",
+    "name": "get_nirf_preview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/accreditation/reports/status/{job_id}",
+    "name": "get_report_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/validation/health-check",
+    "name": "validation_health_check",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/validation/qlm",
+    "name": "update_qlm",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/validation/qlm/copy-from-year",
+    "name": "copy_qlm",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/validation/threshold",
+    "name": "update_threshold",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/ami/context-map",
+    "name": "get_admin_ami_context_map",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/ami/query",
+    "name": "query_admin_ami",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/ami/action-preview",
+    "name": "preview_admin_ami_action",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/reports/faculty-research",
+    "name": "get_faculty_research_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/staff-profiles/pending",
+    "name": "get_pending_staff_profiles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/staff-profiles/{user_id}/review",
+    "name": "review_staff_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/registration-windows/{window_id}/unregistered",
+    "name": "get_unregistered_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/activity-reports",
+    "name": "get_activity_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/dashboard-stats",
+    "name": "get_admin_dashboard_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/reports/alumni-outcomes",
+    "name": "get_alumni_outcomes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/parents/link",
+    "name": "link_parent_student",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/parents/links",
+    "name": "list_parent_links",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/grievances",
+    "name": "admin_grievances",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/grievances/{grievance_id}/resolve",
+    "name": "resolve_grievance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/reports/retired-faculty-research",
+    "name": "get_retired_faculty_research_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/reports/consultancy",
+    "name": "get_consultancy_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/export",
+    "name": "export_college_data",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/college/settings",
+    "name": "get_college_settings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/college/settings",
+    "name": "update_college_settings",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/gdpr-forget/{target_user_id}",
+    "name": "anonymize_user_data",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/admin/hostel/reconcile-admissions",
+    "name": "reconcile_admissions",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/profile",
+    "name": "get_faculty_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/profile",
+    "name": "update_faculty_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/faculty/teachers",
+    "name": "list_department_teachers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/assignments",
+    "name": "list_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/assignments",
+    "name": "create_assignment",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/assignments/{assignment_id}",
+    "name": "delete_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/faculty/students/{student_id}/progression",
+    "name": "get_student_progression",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/my-mentees",
+    "name": "get_my_mentees",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/activities",
+    "name": "request_activity_permission",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/activities/{activity_id}/close",
+    "name": "close_activity",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/out-of-campus",
+    "name": "request_out_of_campus",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/free-periods",
+    "name": "request_free_period",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/my-tasks",
+    "name": "get_my_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/my-evaluations",
+    "name": "get_faculty_evaluations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/question-papers",
+    "name": "faculty_submit_qp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/question-papers",
+    "name": "faculty_get_qps",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/study-materials",
+    "name": "faculty_submit_mat",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/study-materials",
+    "name": "faculty_get_mats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/at-risk-students",
+    "name": "get_at_risk_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/class-in-charge",
+    "name": "get_class_in_charges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/class-in-charge",
+    "name": "create_class_in_charge",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/class-in-charge/{assignment_id}",
+    "name": "delete_class_in_charge",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/mentors",
+    "name": "get_mentor_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/mentors",
+    "name": "create_mentor_assignments",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/assignments/mentors/{assignment_id}",
+    "name": "deactivate_mentor_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/hod/progression",
+    "name": "create_progression",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/progression/{prog_id}",
+    "name": "delete_progression",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/hod/activity-permissions/{permission_id}/review",
+    "name": "review_activity_permission",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/tasks",
+    "name": "create_hod_task",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/tasks",
+    "name": "get_hod_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/tasks/{task_id}",
+    "name": "update_hod_task",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/meetings",
+    "name": "create_meeting",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/meetings",
+    "name": "get_hod_meetings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/meetings/{meeting_id}/minutes",
+    "name": "update_meeting_minutes",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/free-period-requests",
+    "name": "get_pending_free_period_requests",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/free-period-requests/{req_id}",
+    "name": "review_free_period_request",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/student/my-mentor",
+    "name": "get_my_mentor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/students/search",
+    "name": "search_students",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/students/{student_id}/profile",
+    "name": "student_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/drives",
+    "name": "get_eligible_student_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/placement-drives",
+    "name": "get_student_placement_drives",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/drives/{drive_id}/apply",
+    "name": "apply_for_placement_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/drives/{drive_id}/withdraw",
+    "name": "withdraw_application",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/student/applications",
+    "name": "get_student_application_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/alumni-jobs",
+    "name": "browse_alumni_jobs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/alumni-mentors",
+    "name": "browse_available_mentors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/alumni-mentorship/request",
+    "name": "request_mentorship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/scholarships",
+    "name": "get_available_scholarships",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/scholarships/apply",
+    "name": "apply_scholarship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/scholarships/my-applications",
+    "name": "get_my_scholarship_apps",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/study-materials",
+    "name": "get_student_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/resume-profile",
+    "name": "get_resume_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/resume-profile",
+    "name": "update_resume_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/student/verify-social-profile",
+    "name": "verify_social_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/resume/generate-docx",
+    "name": "generate_resume_docx",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/resume/generate",
+    "name": "generate_resume",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/students/ping-activity",
+    "name": "ping_student_activity",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/students/mood",
+    "name": "log_student_mood",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/settings",
+    "name": "get_college_settings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/settings",
+    "name": "update_college_settings",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/schedule",
+    "name": "create_exam_schedule",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/schedule",
+    "name": "get_exam_schedules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/schedule/{id}/publish",
+    "name": "toggle_exam_schedule_publish",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/schedule/{id}",
+    "name": "delete_exam_schedule",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/student/exam-schedule",
+    "name": "get_student_exam_schedule",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/dashboard-stats",
+    "name": "get_examcell_dashboard_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/hall-ticket",
+    "name": "get_hall_ticket",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/endterm",
+    "name": "save_endterm",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/endterm",
+    "name": "list_endterm",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/publish/{entry_id}",
+    "name": "publish_results",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/upload",
+    "name": "upload_examcell_file",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/academic-calendars",
+    "name": "create_academic_calendar",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/academic-calendars",
+    "name": "list_academic_calendars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/academic-calendar",
+    "name": "get_student_academic_calendar",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/academic-calendars/{calendar_id}/year-view",
+    "name": "get_calendar_year_view",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/subject-allocation",
+    "name": "create_subject_allocation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/hod/subject-allocation",
+    "name": "list_subject_allocations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/subject-allocation/{assignment_id}",
+    "name": "delete_subject_allocation",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/faculty/my-subjects",
+    "name": "get_my_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/subjects",
+    "name": "get_student_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/permissions/summary",
+    "name": "permissions_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/roles",
+    "name": "list_roles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/roles",
+    "name": "create_role",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/roles/{role_id}",
+    "name": "update_role",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/roles/{role_id}",
+    "name": "delete_role",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/sections",
+    "name": "list_sections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/sections",
+    "name": "create_section",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/sections/{sec_id}",
+    "name": "update_section",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/sections/{sec_id}",
+    "name": "delete_section",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/admin/retired-faculty/{user_id}/advisory-roles",
+    "name": "create_advisory_role",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/retired-faculty/available-lecturers",
+    "name": "get_available_retired_lecturers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/retired-faculty/{user_id}/entitlements",
+    "name": "get_retired_faculty_entitlements_admin",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/retired-faculty/{user_id}/entitlements",
+    "name": "update_retired_faculty_entitlements",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/dashboard",
+    "name": "get_retired_faculty_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/my-roles",
+    "name": "get_my_advisory_roles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/research",
+    "name": "get_my_research",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/research",
+    "name": "create_research",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/consultancy",
+    "name": "get_my_consultancy",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/consultancy",
+    "name": "create_consultancy",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/my-entitlements",
+    "name": "get_my_entitlements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/retired-faculty/events/{event_id}/register",
+    "name": "register_for_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/grievances",
+    "name": "submit_grievance",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/grievances/my",
+    "name": "my_grievances",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/feedback",
+    "name": "submit_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/feedback/history",
+    "name": "get_my_feedback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/feedback-summary",
+    "name": "get_faculty_feedback_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/feedback/detailed",
+    "name": "get_admin_feedback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/institution-profile",
+    "name": "get_institution_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/institution-profile",
+    "name": "update_institution_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/principal/dashboard",
+    "name": "get_principal_dashboard_summary",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/calendar-events",
+    "name": "add_principal_calendar_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/academic-performance",
+    "name": "get_academic_performance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/attendance-compliance",
+    "name": "get_attendance_compliance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/staff-profiles",
+    "name": "get_staff_profiles_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/grievances/{grievance_id}/reassign",
+    "name": "reassign_grievance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/principal/infrastructure",
+    "name": "get_principal_infrastructure",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/extension-activities",
+    "name": "get_extension_activities",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/placement",
+    "name": "get_principal_placement",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/reports/annual",
+    "name": "get_annual_report_consolidation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/leave/pending",
+    "name": "get_pending_hod_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/activity-reports",
+    "name": "get_principal_activity_reports",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/tasks",
+    "name": "get_all_tasks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/meetings",
+    "name": "get_all_meetings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/experts/assign",
+    "name": "assign_expert",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/expert/my-assignments",
+    "name": "get_my_assignments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/expert/dashboard",
+    "name": "get_expert_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/expert/question-papers/{paper_id}/review",
+    "name": "review_question_paper",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/expert/question-papers",
+    "name": "get_expert_question_papers",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/expert/evaluations",
+    "name": "submit_teaching_evaluation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/expert/study-materials",
+    "name": "get_expert_study_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/expert/study-materials/{mat_id}/review",
+    "name": "review_study_material",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/experts",
+    "name": "get_admin_experts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni/batch-graduate",
+    "name": "batch_graduate",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni/pending",
+    "name": "get_pending_alumni",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni/{alumni_id}/verify",
+    "name": "verify_alumni_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni/contributions",
+    "name": "add_alumni_contribution",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni-events",
+    "name": "create_alumni_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni-events/{event_id}",
+    "name": "update_alumni_event",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni-events/{event_id}/attendance",
+    "name": "mark_event_attendance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/alumni/achievements/{achievement_id}/verify",
+    "name": "verify_achievement",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/alumni/profile",
+    "name": "get_my_alumni_profile",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/alumni/profile",
+    "name": "update_alumni_profile",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/alumni/directory",
+    "name": "browse_alumni_directory",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/alumni/job-postings",
+    "name": "post_job_referral",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/alumni/job-postings",
+    "name": "my_job_postings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/alumni/mentorship/{id}/respond",
+    "name": "respond_to_mentorship",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/alumni/mentorship/{id}/session-note",
+    "name": "add_session_note",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/alumni/events",
+    "name": "list_alumni_events",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/alumni/events/{event_id}/register",
+    "name": "rsvp_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/alumni/achievements",
+    "name": "submit_achievement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/alumni/progression/higher-studies",
+    "name": "update_higher_studies",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/alumni/feedback",
+    "name": "submit_feedback",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placements/student",
+    "name": "student_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/placements/drives/{drive_id}/apply",
+    "name": "apply_drive",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placements/drives/{drive_id}/ats-score",
+    "name": "get_ats_score",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placements",
+    "name": "create_placement",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/placements",
+    "name": "list_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/applicants",
+    "name": "get_drive_applicants",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/shortlist",
+    "name": "bulk_shortlist",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/results",
+    "name": "append_round_result",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/drives/{drive_id}/select",
+    "name": "select_candidate",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/tpo/statistics",
+    "name": "get_tpo_statistics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/statistics/export",
+    "name": "export_tpo_statistics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/alumni-jobs",
+    "name": "get_tpo_alumni_jobs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/tpo/alumni-jobs/{job_id}/moderate",
+    "name": "moderate_alumni_job",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/hall-tickets/generate",
+    "name": "generate_hall_tickets",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/registration-window",
+    "name": "create_registration_window",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/examcell/registration-window",
+    "name": "get_registration_windows",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/registration-window/{window_id}/toggle",
+    "name": "toggle_registration_window",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/student/register-courses",
+    "name": "register_courses",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/my-registrations",
+    "name": "get_my_registrations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/registrations",
+    "name": "view_course_registrations",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/examcell/registrations/{reg_id}/approve",
+    "name": "approve_registration",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/registrations/bulk-approve",
+    "name": "bulk_approve_registrations",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/registrations/manual-add",
+    "name": "manual_add_registration",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/teaching-records",
+    "name": "get_teaching_records",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/teaching-plan",
+    "name": "save_teaching_plan",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/class-record",
+    "name": "save_class_record",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/teaching-records/{record_id}",
+    "name": "update_teaching_record",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/hod/timetable/slots",
+    "name": "upsert_timetable_slots",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/timetable",
+    "name": "get_department_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/timetable/generate",
+    "name": "generate_timetable",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/faculty/timetable/today",
+    "name": "get_faculty_today_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/timetable",
+    "name": "get_student_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/timetable/conflicts",
+    "name": "get_timetable_conflicts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/timetable/{department_id}/approve",
+    "name": "approve_timetable",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/quizzes",
+    "name": "list_quizzes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/quizzes",
+    "name": "create_quiz",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}",
+    "name": "get_quiz",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/quizzes/live/{quiz_id}",
+    "name": "live_quiz_monitor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}",
+    "name": "update_quiz",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}",
+    "name": "delete_quiz",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}/publish",
+    "name": "publish_quiz",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}/extend-time",
+    "name": "extend_quiz_time",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}/end",
+    "name": "end_quiz_now",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/quizzes/{quiz_id}/start",
+    "name": "start_attempt",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/quizzes/attempts/{attempt_id}/telemetry/violation",
+    "name": "log_telemetry_violation",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/departments",
+    "name": "list_departments",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/departments",
+    "name": "create_department",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/departments/{dept_id}",
+    "name": "update_department",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/departments/{dept_id}",
+    "name": "delete_department",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/admin/users/{user_id}/permissions",
+    "name": "get_user_permissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/users/{user_id}/permissions",
+    "name": "set_user_permissions",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/users/{user_id}/permissions",
+    "name": "patch_user_permissions",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/users",
+    "name": "list_users",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/users/{user_id}",
+    "name": "get_user",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/users",
+    "name": "create_user",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/users/{user_id}",
+    "name": "update_user",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/users/{user_id}",
+    "name": "delete_user",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/admin/users/bulk-import",
+    "name": "bulk_import_users",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/users/{user_id}/reset-password",
+    "name": "reset_user_password",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/users/export",
+    "name": "export_users",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children",
+    "name": "get_parent_children",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/academics",
+    "name": "parent_child_academics",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/attendance",
+    "name": "parent_child_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/timetable",
+    "name": "parent_child_timetable",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/subjects",
+    "name": "parent_child_subjects",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/exam-schedule",
+    "name": "parent_child_exam_schedule",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/leaves",
+    "name": "parent_child_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/faculty-contacts",
+    "name": "parent_child_faculty",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/mentor",
+    "name": "parent_child_mentor",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/progress-report",
+    "name": "parent_progress_report",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/notification-preferences",
+    "name": "update_notification_prefs",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/parent/ward-info",
+    "name": "get_ward_info",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/attendance",
+    "name": "get_ward_attendance_generic",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/scholarships",
+    "name": "get_ward_scholarships",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/placements",
+    "name": "get_ward_placements",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/grades",
+    "name": "get_ward_grades",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/health/",
+    "name": "health",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/health/ready",
+    "name": "readiness",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/health/db",
+    "name": "health_db",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/health/gpu",
+    "name": "health_gpu",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/health/test-sentry",
+    "name": "test_sentry",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/leave/apply",
+    "name": "apply_leave",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/leave/{leave_id}/cancel",
+    "name": "cancel_leave",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/leave/my",
+    "name": "get_my_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/leave/pending",
+    "name": "get_pending_faculty_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/leave/student-pending",
+    "name": "get_pending_student_leaves",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/leave/{leave_id}/review",
+    "name": "review_leave_route",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/leave/{leave_id}/review-cancellation",
+    "name": "review_leave_cancellation_route",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/hod/free-periods",
+    "name": "get_free_period_pool",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/free-periods/{slot_id}/assign",
+    "name": "assign_substitute_faculty",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/free-periods/{slot_id}/assign",
+    "name": "revert_substitute_assignment",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/faculty/attendance/today",
+    "name": "get_today_attendance_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/attendance/mark",
+    "name": "mark_attendance_batch",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/attendance",
+    "name": "get_student_consolidated_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/attendance/detail",
+    "name": "get_student_attendance_detail",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/student/attendance/calendar",
+    "name": "get_student_attendance_calendar",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/attendance/defaulters",
+    "name": "get_attendance_defaulters",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/override-attendance",
+    "name": "override_student_attendance",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/syllabus/{course_id}",
+    "name": "get_syllabus",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/syllabus/{course_id}",
+    "name": "upsert_syllabus",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/courses/{course_id}/parse-syllabus",
+    "name": "parse_syllabus_pdf",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/syllabus/topics-by-subject/{subject_code}",
+    "name": "get_topics_by_subject",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/syllabus/coverage",
+    "name": "get_hod_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/principal/syllabus/coverage",
+    "name": "get_principal_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-templates",
+    "name": "create_cia_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-templates",
+    "name": "list_cia_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-templates/{template_id}",
+    "name": "update_cia_template",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-templates/{template_id}",
+    "name": "delete_cia_template",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-config",
+    "name": "create_cia_config",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-config",
+    "name": "list_cia_configs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-config/{config_id}/enable-consolidation",
+    "name": "toggle_cia_consolidation",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/subjects/{subject_code}/cia-template",
+    "name": "get_subject_cia_template",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/faculty/cia-dashboard",
+    "name": "get_faculty_cia_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/cia-config-coverage",
+    "name": "get_cia_config_coverage",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/marks/students",
+    "name": "get_students_for_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/marks/entry/{assignment_id}/{exam_type}",
+    "name": "get_mark_entry",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/marks/entry",
+    "name": "save_mark_entry",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/marks/entry/{entry_id}/submit",
+    "name": "submit_marks",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/hod/marks/entry/{entry_id}/review",
+    "name": "review_marks",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/examcell/marks/approved",
+    "name": "get_approved_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/marks/entry/upload",
+    "name": "upload_marks_file",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/student/cia-marks",
+    "name": "get_student_cia_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/parent/children/{student_id}/cia-marks",
+    "name": "parent_child_cia_marks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/hod/cia/status",
+    "name": "get_cia_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/ws/ticket",
+    "name": "create_ws_ticket",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/ws/stats",
+    "name": "ws_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/materials/{course_id}",
+    "name": "list_course_materials",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/materials/{course_id}",
+    "name": "upload_course_material",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/materials/{material_id}",
+    "name": "delete_course_material",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/auth/login",
+    "name": "login",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/auth/register",
+    "name": "register",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/auth/me",
+    "name": "get_me",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/auth/logout",
+    "name": "logout",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/auth/refresh",
+    "name": "refresh_access_token",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/auth/logout/all",
+    "name": "logout_all",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/auth/heartbeat",
+    "name": "heartbeat",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/sso/login/{provider}",
+    "name": "sso_login",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/sso/callback/{provider}",
+    "name": "sso_callback",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/billing/checkout",
+    "name": "create_checkout_session",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/billing/webhook",
+    "name": "stripe_webhook",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/code/execute",
+    "name": "execute_code",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/code/review",
+    "name": "request_code_review",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/code/review_status/{task_id}",
+    "name": "get_review_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/code/coach",
+    "name": "request_code_coach",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/webhooks/whatsapp",
+    "name": "whatsapp_webhook",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/webhooks/whatsapp",
+    "name": "whatsapp_verify",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/webhooks/whatsapp/test",
+    "name": "whatsapp_test",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/bus/location",
+    "name": "bus_location_ping",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/bus/telemetry",
+    "name": "ais140_telemetry",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/bus/sos",
+    "name": "ais140_sos",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/bus/geofence",
+    "name": "bus_geofence_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/vending/transaction",
+    "name": "vending_transaction",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/iot/vending/health",
+    "name": "vending_health_ping",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/transport/routes",
+    "name": "list_routes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/transport/enroll",
+    "name": "enroll_in_route",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/transport/my-enrollment",
+    "name": "my_enrollment",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/transport/live/{route_id}",
+    "name": "get_live_position",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/transport/status/{route_id}",
+    "name": "get_bus_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/transport/pass",
+    "name": "get_bus_pass",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/transport/history",
+    "name": "trip_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/devices",
+    "name": "register_device",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/devices",
+    "name": "list_devices",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/routes",
+    "name": "create_route",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/routes/{route_id}",
+    "name": "update_route",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/routes",
+    "name": "list_admin_routes",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/assign-driver",
+    "name": "assign_driver",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/dashboard",
+    "name": "fleet_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/trips",
+    "name": "trip_history",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/start-trip",
+    "name": "start_trip",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/end-trip",
+    "name": "end_trip",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/clear-stop",
+    "name": "clear_stop",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/transport/scan-boarding",
+    "name": "scan_boarding",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/transport/simulate/start",
+    "name": "simulate_start",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/transport/simulate/advance",
+    "name": "simulate_advance",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/transport/simulate/end",
+    "name": "simulate_end",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/visitors/dashboard",
+    "name": "visitor_dashboard",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/search",
+    "name": "search_visitors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/check-in",
+    "name": "check_in_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/visitors/{visit_id}/check-in",
+    "name": "check_in_pre_approved",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/visitors/check-out",
+    "name": "check_out_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/visitors/pre-approve",
+    "name": "pre_approve_visitor",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/visitors/{visit_id}/review",
+    "name": "review_visit",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/visitors/active",
+    "name": "get_active_visitors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/pending",
+    "name": "get_pending_visits",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/pre-approved",
+    "name": "get_pre_approved_visits",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/my-expected",
+    "name": "get_my_expected",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/visitors/log",
+    "name": "get_visit_log",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/notifications",
+    "name": "get_notifications",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/notifications/{notification_id}/read",
+    "name": "mark_read",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/notifications/read-all",
+    "name": "mark_all_read",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/notifications/subscribe",
+    "name": "subscribe_push",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/notifications/unsubscribe",
+    "name": "unsubscribe_push",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/audit/logs",
+    "name": "get_audit_logs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/audit/export",
+    "name": "export_audit_logs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/status",
+    "name": "get_pre_enroll_status",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/request-otp",
+    "name": "request_otp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/verify-otp",
+    "name": "verify_otp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/available",
+    "name": "get_available_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/buildings/{hostel_id}/floors",
+    "name": "get_hostel_floors",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/rooms/{room_id}/grid",
+    "name": "get_room_grid",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/beds/lock",
+    "name": "lock_bed",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/beds/confirm",
+    "name": "confirm_booking",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/pre-enroll/hostel/my-allocation",
+    "name": "get_my_allocation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/college/modules",
+    "name": "get_modules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/college/modules/{module_name}/enable",
+    "name": "enable_module",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/college/modules/{module_name}/visible",
+    "name": "set_module_visibility",
+    "methods": [
+      "PATCH"
+    ]
+  },
+  {
+    "path": "/api/campus/buildings",
+    "name": "get_campus_buildings",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/campus/events",
+    "name": "get_campus_events",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/campus/events",
+    "name": "create_campus_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/campus/events/{event_id}/approve",
+    "name": "approve_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/campus/events/{event_id}/reject",
+    "name": "reject_event",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/campus/layout",
+    "name": "get_campus_layout",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/campus/layout",
+    "name": "update_campus_layout",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/campus/buildings",
+    "name": "create_building",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/campus/buildings/{building_id}",
+    "name": "update_building",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/campus/buildings/{building_id}",
+    "name": "delete_building",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/nodal/colleges",
+    "name": "get_nodal_colleges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/reports/attendance-compliance",
+    "name": "get_nodal_attendance",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/reports/results-status",
+    "name": "get_nodal_results",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/reports/cia-submission",
+    "name": "get_nodal_cia_submission",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/reports/faculty-profiles",
+    "name": "get_nodal_faculty_profiles",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/reports/accreditation",
+    "name": "get_nodal_accreditation",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/activity-reports",
+    "name": "get_nodal_activities",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/activity-reports/{report_id}/acknowledge",
+    "name": "ack_nodal_activity",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/nodal/circulars",
+    "name": "create_circular",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/nodal/circulars",
+    "name": "get_nodal_circulars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/submission-requirements",
+    "name": "create_sub_req",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/nodal/submissions/status",
+    "name": "get_nodal_subs",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/nodal/experts/assign",
+    "name": "nodal_expert_assign",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/nodal/inspections",
+    "name": "nodal_inspection",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/nodal/inspections",
+    "name": "get_nodal_inspections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/circulars/{circular_id}/acknowledge",
+    "name": "admin_ack_circular",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/circulars",
+    "name": "admin_get_circulars",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/submissions",
+    "name": "admin_get_submissions",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/submissions/{requirement_id}",
+    "name": "admin_submit_req",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/admin/inspections",
+    "name": "admin_get_inspections",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/admin/inspections/{inspection_id}/respond",
+    "name": "admin_respond_insp",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/platform/overview",
+    "name": "platform_overview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges",
+    "name": "list_colleges",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges",
+    "name": "create_college",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges/{college_id}",
+    "name": "update_college",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges/{college_id}",
+    "name": "deactivate_college",
+    "methods": [
+      "DELETE"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges/{college_id}/stats",
+    "name": "college_deep_stats",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges/{college_id}/modules",
+    "name": "get_college_modules",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/colleges/{college_id}/modules",
+    "name": "toggle_modules",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels",
+    "name": "list_hostels",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels",
+    "name": "create_hostel",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels/{hostel_id}/floor-layout/{floor}",
+    "name": "get_floor_layout",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels/{hostel_id}/floor-layouts",
+    "name": "get_all_floor_layouts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels/{hostel_id}/floor-layout/{floor}",
+    "name": "save_floor_layout",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "path": "/api/superadmin/hostels/{hostel_id}/rooms",
+    "name": "list_hostel_rooms",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/rooms",
+    "name": "create_room",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/rooms/{room_id}/beds",
+    "name": "get_room_beds",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/rooms/{room_id}/beds",
+    "name": "save_room_beds",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/room-templates",
+    "name": "list_room_templates",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/superadmin/room-templates",
+    "name": "create_room_template",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/rooms/{room_id}/apply-template/{template_id}",
+    "name": "apply_template_to_room",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/superadmin/billing/overview",
+    "name": "billing_overview",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcard-decks",
+    "name": "get_flashcard_decks",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcard-decks",
+    "name": "create_flashcard_deck",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcard-decks/{deck_id}/cards",
+    "name": "get_flashcards",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcard-decks/{deck_id}/cards",
+    "name": "create_flashcard",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcard-decks/{deck_id}/due",
+    "name": "get_due_flashcards",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcards/{card_id}/review",
+    "name": "submit_flashcard_review",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/flashcards-api/flashcards/generate-from-material",
+    "name": "generate_flashcards",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "path": "/api/study-api/study-assistant/chat",
+    "name": "chat_with_study_assistant",
+    "methods": [
+      "POST"
+    ]
+  }
+]

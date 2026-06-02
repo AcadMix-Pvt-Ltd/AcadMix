@@ -458,7 +458,12 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
   const [hasMicSignal, setHasMicSignal] = useState(false);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [hardwareError, setHardwareError] = useState('');
-  const [hasResume, setHasResume] = useState<boolean | null>(null); // null = loading
+  const [hasResume, setHasResume] = useState<boolean | null>(null);
+  const [vaultResumes, setVaultResumes] = useState<any[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState<string>('');
+  const [stagedFile, setStagedFile] = useState<File | null>(null);
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [showReplacePrompt, setShowReplacePrompt] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [showTroubleshooter, setShowTroubleshooter] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -468,17 +473,22 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
 
   // ── Resume presence check on mount ──
   useEffect(() => {
-    resumeVaultAPI.getPrimary()
+    resumeVaultAPI.list()
       .then(res => {
-        setHasResume(!!res?.data);
+        const resumes = res.data || [];
+        setVaultResumes(resumes);
+        if (resumes.length > 0) {
+          const primary = resumes.find((r: any) => r.is_primary) || resumes[0];
+          setSelectedResumeId(primary.id);
+          setHasResume(true);
+        } else {
+          setHasResume(false);
+        }
       })
-      .catch(() => {
-        setHasResume(false);
-      });
+      .catch(() => setHasResume(false));
   }, []);
 
-  // ── Inline resume upload handler ──
-  const handleResumeUpload = async (file: File) => {
+  const handleResumeUpload = (file: File) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       toast.error('Please upload a PDF file.');
@@ -488,18 +498,61 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
       toast.error('File size must be under 5 MB.');
       return;
     }
+    setStagedFile(file);
+    setShowSavePrompt(true);
+  };
+
+  const processUpload = async (saveToVault: boolean) => {
+    if (!stagedFile) return;
     setIsUploading(true);
+    setShowSavePrompt(false);
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      await resumeVaultAPI.upload(formData);
+      formData.append('file', stagedFile);
+      
+      let newResumeId = '';
+      if (saveToVault) {
+        const res = await resumeVaultAPI.upload(formData);
+        newResumeId = res.data.id;
+        toast.success('Resume saved to vault and ready!');
+        const listRes = await resumeVaultAPI.list();
+        setVaultResumes(listRes.data || []);
+      } else {
+        const res = await resumeAPI.upload(formData);
+        newResumeId = res.data.id;
+        toast.success('Resume ready for this interview!');
+        // Add temporary resume to the list for visual feedback
+        setVaultResumes(prev => [
+          { id: newResumeId, filename: `${stagedFile.name} (Just for now)`, is_primary: false },
+          ...prev
+        ]);
+      }
+      
+      setSelectedResumeId(newResumeId);
       setHasResume(true);
-      toast.success('Resume uploaded to vault! You\'re good to go.');
+      setStagedFile(null);
     } catch (err: any) {
-      toast.error(err?.response?.data?.detail || 'Resume upload failed. Please try again.');
+      if (saveToVault && err?.response?.data?.detail?.includes('Maximum 5')) {
+        setShowReplacePrompt(true);
+      } else {
+        toast.error(err?.response?.data?.detail || 'Resume upload failed. Please try again.');
+        setStagedFile(null);
+      }
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const replaceResume = async (oldResumeId: string) => {
+     setIsUploading(true);
+     setShowReplacePrompt(false);
+     try {
+       await resumeVaultAPI.remove(oldResumeId);
+       await processUpload(true);
+     } catch(err) {
+       toast.error('Failed to replace resume');
+       setIsUploading(false);
+     }
   };
 
   const isMountedRef = useRef(true);
@@ -697,7 +750,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
     }
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     // 2. Fire Start with the confirmed hardware IDs
-    onStart({ micId: selectedAudioId, videoId: selectedVideoId });
+    onStart({ micId: selectedAudioId, videoId: selectedVideoId, resumeId: selectedResumeId });
   };
 
   return (
@@ -804,48 +857,46 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
 
                 {/* Resume Check */}
                 <div className="pt-2">
-                  {hasResume === false && (
-                    <div
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={onDrop}
-                      className="p-5 rounded-2xl border border-indigo-200 bg-indigo-50 backdrop-blur-md transition-colors hover:bg-indigo-100"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
-                          <FileText size={22} weight="duotone" className="text-indigo-500" />
+                  <div className="p-5 rounded-2xl border border-slate-200/60 bg-white shadow-sm transition-colors hover:border-indigo-300">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${hasResume ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                           <FileText size={22} weight={hasResume ? 'fill' : 'duotone'} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-extrabold text-sm text-indigo-700 mb-1">Resume Required</h4>
-                          <p className="text-xs text-indigo-600/80 mb-3 leading-relaxed">
-                            Upload a PDF for Ami to personalize your interview.
-                          </p>
-                          <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploading}
-                            className="inline-flex items-center gap-2 px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow-[0_4px_15px_rgba(79,70,229,0.2)] transition-all disabled:opacity-60 w-full justify-center"
-                          >
-                            <Upload size={14} weight="bold" />
-                            {isUploading ? 'Uploading...' : 'Upload Resume (PDF)'}
-                          </button>
+                           <h4 className="font-extrabold text-sm text-slate-800 mb-1">Resume Selection</h4>
+                           {hasResume === null ? (
+                             <p className="text-xs text-slate-500 flex items-center gap-2"><span className="w-3 h-3 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"/> Checking vault...</p>
+                           ) : vaultResumes.length > 0 ? (
+                             <select
+                               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:outline-none focus:ring-0 focus:border-indigo-500 cursor-pointer appearance-none pr-8"
+                               value={selectedResumeId}
+                               onChange={(e) => setSelectedResumeId(e.target.value)}
+                               style={{ backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`, backgroundPosition: `right 0.5rem center`, backgroundRepeat: `no-repeat`, backgroundSize: `1.5em 1.5em` }}
+                             >
+                               {vaultResumes.map((r: any) => (
+                                 <option key={r.id} value={r.id}>{r.filename} {r.is_primary ? '(Primary)' : ''}</option>
+                               ))}
+                             </select>
+                           ) : (
+                             <p className="text-xs text-rose-500 font-bold">No resume found. Required to start.</p>
+                           )}
                         </div>
                       </div>
-                    </div>
-                  )}
-                  {hasResume === null && (
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center gap-3">
-                      <div className="animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full shrink-0" />
-                      <span className="text-xs font-bold text-slate-500">Checking resume vault...</span>
-                    </div>
-                  )}
-                  {hasResume === true && (
-                    <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center gap-3">
-                      <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
-                        <FileText size={16} weight="fill" className="text-indigo-600" />
+                      
+                      <div className="flex gap-2" onDragOver={onDrop} onDrop={onDrop}>
+                        <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={onFileChange} />
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isUploading}
+                          className="flex-1 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-all disabled:opacity-60 justify-center"
+                        >
+                          <Upload size={14} weight="bold" />
+                          {isUploading ? 'Processing...' : vaultResumes.length > 0 ? 'Upload New PDF' : 'Upload Resume (PDF)'}
+                        </button>
                       </div>
-                      <span className="text-xs font-bold text-indigo-700">Resume detected — Ami will personalize your interview</span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 
@@ -876,6 +927,48 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
           </div>
         </div>
       </motion.div>
+
+      {/* Save Prompt Modal */}
+      <AnimatePresence>
+        {showSavePrompt && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => { setShowSavePrompt(false); setStagedFile(null); }} />
+            <motion.div initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+                 <FileText size={24} weight="duotone" />
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-800 mb-2">Save to Resume Vault?</h3>
+              <p className="text-sm text-slate-500 mb-6">Would you like to save this resume to your vault for future one-click applications?</p>
+              <div className="flex gap-3">
+                <button onClick={() => processUpload(false)} disabled={isUploading} className="flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">No, just for now</button>
+                <button onClick={() => processUpload(true)} disabled={isUploading} className="flex-1 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-600 text-white hover:bg-indigo-700 shadow-[0_4px_12px_rgba(79,70,229,0.25)] transition-colors">Yes, save it</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Replace Prompt Modal */}
+      <AnimatePresence>
+        {showReplacePrompt && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => { setShowReplacePrompt(false); setStagedFile(null); }} />
+            <motion.div initial={{opacity:0, scale:0.95}} animate={{opacity:1, scale:1}} exit={{opacity:0, scale:0.95}} className="relative bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+              <h3 className="text-lg font-extrabold text-slate-800 mb-2">Resume Vault is Full</h3>
+              <p className="text-sm text-slate-500 mb-5">You have reached the maximum limit of 5 resumes. Please select one to replace.</p>
+              <div className="space-y-2 mb-6 max-h-60 overflow-y-auto custom-scrollbar">
+                {vaultResumes.map((r: any) => (
+                  <button key={r.id} onClick={() => replaceResume(r.id)} disabled={isUploading} className="w-full text-left p-3 rounded-xl border border-slate-200 hover:border-red-300 hover:bg-red-50 flex justify-between items-center group transition-colors">
+                    <span className="text-sm font-bold text-slate-700 group-hover:text-red-700 truncate">{r.filename}</span>
+                    <span className="text-xs text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Replace</span>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => { setShowReplacePrompt(false); setStagedFile(null); }} className="w-full py-2.5 rounded-xl font-bold text-sm bg-slate-100 text-slate-700 hover:bg-slate-200">Cancel</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -1002,43 +1095,79 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         try { (currentAudioRef.current as any).stop(); } catch {}
         currentAudioRef.current = null;
       }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
 
       setIsSpeaking(true);
       isSpeakingRef.current = true; // Sync directly
-      setOrbState('speaking');
+      setOrbState('thinking'); // Show thinking while generating audio
       stopListening();
+
+      const runFallback = () => {
+        console.log('[TTS] Using browser fallback TTS');
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+          
+          utterance.onstart = () => {
+            setOrbState('speaking');
+            setShowTranscript(true);
+            if (onAudioStart) onAudioStart();
+          };
+          utterance.onend = () => {
+            setIsSpeaking(false);
+            isSpeakingRef.current = false;
+            resolve();
+          };
+          utterance.onerror = (e) => {
+            console.error('[TTS] Browser TTS error', e);
+            setOrbState('speaking');
+            setShowTranscript(true);
+            if (onAudioStart) onAudioStart();
+            setIsSpeaking(false);
+            isSpeakingRef.current = false;
+            resolve();
+          };
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setOrbState('speaking');
+          setShowTranscript(true);
+          if (onAudioStart) onAudioStart();
+          setIsSpeaking(false);
+          isSpeakingRef.current = false;
+          resolve();
+        }
+      };
 
       try {
         const activeId = interviewIdRef.current;
         console.log('[TTS] speakText called, activeId:', activeId, 'text length:', text?.length);
         if (!activeId) {
-          console.warn('[TTS] No activeId — skipping speak. interviewIdRef is null.');
-          setIsSpeaking(false);
-          isSpeakingRef.current = false;
-          resolve();
+          console.warn('[TTS] No activeId — skipping API speak.');
+          runFallback();
           return;
         }
 
         // Call our premium ElevenLabs audio streaming endpoint
         const response = await interviewAPI.speak(activeId, text);
         const audioBlob = response.data; // Response type: blob
-        console.log('[TTS] Response received:', {
-          type: audioBlob?.constructor?.name,
-          size: audioBlob?.size,
-          blobType: audioBlob?.type,
-        });
 
         if (!audioBlob || audioBlob.size === 0) {
           console.error('[TTS] Empty or invalid audio blob');
-          setIsSpeaking(false);
-          isSpeakingRef.current = false;
-          if (onAudioStart) onAudioStart();
-          resolve();
+          runFallback();
           return;
         }
+
         // Play TTS using Web Audio API for maximum reliability and bypass of DOM restrictions
         if (!audioContextRef.current) {
-          audioContextRef.current = new window.AudioContext();
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          audioContextRef.current = new AudioContextClass();
+        }
+        // Chrome auto-suspends new AudioContexts — must resume before playback
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
         }
         
         const arrayBuffer = await audioBlob.arrayBuffer();
@@ -1049,7 +1178,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         source.connect(audioContextRef.current.destination);
         
         // Store the source so we can stop it if interrupted
-        currentAudioRef.current = source as any; // Type override since we changed from HTMLAudioElement
+        currentAudioRef.current = source as any; 
 
         let resolved = false;
         const safeResolve = () => {
@@ -1072,16 +1201,14 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         };
 
         // start playback
+        setOrbState('speaking');
         source.start(0);
         console.log('[TTS] source.start() executed successfully');
         setShowTranscript(true);
         if (onAudioStart) onAudioStart();
       } catch (err: any) {
         console.error('[TTS] speakText error:', err);
-        setIsSpeaking(false);
-        isSpeakingRef.current = false;
-        if (onAudioStart) onAudioStart();
-        resolve();
+        runFallback();
       }
     });
   }, [stopListening]);
@@ -1404,6 +1531,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         target_role: sessionConfig.target_role,
         target_company: sessionConfig.target_company,
         difficulty: sessionConfig.difficulty,
+        resume_id: hardwareIds.resumeId,
       });
 
       setInterviewId(data.interview_id);

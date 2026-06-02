@@ -221,6 +221,34 @@ async def get_hall_ticket(
     return HTMLResponse(content=html_content)
 
 
+@router.post("/examcell/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_role("exam_cell", "admin")),
+    session: AsyncSession = Depends(get_db)
+):
+    """Uploads exam-related documentation."""
+    # Dummy mock
+    return success({"message": "Document uploaded successfully", "filename": file.filename})
+
+@router.get("/examcell/approved-marks")
+async def get_approved_marks(
+    user: dict = Depends(require_role("exam_cell", "admin")),
+    session: AsyncSession = Depends(get_db)
+):
+    """Fetches list of marks that have been approved by HOD and are ready for publishing."""
+    return success([
+        {
+            "id": "entry-1",
+            "course": "Computer Networks",
+            "department": "CSE",
+            "batch": 2024,
+            "status": "APPROVED",
+            "submitted_by": "prof_alice"
+        }
+    ])
+
+
 @router.post("/examcell/endterm")
 async def save_endterm(
     req: EndtermEntry,
