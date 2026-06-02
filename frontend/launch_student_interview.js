@@ -76,8 +76,33 @@ const puppeteer = require('puppeteer');
     console.log('⏳ Waiting for Green Room Lobby to load...');
     await new Promise(res => setTimeout(res, 3000));
     console.log('Current URL:', page.url());
-    console.log('🎉 Successfully landed on the AI Mock Interview Session Setup!');
-    console.log('Leaving browser open. You can now use your camera, microphone, and start the interview session.');
+    console.log('🎉 Landed on the AI Mock Interview Session Setup Lobby.');
+
+    console.log('⏳ Waiting for "Start Interview" button to become enabled...');
+    // Poll/wait for the Start Interview button to be active
+    await page.waitForFunction(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const startBtn = buttons.find(b => b.textContent.includes('Start Interview'));
+      return startBtn && !startBtn.disabled;
+    }, { timeout: 20000 });
+
+    console.log('🖱️ Clicking "Start Interview" to launch mock interview session...');
+    await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const startBtn = buttons.find(b => b.textContent.includes('Start Interview'));
+      if (startBtn) {
+        startBtn.click();
+        console.log('Clicked Start Interview button successfully.');
+      } else {
+        console.error('Could not find Start Interview button.');
+      }
+    });
+
+    console.log('⏳ Waiting for the active interview room/session to initialize...');
+    await new Promise(res => setTimeout(res, 5000));
+    console.log('Current URL:', page.url());
+    console.log('🎉 Successfully launched the AI Mock Interview Session!');
+    console.log('Leaving browser open. You are now inside the active mock interview room. Happy interviewing!');
 
   } catch (error) {
     console.error('❌ An error occurred during automation:', error);
