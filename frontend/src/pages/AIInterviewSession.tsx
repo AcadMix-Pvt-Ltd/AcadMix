@@ -1087,12 +1087,16 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
   }, []);
 
-  // ── Speech Synthesis (AI speaks via ElevenLabs backend) ──
-  const speakText = useCallback((text, onAudioStart) => {
+  // ── Speech Synthesis (AI speaks via Cartesia TTS backend) ──
+  const speakText = useCallback((text: string, onAudioStart?: () => void) => {
     return new Promise<void>(async (resolve) => {
       // 1. Interrupt any active playback
       if (currentAudioRef.current) {
-        try { (currentAudioRef.current as any).stop(); } catch {}
+        try {
+          const el = currentAudioRef.current as any;
+          if (el.pause) { el.pause(); el.src = ''; }
+          else if (el.stop) { el.stop(); }
+        } catch {}
         currentAudioRef.current = null;
       }
       if ('speechSynthesis' in window) {
@@ -1100,8 +1104,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       }
 
       setIsSpeaking(true);
-      isSpeakingRef.current = true; // Sync directly
-      setOrbState('thinking'); // Show thinking while generating audio
+      isSpeakingRef.current = true;
+      setOrbState('thinking');
       stopListening();
 
       const runFallback = () => {
@@ -1150,9 +1154,11 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           return;
         }
 
-        // Call our premium ElevenLabs audio streaming endpoint
+        // Call Cartesia TTS endpoint via backend
         const response = await interviewAPI.speak(activeId, text);
-        const audioBlob = response.data; // Response type: blob
+        const audioBlob = response.data;
+
+        console.log('[TTS] Got response, blob type:', audioBlob?.constructor?.name, 'size:', audioBlob?.size);
 
         if (!audioBlob || audioBlob.size === 0) {
           console.error('[TTS] Empty or invalid audio blob');
@@ -1160,25 +1166,13 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           return;
         }
 
-        // Play TTS using Web Audio API for maximum reliability and bypass of DOM restrictions
-        if (!audioContextRef.current) {
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-          audioContextRef.current = new AudioContextClass();
-        }
-        // Chrome auto-suspends new AudioContexts — must resume before playback
-        if (audioContextRef.current.state === 'suspended') {
-          await audioContextRef.current.resume();
-        }
-        
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-        
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContextRef.current.destination);
-        
-        // Store the source so we can stop it if interrupted
-        currentAudioRef.current = source as any; 
+        // Play TTS using HTMLAudioElement — the most reliable way to play MP3 in browsers
+        const blobUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(blobUrl);
+        audio.volume = 1.0;
+
+        // Store the audio element so we can stop it if interrupted
+        currentAudioRef.current = audio as any;
 
         let resolved = false;
         const safeResolve = () => {
@@ -1187,25 +1181,42 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             currentAudioRef.current = null;
+            URL.revokeObjectURL(blobUrl);
             resolve();
           }
         };
 
-        const fallbackMs = Math.max(3000, text.length * 80 + 2000);
-        const timeoutId = setTimeout(safeResolve, fallbackMs);
+        // Safety timeout in case onended never fires
+        const fallbackMs = Math.max(5000, text.length * 100 + 3000);
+        const timeoutId = setTimeout(() => {
+          console.warn('[TTS] Safety timeout fired after', fallbackMs, 'ms');
+          safeResolve();
+        }, fallbackMs);
 
-        source.onended = () => {
+        audio.onended = () => {
           console.log('[TTS] Audio playback ended naturally');
           clearTimeout(timeoutId);
           safeResolve();
         };
 
-        // start playback
-        setOrbState('speaking');
-        source.start(0);
-        console.log('[TTS] source.start() executed successfully');
-        setShowTranscript(true);
-        if (onAudioStart) onAudioStart();
+        audio.onerror = (e) => {
+          console.error('[TTS] HTMLAudioElement error:', e);
+          clearTimeout(timeoutId);
+          URL.revokeObjectURL(blobUrl);
+          currentAudioRef.current = null;
+          runFallback();
+        };
+
+        audio.onplay = () => {
+          console.log('[TTS] Audio playback started');
+          setOrbState('speaking');
+          setShowTranscript(true);
+          if (onAudioStart) onAudioStart();
+        };
+
+        // Start playback
+        await audio.play();
+        console.log('[TTS] audio.play() resolved successfully');
       } catch (err: any) {
         console.error('[TTS] speakText error:', err);
         runFallback();
