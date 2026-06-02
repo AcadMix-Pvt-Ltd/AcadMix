@@ -60,18 +60,36 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 
       // Data collection & Smoothing
       if (state === 'listening' && analyserRef?.current) {
+         let energy = 0;
          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
          analyserRef.current.getByteFrequencyData(dataArray);
          
+         let sum = 0;
+         // Calculate overall energy from the lower half of frequencies (human voice range)
+         const maxIndex = Math.floor(dataArray.length * 0.5);
+         for (let j = 0; j < maxIndex; j++) sum += dataArray[j];
+         
+         // Normalize and apply noise gate
+         let rawEnergy = (sum / maxIndex / 255);
+         rawEnergy = rawEnergy < 0.08 ? 0 : (rawEnergy - 0.08) / 0.92;
+         energy = Math.min(1.0, rawEnergy * 3.0); // Boosted 0->1
+
          for (let i = 0; i < NUM_POINTS; i++) {
-           const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.4)); // use lower 40% of frequencies
-           let val = dataArray[binIndex] / 255;
-           
-           // Noise floor gate: ignore ambient mic noise below 8% intensity
-           val = val < 0.08 ? 0 : (val - 0.08) / 0.92; // remap 0.08–1.0 → 0–1
-           
-           const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI); // 0 at edges, 1 in middle
-           targetData[i] = val * 70 * bell; // Max amplitude ~70px
+           const t = i / (NUM_POINTS - 1);
+           const bell = Math.sin(t * Math.PI);
+
+           // Multi-frequency flowing sine waves
+           const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
+           const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
+           const wave3 = Math.sin(time * 3.2 + t * Math.PI * 8 + 2.8) * 7;
+           const wave4 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
+           const wave5 = Math.sin(time * 4.0 + t * Math.PI * 10 + 4.1) * 4;
+
+           // Breathing + real mic energy modulation
+           const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
+           const amplitude = (0.15 + energy * 0.85) * breathe; // minimum 15% even in silence
+
+           targetData[i] = (wave1 + wave2 + wave3 + wave4 + wave5) * bell * amplitude;
          }
       } else if (state === 'speaking' || state === 'evaluating') {
          // Smooth Siri-style waves modulated by real audio energy
