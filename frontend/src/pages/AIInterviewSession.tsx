@@ -74,18 +74,32 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
            targetData[i] = val * 70 * bell; // Max amplitude ~70px
          }
       } else if (state === 'speaking' || state === 'evaluating') {
-         // Simulated speaking waveform
-         if (Math.floor(time * 30) % 4 === 0) {
-           for (let i = 0; i < NUM_POINTS; i++) {
-             const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
-             targetData[i] = Math.random() * 35 * bell;
-           }
+         // Smooth multi-frequency sinusoidal waves (Siri-style)
+         for (let i = 0; i < NUM_POINTS; i++) {
+           const t = i / (NUM_POINTS - 1); // normalized 0→1
+           const bell = Math.sin(t * Math.PI); // envelope: 0 at edges, 1 at center
+           
+           // 5 harmonics with different speeds/phases for organic motion
+           const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
+           const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
+           const wave3 = Math.sin(time * 3.2 + t * Math.PI * 8 + 2.8) * 7;
+           const wave4 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
+           const wave5 = Math.sin(time * 4.0 + t * Math.PI * 10 + 4.1) * 4;
+           
+           // Breathing modulation — slowly varies overall amplitude
+           const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
+           
+           targetData[i] = (wave1 + wave2 + wave3 + wave4 + wave5) * bell * breathe;
          }
       } else if (state === 'thinking') {
-         // Smooth undulating wave
+         // Gentle undulating wave — slower, subtler
          for (let i = 0; i < NUM_POINTS; i++) {
-           const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
-           targetData[i] = Math.sin(time * 2 + i * 0.1) * 12 * bell;
+           const t = i / (NUM_POINTS - 1);
+           const bell = Math.sin(t * Math.PI);
+           const wave1 = Math.sin(time * 1.5 + t * Math.PI * 3) * 8;
+           const wave2 = Math.sin(time * 2.2 + t * Math.PI * 5 + 1.0) * 5;
+           const breathe = 0.6 + 0.4 * Math.sin(time * 0.4);
+           targetData[i] = (wave1 + wave2) * bell * breathe;
          }
       } else {
          for (let i = 0; i < NUM_POINTS; i++) {
@@ -95,7 +109,7 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
 
       // Apply smoothing to transitions
       for (let i = 0; i < NUM_POINTS; i++) {
-        smoothedData[i] += (targetData[i] - smoothedData[i]) * 0.15;
+        smoothedData[i] += (targetData[i] - smoothedData[i]) * 0.12;
       }
 
       const orbColor1 = ORB_STATES[state]?.color1 || '#14b8a6';
