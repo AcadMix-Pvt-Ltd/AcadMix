@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { useTheme } from '../contexts/ThemeContext';
 import Avatar from 'boring-avatars';
+import { LiveKitRoom, useVoiceAssistant, BarVisualizer, RoomAudioRenderer, useLocalParticipant } from '@livekit/components-react';
+import '@livekit/components-styles';
 
 // ─── Orb State Colors ────────────────────────────────────────────────────────
 const ORB_STATES = {
@@ -494,7 +496,7 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
 };
 
 // ─── Hardware Setup Lobby ──────────────────────────────────────────────────────
-const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
+const HardwareSetupLobby = ({ sessionConfig, isStarting, onStart, onCancel }) => {
   const videoRef = useRef(null);
   const amplitudeBarRef = useRef(null);
   const [devices, setDevices] = useState({ video: [], audio: [] });
@@ -949,22 +951,23 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
               <div className="mt-auto pt-6 border-t border-slate-100">
                 <button
                   onClick={handleStartWrapper}
-                  disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
+                  disabled={isStarting || !permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
                   className={`group relative w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl font-extrabold text-sm transition-all duration-300 overflow-hidden ${
-                    permissionsGranted && hasMicSignal && hasResume === true
+                    permissionsGranted && hasMicSignal && hasResume === true && !isStarting
                       ? 'bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-[0_8px_30px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.55)] hover:scale-[1.02] active:scale-[0.98]'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  {permissionsGranted && hasMicSignal && hasResume === true && (
+                  {permissionsGranted && hasMicSignal && hasResume === true && !isStarting && (
                     <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   )}
-                  <Sparkle size={18} weight="fill" className={permissionsGranted && hasMicSignal && hasResume === true ? 'animate-pulse' : ''} />
-                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Awaiting permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
+                  {isStarting ? <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" /> : <Sparkle size={18} weight="fill" className={permissionsGranted && hasMicSignal && hasResume === true ? 'animate-pulse' : ''} />}
+                  {isStarting ? 'Starting Session...' : hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Awaiting permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
                 </button>
                 <button 
                   onClick={onCancel}
-                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-400 hover:text-slate-600 rounded-xl font-bold text-xs transition-all duration-200"
+                  disabled={isStarting}
+                  className="w-full mt-3 px-6 py-2.5 bg-transparent hover:bg-slate-50 text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold text-xs transition-all duration-200"
                 >
                   Cancel
                 </button>
@@ -1021,880 +1024,172 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
 
 // ─── Main Interview Session ──────────────────────────────────────────────────
 
-const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
-  // If viewing a past interview
-  const [viewMode, setViewMode] = useState(null);
 
-  // Interview state
-  const [phase, setPhase] = useState('setup'); // setup | active | ending | scorecard
-  const [orbState, setOrbState] = useState('idle');
-  const [interviewId, setInterviewId] = useState(null);
-  const [questionNumber, setQuestionNumber] = useState(0);
-  const [maxQuestions] = useState(10);
-  const [elapsed, setElapsed] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState('');
-  const [transcript, setTranscript] = useState('');
-  const [conversation, setConversation] = useState([]);
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showTranscript, setShowTranscript] = useState(false); // Gates TypewriterText — prevents text leak in thinking mode
-  const [feedback, setFeedback] = useState(null);
-  const [sessionMicId, setSessionMicId] = useState('');
-  const [sessionVideoId, setSessionVideoId] = useState('');
-  const sessionMicIdRef = useRef('');
-  const sessionVideoIdRef = useRef('');
-  const dragConstraintsRef = useRef(null);
+const ActiveLiveKitInterview = ({ interviewId, token, url, handleEndInterview }) => {
+  const { state, audioTrack } = useVoiceAssistant();
+  const localParticipant = useLocalParticipant();
+  const [showTranscript, setShowTranscript] = useState(false);
 
-  // Refs
-  const recognitionRef = useRef<any>(null);
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const silenceTimerRef = useRef<any>(null);
-  const timerRef = useRef<any>(null);
-  const transcriptRef = useRef('');
-  const prevDisplayedRef = useRef(''); // Tracks last full displayed text (final+interim) to detect real changes
-  const isSpeakingRef = useRef(false);
-  const isSubmittingRef = useRef(false);
-  const phaseRef = useRef('setup');
-  const interviewIdRef = useRef<any>(null); // Avoids stale closure in submitAnswer
-  const stopListeningAndTranscribeRef = useRef<(() => void) | null>(null);
-  
-  // Follow Up Timeout Refs
-  const followUpCountRef = useRef(0);
-  const idleTimerRef = useRef<any>(null);
-  const isMountedRef = useRef(true);
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-  
-  // Audio Web API Refs
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const ttsAnalyserRef = useRef<AnalyserNode | null>(null);
-  const ttsContextRef = useRef<AudioContext | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  let orbState = 'idle';
+  if (state === 'listening') orbState = 'listening';
+  if (state === 'speaking') orbState = 'speaking';
+  if (state === 'thinking') orbState = 'evaluating';
 
-  const { isDark } = useTheme();
-
-  // ── Audio Cleanup Helper ──
-  const cleanupAudio = useCallback(() => {
-    if (sourceNodeRef.current) {
-      sourceNodeRef.current.disconnect();
-      sourceNodeRef.current = null;
-    }
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.close().catch(() => {});
-      audioContextRef.current = null;
-    }
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => {
-        track.stop();
-      });
-      mediaStreamRef.current = null;
-    }
-  }, []);
-
-  // ── Load past interview if viewId ──
-  useEffect(() => {
-    if (sessionConfig?.viewId) {
-      interviewAPI.get(sessionConfig.viewId).then(res => {
-        setViewMode(res.data);
-        if (res.data.ai_feedback) {
-          setFeedback({ ...res.data.ai_feedback, overall_score: res.data.overall_score, scores: res.data.scores });
-          setPhase('scorecard');
-        }
-      }).catch(() => navigate('interview-warroom'));
-    }
-  }, [sessionConfig, navigate]);
-
-  // ── Timer ──
-  useEffect(() => {
-    if (phase === 'active') {
-      timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
-      return () => clearInterval(timerRef.current);
-    }
-  }, [phase]);
-
-  const formatTime = (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
-
-  // Keep refs synced
-  useEffect(() => { isSpeakingRef.current = isSpeaking; }, [isSpeaking]);
-  useEffect(() => { phaseRef.current = phase; }, [phase]);
-  useEffect(() => { interviewIdRef.current = interviewId; }, [interviewId]);
-
-  // ── Stop Listening ──
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-    }
-    setIsListening(false);
-    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-  }, []);
-
-  // ── Speech Synthesis (AI speaks via Cartesia TTS backend) ──
-  const speakText = useCallback((text: string, onAudioStart?: () => void) => {
-    return new Promise<void>(async (resolve) => {
-      // 1. Interrupt any active playback
-      if (currentAudioRef.current) {
-        try {
-          const el = currentAudioRef.current as any;
-          if (el.pause) { el.pause(); el.src = ''; }
-          else if (el.stop) { el.stop(); }
-        } catch {}
-        currentAudioRef.current = null;
-      }
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-
-      setIsSpeaking(true);
-      isSpeakingRef.current = true;
-      setOrbState('thinking');
-      stopListening();
-
-      const runFallback = () => {
-        console.log('[TTS] Using browser fallback TTS');
-        if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
-          
-          utterance.onstart = () => {
-            setOrbState('speaking');
-            setShowTranscript(true);
-            if (onAudioStart) onAudioStart();
-          };
-          utterance.onend = () => {
-            setIsSpeaking(false);
-            isSpeakingRef.current = false;
-            resolve();
-          };
-          utterance.onerror = (e) => {
-            console.error('[TTS] Browser TTS error', e);
-            setOrbState('speaking');
-            setShowTranscript(true);
-            if (onAudioStart) onAudioStart();
-            setIsSpeaking(false);
-            isSpeakingRef.current = false;
-            resolve();
-          };
-          window.speechSynthesis.speak(utterance);
-        } else {
-          setOrbState('speaking');
-          setShowTranscript(true);
-          if (onAudioStart) onAudioStart();
-          setIsSpeaking(false);
-          isSpeakingRef.current = false;
-          resolve();
-        }
-      };
-
-      try {
-        const activeId = interviewIdRef.current;
-        console.log('[TTS] speakText called, activeId:', activeId, 'text length:', text?.length);
-        if (!activeId) {
-          console.warn('[TTS] No activeId — skipping API speak.');
-          runFallback();
-          return;
-        }
-
-        // Call Cartesia TTS endpoint via backend
-        const response = await interviewAPI.speak(activeId, text);
-        const audioBlob = response.data;
-
-        console.log('[TTS] Got response, blob type:', audioBlob?.constructor?.name, 'size:', audioBlob?.size);
-
-        if (!audioBlob || audioBlob.size === 0) {
-          console.error('[TTS] Empty or invalid audio blob');
-          runFallback();
-          return;
-        }
-
-        // Play TTS using HTMLAudioElement routed through AudioContext for waveform sync
-        const blobUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(blobUrl);
-        audio.volume = 1.0;
-        audio.crossOrigin = 'anonymous';
-
-        // Route audio through AudioContext → AnalyserNode → speakers for waveform visualization
-        try {
-          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-          if (!ttsContextRef.current || ttsContextRef.current.state === 'closed') {
-            ttsContextRef.current = new AudioContextClass();
-          }
-          if (ttsContextRef.current.state === 'suspended') {
-            await ttsContextRef.current.resume();
-          }
-          const ttsSource = ttsContextRef.current.createMediaElementSource(audio);
-          const ttsAnalyser = ttsContextRef.current.createAnalyser();
-          ttsAnalyser.fftSize = 256;
-          ttsSource.connect(ttsAnalyser);
-          ttsAnalyser.connect(ttsContextRef.current.destination);
-          ttsAnalyserRef.current = ttsAnalyser;
-          console.log('[TTS] Audio routed through AnalyserNode for waveform sync');
-        } catch (analyserErr) {
-          console.warn('[TTS] Could not create analyser, playing without waveform sync:', analyserErr);
-        }
-
-        // Store the audio element so we can stop it if interrupted
-        currentAudioRef.current = audio as any;
-
-        let resolved = false;
-        const safeResolve = () => {
-          if (!resolved) {
-            resolved = true;
-            setIsSpeaking(false);
-            isSpeakingRef.current = false;
-            currentAudioRef.current = null;
-            ttsAnalyserRef.current = null;
-            URL.revokeObjectURL(blobUrl);
-            resolve();
-          }
-        };
-
-        // Safety timeout in case onended never fires
-        const fallbackMs = Math.max(5000, text.length * 100 + 3000);
-        const timeoutId = setTimeout(() => {
-          console.warn('[TTS] Safety timeout fired after', fallbackMs, 'ms');
-          safeResolve();
-        }, fallbackMs);
-
-        audio.onended = () => {
-          console.log('[TTS] Audio playback ended naturally');
-          clearTimeout(timeoutId);
-          safeResolve();
-        };
-
-        audio.onerror = (e) => {
-          console.error('[TTS] HTMLAudioElement error:', e);
-          clearTimeout(timeoutId);
-          URL.revokeObjectURL(blobUrl);
-          currentAudioRef.current = null;
-          ttsAnalyserRef.current = null;
-          runFallback();
-        };
-
-        let hasStarted = false;
-        audio.onplay = () => {
-          if (!hasStarted) {
-            hasStarted = true;
-            console.log('[TTS] Audio playback started');
-            setOrbState('speaking');
-            setShowTranscript(true);
-            if (onAudioStart) onAudioStart();
-          }
-        };
-
-        // Start playback
-        await audio.play();
-        console.log('[TTS] audio.play() resolved successfully');
-      } catch (err: any) {
-        console.error('[TTS] speakText error:', err);
-        runFallback();
-      }
-    });
-  }, [stopListening]);
-
-  // ── Speech Recognition & MediaRecorder (Student speaks) ──
-  const startListening = useCallback(async () => {
-   // 1. Acquire mic+camera stream if not already active
-    if (!mediaStreamRef.current || mediaStreamRef.current.getAudioTracks().every(t => t.readyState === 'ended')) {
-      // Clear stale stream ref if tracks are dead
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach(t => t.stop());
-        mediaStreamRef.current = null;
-      }
-
-      try {
-        const constraints: MediaStreamConstraints = {
-          audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
-          video: sessionVideoIdRef.current ? { deviceId: { ideal: sessionVideoIdRef.current } } : true
-        };
-        console.log('[MIC] Requesting getUserMedia with constraints:', JSON.stringify(constraints));
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        if (!isMountedRef.current || (phaseRef.current !== 'active' && phaseRef.current !== 'setup' && phaseRef.current !== 'starting')) {
-            console.log('[MIC] Discarding stream, component unmounted or phase inactive');
-            stream.getTracks().forEach(t => t.stop());
-            return;
-        }
-        mediaStreamRef.current = stream;
-        console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}:${t.readyState}`));
-      } catch (err: any) {
-        console.warn('[MIC] Combined audio+video failed, trying audio-only:', err.message);
-        // Fallback: try audio-only
-        try {
-          const audioOnly: MediaStreamConstraints = {
-            audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
-            video: false
-          };
-          const stream = await navigator.mediaDevices.getUserMedia(audioOnly);
-          mediaStreamRef.current = stream;
-          console.log('[MIC] Audio-only stream acquired:', stream.getAudioTracks().map(t => `${t.label}:${t.readyState}`));
-        } catch (audioErr: any) {
-          console.error('[MIC] All microphone access failed:', audioErr);
-          toast.error('Microphone access is required for the interview.');
-          return; // Don't continue without mic
-        }
-      }
-    } else {
-      console.log('[MIC] Reusing existing stream, audio tracks:', mediaStreamRef.current.getAudioTracks().map(t => `${t.label}:${t.readyState}`));
-    }
-
-    // 2. Connect analyser to stream for visualizer — always ensure it's healthy
-    const needsAnalyser = !analyserRef.current || !sourceNodeRef.current 
-      || (audioContextRef.current && audioContextRef.current.state === 'closed');
-    
-    if (mediaStreamRef.current && needsAnalyser) {
-      // Clean up stale references
-      if (sourceNodeRef.current) {
-        try { sourceNodeRef.current.disconnect(); } catch {}
-        sourceNodeRef.current = null;
-      }
-      analyserRef.current = null;
-
-      try {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-          audioContextRef.current = new AudioContextClass();
-          console.log('[MIC] Created new AudioContext');
-        }
-        if (audioContextRef.current.state === 'suspended') {
-          await audioContextRef.current.resume();
-          console.log('[MIC] Resumed suspended AudioContext');
-        }
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 256;
-
-        sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
-        sourceNodeRef.current.connect(analyserRef.current);
-        console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize, 'ctx state:', audioContextRef.current.state);
-      } catch (err: any) {
-        console.error('[MIC] Failed to connect analyser:', err);
-      }
-    } else if (audioContextRef.current?.state === 'suspended') {
-      await audioContextRef.current.resume();
-      console.log('[MIC] Resumed existing AudioContext');
-    }
-
-    // 2. Prepare MediaRecorder for High-Fidelity Audio capture
-    if (mediaStreamRef.current) {
-      try {
-        audioChunksRef.current = [];
-        const recorder = new MediaRecorder(mediaStreamRef.current, { mimeType: 'audio/webm' });
-        mediaRecorderRef.current = recorder;
-        
-        recorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            audioChunksRef.current.push(e.data);
-          }
-        };
-        
-        recorder.start();
-      } catch (err: any) {
-        console.error("Failed to start MediaRecorder capture:", err);
-      }
-    }
-
-    // 3. Setup browser Speech Recognition ONLY for real-time visual student transcript text feedback
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) { 
-      // If SpeechRecognition isn't supported, we still permit recording (will transcribe purely via Scribe)
-      setIsListening(true);
-      setOrbState('listening');
-      return; 
-    }
-
-    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false; // Disable interim results to stop words from flickering/changing
-    recognition.lang = 'en-IN'; // Optimized for Indian English accents
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => { setIsListening(true); setOrbState('listening'); };
-
-    recognition.onresult = (event: any) => {
-      // If AI starts speaking, interrupt it
-      if (isSpeakingRef.current || currentAudioRef.current) {
-        if (currentAudioRef.current) {
-          try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
-          currentAudioRef.current = null;
-        }
-        setIsSpeaking(false);
-        setOrbState('interrupted');
-        setTimeout(() => setOrbState('listening'), 300);
-      }
-
-      let interim = '';
-      let final = transcriptRef.current;
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const t = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          final += t + ' ';
-        } else {
-          interim = t;
-        }
-      }
-      transcriptRef.current = final;
-      const displayed = final + interim;
-      setTranscript(displayed);
-
-      // Only reset silence timer when the DISPLAYED text actually changed
-      if (displayed !== prevDisplayedRef.current) {
-        prevDisplayedRef.current = displayed;
-        followUpCountRef.current = 0; // Reset follow-up counter since user spoke
-        
-        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = setTimeout(() => {
-          if (transcriptRef.current.trim()) {
-            stopListeningAndTranscribeRef.current?.();
-          }
-        }, 4000);
-      }
-    };
-
-    recognition.onerror = (e: any) => {
-      if (e.error !== 'no-speech' && e.error !== 'aborted') {
-        console.error('Speech recognition error:', e.error);
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      // Auto-restart if still active phase and AI is not speaking
-      if (phaseRef.current === 'active' && !isSpeakingRef.current) {
-        try { recognition.start(); } catch {}
-      }
-    };
-
-    recognitionRef.current = recognition;
-    try { recognition.start(); } catch {}
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ── End Interview (defined before submitAnswer) ──
-  const handleEndInterview = useCallback(async () => {
-    stopListening();
-    if (currentAudioRef.current) {
-      try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
-      currentAudioRef.current = null;
-    }
-    cleanupAudio(); // Securely close audio hardware streams
-    setPhase('ending');
-    setOrbState('evaluating');
-
-    try {
-      const { data } = await interviewAPI.end(interviewId);
-      setFeedback(data.feedback ? { ...data.feedback, overall_score: data.overall_score, scores: data.scores } : data);
-      setPhase('scorecard');
-      try { document.exitFullscreen(); } catch {}
-    } catch (err: any) {
-      toast.error('Failed to generate feedback');
-      setPhase('active');
-      setOrbState('listening');
-      startListening();
-    }
-  }, [interviewId, stopListening, startListening]);
-
-  // ── Submit answer to backend ──
-  const submitAnswer = useCallback(async (answer) => {
-    const currentInterviewId = interviewIdRef.current;
-    if (!currentInterviewId || !answer.trim() || isSubmittingRef.current) return;
-    
-    isSubmittingRef.current = true;
-    stopListening();
-    setOrbState('thinking');
-    setShowTranscript(false); // ← Hide text immediately when entering thinking mode
-    setTranscript('');
-    transcriptRef.current = '';
-    prevDisplayedRef.current = '';
-
-    // Immediately display the user's answer in the conversation history
-    setConversation(prev => [...prev, { role: 'user', content: answer }]);
-
-    try {
-      const { data } = await interviewAPI.sendMessage(currentInterviewId, { content: answer });
-      
-      const onAudioStart = () => {
-        setConversation(prev => [
-          ...prev,
-          { role: 'assistant', content: data.ai_response },
-        ]);
-        setQuestionNumber(data.question_number);
-        setCurrentQuestion(data.ai_response);
-      };
-
-      // AI speaks the response
-      await speakText(data.ai_response, onAudioStart);
-      
-      // Stop execution context if user clicked "End Interview" while AI was speaking
-      if (phaseRef.current === 'ending') {
-        isSubmittingRef.current = false;
-        return;
-      }
-
-      // If final question, auto-end
-      if (data.is_final || data.question_number >= maxQuestions) {
-        handleEndInterview();
-        isSubmittingRef.current = false;
-        return;
-      }
-
-      // Start listening again
-      setOrbState('listening');
-      startListening();
-    } catch (err: any) {
-      toast.error('Failed to process response. Please try again.');
-      setOrbState('listening');
-      startListening();
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  }, [stopListening, speakText, startListening, maxQuestions, handleEndInterview]);
-
-  // ── Stop Listening and Transcribe (High-Fidelity STT) ──
-  const stopListeningAndTranscribe = useCallback(async () => {
-    stopListening();
-    setOrbState('thinking');
-
-    const recorder = mediaRecorderRef.current;
-    if (!recorder || recorder.state === 'inactive') {
-      const text = transcriptRef.current.trim();
-      if (text) {
-        submitAnswer(text);
-      }
-      return;
-    }
-
-    const audioBlobPromise = new Promise<Blob>((resolve) => {
-      recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        resolve(blob);
-      };
-    });
-
-    try {
-      recorder.stop();
-      const blob = await audioBlobPromise;
-      
-      const currentInterviewId = interviewIdRef.current;
-      if (!currentInterviewId) return;
-
-      setOrbState('thinking');
-      // Transcribe via ElevenLabs Scribe STT
-      const response = await interviewAPI.transcribe(currentInterviewId, blob);
-      const text = response.data?.text || '';
-      
-      const finalAnswer = text.trim() || transcriptRef.current.trim();
-      if (finalAnswer) {
-        submitAnswer(finalAnswer);
-      } else {
-        setOrbState('listening');
-        startListening();
-      }
-    } catch (err: any) {
-      console.error("Transcription failed:", err);
-      const finalAnswer = transcriptRef.current.trim();
-      if (finalAnswer) {
-        submitAnswer(finalAnswer);
-      } else {
-        setOrbState('listening');
-        startListening();
-      }
-    }
-  }, [stopListening, submitAnswer, startListening]);
-
-  // Sync ref to break circular dependency
-  useEffect(() => {
-    stopListeningAndTranscribeRef.current = stopListeningAndTranscribe;
-  }, [stopListeningAndTranscribe]);
-
-  // ── Start Interview ──
-  const handleStart = async (hardwareIds) => {
-    if (!sessionConfig?.interview_type) { navigate('interview-warroom'); return; }
-    
-    // Ensure AudioContext is created securely during the click gesture to avoid browser suspension
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContextClass();
-    }
-    if (audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume();
-    }
-    
-    if (hardwareIds?.micId) {
-      setSessionMicId(hardwareIds.micId);
-      sessionMicIdRef.current = hardwareIds.micId;
-    }
-    if (hardwareIds?.videoId) {
-      setSessionVideoId(hardwareIds.videoId);
-      sessionVideoIdRef.current = hardwareIds.videoId;
-    }
-
-    // Enter fullscreen
-    try {
-      await document.documentElement.requestFullscreen();
-    } catch {}
-
-    setPhase('active');
-    setOrbState('thinking');
-    setShowTranscript(false); // ← Ensure text is hidden on initial start
-
-    try {
-      const { data } = await interviewAPI.start({
-        interview_type: sessionConfig.interview_type,
-        target_role: sessionConfig.target_role,
-        target_company: sessionConfig.target_company,
-        difficulty: sessionConfig.difficulty,
-        resume_id: hardwareIds.resumeId,
-      });
-
-      setInterviewId(data.interview_id);
-      interviewIdRef.current = data.interview_id; // Sync ref immediately — useEffect is async
-      setQuestionNumber(1);
-      setCurrentQuestion(data.first_question);
-
-      // Speak the first question — only add to chat when audio begins to prevent text leak
-      await speakText(data.first_question, () => {
-        setConversation([{ role: 'assistant', content: data.first_question }]);
-      });
-
-      // Start continuous listening
-      setOrbState('listening');
-      startListening();
-    } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Failed to start interview');
-      setPhase('setup');
-      try { document.exitFullscreen(); } catch {}
-    }
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopListening();
-      cleanupAudio();
-      if (currentAudioRef.current) {
-        try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
-        currentAudioRef.current = null;
-      }
-      clearInterval(timerRef.current);
-    };
-  }, [stopListening, cleanupAudio]);
-
-  // ── Follow-up Idle Timeout Logic ──
-  useEffect(() => {
-    if (isListening && phase === 'active') {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      idleTimerRef.current = setTimeout(() => {
-         if (!transcript.trim()) {
-           followUpCountRef.current += 1;
-           if (followUpCountRef.current > 2) {
-               toast.error("Interview ended due to inactivity.");
-               handleEndInterview();
-           } else {
-               stopListening();
-               const followUpText = "Are you still there? Take your time, but let me know when you are ready to answer.";
-               speakText(followUpText, () => {
-                   setConversation(prev => [...prev, { role: 'assistant', content: followUpText }]);
-                   setCurrentQuestion(followUpText);
-               }).then(() => {
-                   if (phaseRef.current === 'active') {
-                       setOrbState('listening');
-                       startListening();
-                   }
-               });
-           }
-         }
-      }, 20000); // 20s
-    } else {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    }
-    return () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-    }
-  }, [isListening, transcript, phase, handleEndInterview, speakText, stopListening, startListening, setCurrentQuestion]);
-
-  // ── Scorecard View ──
-  if (phase === 'scorecard' && feedback) {
-    return (
-      <Scorecard
-        feedback={feedback}
-        conversation={conversation}
-        onBack={() => navigate('interview-warroom')}
-        onRetry={() => navigate('interview-warroom')}
-      />
-    );
-  }
-
-  // ── Setup Screen (pre-fullscreen) ──
-  if (phase === 'setup' && !sessionConfig?.viewId) {
-    return <HardwareSetupLobby sessionConfig={sessionConfig} onStart={handleStart} onCancel={() => navigate('interview-warroom')} />;
-  }
-
-  // ── Active Interview / Ending ──
   return (
-    <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
-      {/* Premium Ambient Background Glows */}
+    <div className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
         <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
       </div>
 
-      {/* Minimal Header */}
+      {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6 border-b border-white/[0.03]">
         <div className="flex items-center gap-4">
           <Avatar size={36} name="AcadMix Intelligence" variant="beam" colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} />
           <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">AcadMix Intelligence</span>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white/[0.03] border border-white/[0.05] px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
-            <Clock size={16} className="text-slate-400" />
-            <span className="text-sm font-bold text-slate-200 tabular-nums">{formatTime(elapsed)}</span>
-          </div>
-          <div className="flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
-            <span className="text-sm font-bold text-indigo-400">Q {questionNumber}/{maxQuestions}</span>
-          </div>
-          <button onClick={handleEndInterview} disabled={phase === 'ending'}
-            className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 hover:text-red-300 transition-all disabled:opacity-50 group shadow-sm">
-            <Stop size={14} weight="fill" className="group-hover:scale-110 transition-transform" /> 
+          <button onClick={handleEndInterview}
+            className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 hover:text-red-300 transition-all shadow-sm">
+            <Stop size={14} weight="fill" /> 
             End Session
           </button>
         </div>
       </div>
 
-      {/* Center content: Live Chat & Wave */}
-      <div className="relative z-10 flex-1 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
-        
-        {/* Chat History Container */}
-        <div 
-          className="flex-1 w-full overflow-y-auto flex flex-col gap-6 pt-10 pb-8 [mask-image:linear-gradient(to_bottom,transparent,black_5%,black_90%,transparent)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          ref={(el) => { if (el) { el.scrollTop = el.scrollHeight; } }}
-        >
-           {/* Conversation History */}
-           {conversation.map((msg, i) => {
-             const isLast = i === conversation.length - 1;
-             const isAI = msg.role === 'assistant';
-             
-             return (
-               <motion.div 
-                 key={i} 
-                 initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                 className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-               >
-                 <div className={`max-w-[85%] md:max-w-[75%] rounded-3xl px-6 py-4 backdrop-blur-md border shadow-2xl ${
-                   msg.role === 'user'
-                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-50 rounded-br-sm'
-                     : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-50 rounded-bl-sm'
-                 }`}>
-                   {isLast && isAI && isSpeaking && showTranscript ? (
-                      <TypewriterText 
-                        text={msg.content} 
-                        isSpeaking={isSpeaking} 
-                        className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium"
-                        cursorClassName="inline-block w-1.5 h-4 ml-1.5 bg-indigo-400 animate-pulse align-middle"
-                      />
-                   ) : (
-                      <p className={`text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'opacity-90 font-medium' : 'text-slate-200'}`}>
-                        {msg.content}
-                      </p>
-                   )}
-                 </div>
-               </motion.div>
-             );
-           })}
-
-           {/* Live Student Transcript Bubble */}
-           <AnimatePresence>
-             {transcript && (
-               <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex w-full justify-end"
-               >
-                  <div className="max-w-[85%] md:max-w-[75%] rounded-3xl rounded-br-sm px-6 py-4 backdrop-blur-md border bg-emerald-500/10 border-emerald-500/20 text-emerald-50 flex flex-col gap-2 shadow-2xl">
-                    <div className="flex items-center gap-2 mb-1">
-                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-                       <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 opacity-80">Listening...</span>
-                    </div>
-                    <p className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium opacity-90">{transcript}</p>
-                  </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-           <div className="h-40 shrink-0" /> {/* Bottom padding so chat scrolls above wave */}
-        </div>
+      {/* Main Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-10 w-full max-w-5xl mx-auto">
+         <div className="w-full flex items-center justify-center mb-12">
+            <BarVisualizer state={state} barCount={7} trackRef={audioTrack} className="w-64 h-32" />
+         </div>
+         <p className="text-slate-400 font-medium text-lg mt-8 text-center max-w-2xl">
+            {state === 'connecting' ? "Connecting to AI..." : 
+             state === 'listening' ? "Listening..." :
+             state === 'thinking' ? "Thinking..." : "AI Speaking"}
+         </p>
       </div>
 
-      {/* Horizontal Aura Wave (Full Screen Width) */}
-      <div className="absolute bottom-[56px] sm:bottom-[60px] left-0 right-0 z-0 h-48 sm:h-56 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
-         <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
-      </div>
-
-      {/* Floating Draggable Camera */}
-      {mediaStreamRef.current && (
-        <motion.div
-           drag
-           dragConstraints={dragConstraintsRef}
-           dragElastic={0.1}
-           dragMomentum={false}
-           initial={{ opacity: 0, scale: 0.8 }}
-           animate={{ opacity: 1, scale: 1 }}
-           className="absolute right-8 top-32 w-72 h-48 bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 cursor-move hover:border-white/10 transition-colors"
-           style={{ touchAction: 'none' }}
-        >
-          <video
-            ref={(node) => {
-              if (node && node.srcObject !== mediaStreamRef.current) {
-                node.srcObject = mediaStreamRef.current;
-              }
-            }}
-            autoPlay
-            playsInline
-            muted
-            className="w-full h-full object-cover scale-x-[-1] pointer-events-none" 
-          />
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 pointer-events-none shadow-sm">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]" />
-             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Active</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Bottom status bar */}
-      <div className="relative z-10 px-8 py-5 border-t border-white/[0.03] bg-black/20 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {orbState === 'listening' ? (
-            <div className="flex items-center gap-2.5 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-              <Microphone size={16} className="text-emerald-400" />
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Listening</span>
-            </div>
-          ) : orbState === 'speaking' ? (
-            <div className="flex items-center gap-2.5 bg-cyan-500/10 px-4 py-2 rounded-full border border-cyan-500/20 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse shadow-[0_0_8px_#06b6d4]" />
-              <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">AI Speaking</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5 bg-blue-500/10 px-4 py-2 rounded-full border border-blue-500/20 shadow-sm">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#3b82f6]" />
-              <span className="text-xs font-bold text-blue-400 uppercase tracking-widest">{phase === 'ending' ? 'Evaluating' : 'Processing'}</span>
-            </div>
-          )}
-        </div>
-        {isListening && (
-          <BottomAudioVisualizer isListening={isListening} />
-        )}
-      </div>
+      <RoomAudioRenderer />
     </div>
+  );
+};
+
+const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
+  const [phase, setPhase] = useState('setup');
+  const [isStarting, setIsStarting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [liveKitToken, setLiveKitToken] = useState(null);
+  const [liveKitUrl, setLiveKitUrl] = useState(null);
+  const [interviewId, setInterviewId] = useState(null);
+  
+  // Audio recording for AssemblyAI
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  const handleStart = async (config) => {
+    setIsStarting(true);
+    try {
+      // 1. Create interview in backend
+      const res = await interviewAPI.start({
+        interview_type: sessionConfig.viewId === 'resume_interview' ? 'resume_deep_dive' : 'general',
+        target_role: sessionConfig.targetRole || 'Software Engineer',
+        target_company: sessionConfig.targetCompany || 'Tech Corp',
+        difficulty: 'Medium',
+        resume_id: config.resumeId || sessionConfig.resumeId || null
+      });
+      const newInterviewId = res.data.interview_id;
+      setInterviewId(newInterviewId);
+
+      // 2. Fetch LiveKit Token
+      const tokenRes = await fetch(`/api/interview/${newInterviewId}/token`, {
+         method: 'POST',
+         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+      }).then(r => r.json());
+      
+      setLiveKitToken(tokenRes.data?.token || tokenRes.token);
+      setLiveKitUrl(tokenRes.data?.url || tokenRes.url);
+
+      // 3. Start Local MediaRecorder for AssemblyAI Final Grading
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: config.micId ? { exact: config.micId } : undefined } });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      
+      recorder.ondataavailable = (e) => {
+         if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+
+      setPhase('active');
+    } catch (err) {
+      console.error(err);
+      setIsStarting(false);
+      toast.error("Failed to start session.");
+    }
+  };
+
+  const handleEndInterview = async () => {
+    setPhase('ending');
+    try {
+      // Stop local recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+         mediaRecorderRef.current.stop();
+         mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+         
+         await new Promise(resolve => {
+            mediaRecorderRef.current.onstop = () => resolve();
+         });
+      }
+
+      // Create blob for AssemblyAI
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'interview_audio.webm');
+
+      // Async process audio
+      fetch(`/api/interview/${interviewId}/audio_eval`, {
+         method: 'POST',
+         headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+         body: formData
+      }).catch(console.error);
+
+      // Mark Complete to get feedback
+      const res = await interviewAPI.end(interviewId);
+      setFeedback(res.data);
+      setPhase('scorecard');
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to submit interview");
+      navigate('interview-warroom');
+    }
+  };
+
+  if (phase === 'scorecard' && feedback) {
+    return <Scorecard feedback={feedback} conversation={[]} onBack={() => navigate('interview-warroom')} onRetry={() => navigate('interview-warroom')} />;
+  }
+
+  if (phase === 'setup' && !sessionConfig?.viewId) {
+    return <HardwareSetupLobby sessionConfig={sessionConfig} isStarting={isStarting} onStart={handleStart} onCancel={() => navigate('interview-warroom')} />;
+  }
+
+  if (phase === 'active' && liveKitToken && liveKitUrl) {
+    return (
+       <LiveKitRoom
+          video={false}
+          audio={true}
+          token={liveKitToken}
+          serverUrl={liveKitUrl}
+          connect={true}
+       >
+          <ActiveLiveKitInterview interviewId={interviewId} handleEndInterview={handleEndInterview} />
+       </LiveKitRoom>
+    );
+  }
+
+  return (
+     <div className="fixed inset-0 bg-[#06090e] flex items-center justify-center">
+       <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+     </div>
   );
 };
 

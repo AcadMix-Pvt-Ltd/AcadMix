@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""                                   # Legacy fallback — kept for hot standby
     ELEVENLABS_API_KEY: str = ""
     CARTESIA_API_KEY: str = ""
+    
+    # Assembly AI & LiveKit (AI Interview V2)
+    ASSEMBLYAI_API_KEY: str = ""
+    LIVEKIT_URL: str = ""
+    LIVEKIT_API_KEY: str = ""
+    LIVEKIT_API_SECRET: str = ""
 
     # ── Vertex AI (Production Single Provider) ───────────────────────
     # Google Cloud DPA available, data never used for training, SLA-backed

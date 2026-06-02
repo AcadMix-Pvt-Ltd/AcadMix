@@ -102,7 +102,12 @@ const puppeteer = require('puppeteer');
     await new Promise(res => setTimeout(res, 5000));
     console.log('Current URL:', page.url());
     console.log('🎉 Successfully launched the AI Mock Interview Session!');
-    console.log('Leaving browser open. You are now inside the active mock interview room. Happy interviewing!');
+    console.log('Leaving browser open indefinitely for you to conduct the interview.');
+
+    // KEEP ALIVE: Prevent the Node process from exiting so the browser stays open!
+    setInterval(() => {
+      console.log('⏱️ Keep-alive tick: Browser agent is running.');
+    }, 60000);
 
   } catch (error) {
     console.error('❌ An error occurred during automation:', error);

@@ -11,6 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from app.core.security import require_role
 from app.services import interview_service, voice_service
+from app.core.config import settings
+from app import models
+from livekit import api
 
 router = APIRouter()
 
@@ -134,3 +137,54 @@ async def transcribe_audio(
         content_type=file.content_type or "audio/wav"
     )
     return {"text": text}
+
+
+@router.post("/interview/{interview_id}/token")
+async def get_livekit_token(
+    interview_id: str,
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Generate a LiveKit WebRTC access token for the student to join the interview room."""
+    # Note: Access check is done inside the token logic to ensure the student owns this interview
+    from sqlalchemy.future import select
+    stmt = select(models.MockInterview).where(
+        models.MockInterview.id == interview_id,
+        models.MockInterview.student_id == user["id"],
+        models.MockInterview.college_id == user["college_id"],
+        models.MockInterview.status == "in_progress",
+    )
+    result = await session.execute(stmt)
+    interview = result.scalars().first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview session not found or already completed")
+
+    if not settings.LIVEKIT_API_KEY or not settings.LIVEKIT_API_SECRET:
+        raise HTTPException(status_code=500, detail="LiveKit keys not configured")
+
+    token = api.AccessToken(
+        settings.LIVEKIT_API_KEY,
+        settings.LIVEKIT_API_SECRET,
+    ).with_identity(str(user["id"])).with_name(user.get("full_name", "Student")).with_grants(api.VideoGrants(room_join=True, room=interview_id))
+
+    return {
+        "token": token.to_jwt(), 
+        "url": settings.LIVEKIT_URL
+    }
+
+
+@router.post("/interview/{interview_id}/audio_eval")
+async def evaluate_audio(
+    interview_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Asynchronously evaluate the final audio recording using Assembly AI."""
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Audio file cannot be empty")
+    
+    # We pass this to the interview service which will handle the AssemblyAI call and DB update
+    return await interview_service.process_audio_evaluation(interview_id, content, file.content_type, user, session)
+

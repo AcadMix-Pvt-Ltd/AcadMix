@@ -694,3 +694,51 @@ async def get_detail(interview_id: str, user: dict, session: AsyncSession) -> di
         "created_at": interview.created_at.isoformat() if interview.created_at else None,
         "completed_at": interview.completed_at.isoformat() if interview.completed_at else None,
     }
+
+async def process_audio_evaluation(interview_id: str, content: bytes, content_type: str, user: dict, session: AsyncSession) -> dict:
+    """Asynchronously evaluate the final audio recording using Assembly AI and merge with scores."""
+    stmt = select(models.MockInterview).where(
+        models.MockInterview.id == interview_id,
+        models.MockInterview.student_id == user["id"],
+        models.MockInterview.college_id == user["college_id"],
+    )
+    result = await session.execute(stmt)
+    interview = result.scalars().first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview not found")
+
+    if not settings.ASSEMBLYAI_API_KEY:
+        raise HTTPException(status_code=500, detail="AssemblyAI API Key not configured")
+    
+    import httpx
+    
+    upload_url = "https://api.assemblyai.com/v2/upload"
+    headers = {"authorization": settings.ASSEMBLYAI_API_KEY}
+    
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        upload_resp = await client.post(upload_url, headers=headers, content=content)
+        if upload_resp.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to upload audio to AssemblyAI")
+        audio_url = upload_resp.json()["upload_url"]
+        
+        transcript_url = "https://api.assemblyai.com/v2/transcript"
+        payload = {
+            "audio_url": audio_url,
+            "sentiment_analysis": True,
+            "disfluencies": True,
+        }
+        tx_resp = await client.post(transcript_url, headers=headers, json=payload)
+        if tx_resp.status_code != 200:
+            raise HTTPException(status_code=500, detail="Failed to start AssemblyAI transcription")
+            
+        transcript_id = tx_resp.json()["id"]
+        
+        feedback = interview.ai_feedback or {}
+        feedback["assembly_ai_job_id"] = transcript_id
+        feedback["assembly_ai_status"] = "processing"
+        
+        interview.ai_feedback = feedback
+        flag_modified(interview, "ai_feedback")
+        await session.commit()
+        
+        return {"message": "Audio evaluation started", "job_id": transcript_id}
