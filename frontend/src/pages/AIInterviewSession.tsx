@@ -74,28 +74,35 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
            targetData[i] = val * 70 * bell; // Max amplitude ~70px
          }
       } else if (state === 'speaking' || state === 'evaluating') {
-         // Real-time TTS audio visualization (synced to actual AI voice output)
+         // Smooth Siri-style waves modulated by real audio energy
+         let energy = 0.5; // default baseline when no analyser
+
          const activeAnalyser = ttsAnalyserRef?.current;
          if (activeAnalyser) {
+           // Extract RMS energy from real audio output
            const dataArray = new Uint8Array(activeAnalyser.frequencyBinCount);
            activeAnalyser.getByteFrequencyData(dataArray);
-           for (let i = 0; i < NUM_POINTS; i++) {
-             const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.5));
-             const val = dataArray[binIndex] / 255;
-             const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
-             targetData[i] = val * 65 * bell;
-           }
-         } else {
-           // Fallback: smooth sinusoidal waves if analyser not available
-           for (let i = 0; i < NUM_POINTS; i++) {
-             const t = i / (NUM_POINTS - 1);
-             const bell = Math.sin(t * Math.PI);
-             const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
-             const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
-             const wave3 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
-             const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
-             targetData[i] = (wave1 + wave2 + wave3) * bell * breathe;
-           }
+           let sum = 0;
+           for (let j = 0; j < dataArray.length; j++) sum += dataArray[j];
+           energy = Math.min(1.0, (sum / dataArray.length / 255) * 3.5); // normalized 0→1, boosted
+         }
+
+         for (let i = 0; i < NUM_POINTS; i++) {
+           const t = i / (NUM_POINTS - 1);
+           const bell = Math.sin(t * Math.PI);
+
+           // Multi-frequency flowing sine waves
+           const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
+           const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
+           const wave3 = Math.sin(time * 3.2 + t * Math.PI * 8 + 2.8) * 7;
+           const wave4 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
+           const wave5 = Math.sin(time * 4.0 + t * Math.PI * 10 + 4.1) * 4;
+
+           // Breathing + real audio energy modulation
+           const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
+           const amplitude = (0.15 + energy * 0.85) * breathe; // minimum 15% even in silence
+
+           targetData[i] = (wave1 + wave2 + wave3 + wave4 + wave5) * bell * amplitude;
          }
       } else if (state === 'thinking') {
          // Gentle undulating wave — slower, subtler
