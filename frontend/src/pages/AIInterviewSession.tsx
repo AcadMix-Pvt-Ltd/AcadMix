@@ -18,7 +18,7 @@ const ORB_STATES = {
 };
 
 // ─── Premium Horizontal Aura Wave ──────────────────────────────────────────────
-const HorizontalAuraWave = ({ state, analyserRef }) => {
+const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: string, analyserRef: any, ttsAnalyserRef?: any }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -74,22 +74,28 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
            targetData[i] = val * 70 * bell; // Max amplitude ~70px
          }
       } else if (state === 'speaking' || state === 'evaluating') {
-         // Smooth multi-frequency sinusoidal waves (Siri-style)
-         for (let i = 0; i < NUM_POINTS; i++) {
-           const t = i / (NUM_POINTS - 1); // normalized 0→1
-           const bell = Math.sin(t * Math.PI); // envelope: 0 at edges, 1 at center
-           
-           // 5 harmonics with different speeds/phases for organic motion
-           const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
-           const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
-           const wave3 = Math.sin(time * 3.2 + t * Math.PI * 8 + 2.8) * 7;
-           const wave4 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
-           const wave5 = Math.sin(time * 4.0 + t * Math.PI * 10 + 4.1) * 4;
-           
-           // Breathing modulation — slowly varies overall amplitude
-           const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
-           
-           targetData[i] = (wave1 + wave2 + wave3 + wave4 + wave5) * bell * breathe;
+         // Real-time TTS audio visualization (synced to actual AI voice output)
+         const activeAnalyser = ttsAnalyserRef?.current;
+         if (activeAnalyser) {
+           const dataArray = new Uint8Array(activeAnalyser.frequencyBinCount);
+           activeAnalyser.getByteFrequencyData(dataArray);
+           for (let i = 0; i < NUM_POINTS; i++) {
+             const binIndex = Math.floor((i / NUM_POINTS) * (dataArray.length * 0.5));
+             const val = dataArray[binIndex] / 255;
+             const bell = Math.sin((i / (NUM_POINTS - 1)) * Math.PI);
+             targetData[i] = val * 65 * bell;
+           }
+         } else {
+           // Fallback: smooth sinusoidal waves if analyser not available
+           for (let i = 0; i < NUM_POINTS; i++) {
+             const t = i / (NUM_POINTS - 1);
+             const bell = Math.sin(t * Math.PI);
+             const wave1 = Math.sin(time * 1.8 + t * Math.PI * 4) * 18;
+             const wave2 = Math.sin(time * 2.5 + t * Math.PI * 6 + 1.2) * 12;
+             const wave3 = Math.sin(time * 1.1 + t * Math.PI * 2 + 0.5) * 22;
+             const breathe = 0.7 + 0.3 * Math.sin(time * 0.6);
+             targetData[i] = (wave1 + wave2 + wave3) * bell * breathe;
+           }
          }
       } else if (state === 'thinking') {
          // Gentle undulating wave — slower, subtler
@@ -157,7 +163,7 @@ const HorizontalAuraWave = ({ state, analyserRef }) => {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
     };
-  }, [state, analyserRef]);
+  }, [state, analyserRef, ttsAnalyserRef]);
 
   return (
     <div className="w-full flex flex-col items-center pointer-events-none">
@@ -1041,6 +1047,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   // Audio Web API Refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const ttsAnalyserRef = useRef<AnalyserNode | null>(null);
+  const ttsContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
@@ -1180,10 +1188,31 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           return;
         }
 
-        // Play TTS using HTMLAudioElement — the most reliable way to play MP3 in browsers
+        // Play TTS using HTMLAudioElement routed through AudioContext for waveform sync
         const blobUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(blobUrl);
         audio.volume = 1.0;
+        audio.crossOrigin = 'anonymous';
+
+        // Route audio through AudioContext → AnalyserNode → speakers for waveform visualization
+        try {
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          if (!ttsContextRef.current || ttsContextRef.current.state === 'closed') {
+            ttsContextRef.current = new AudioContextClass();
+          }
+          if (ttsContextRef.current.state === 'suspended') {
+            await ttsContextRef.current.resume();
+          }
+          const ttsSource = ttsContextRef.current.createMediaElementSource(audio);
+          const ttsAnalyser = ttsContextRef.current.createAnalyser();
+          ttsAnalyser.fftSize = 256;
+          ttsSource.connect(ttsAnalyser);
+          ttsAnalyser.connect(ttsContextRef.current.destination);
+          ttsAnalyserRef.current = ttsAnalyser;
+          console.log('[TTS] Audio routed through AnalyserNode for waveform sync');
+        } catch (analyserErr) {
+          console.warn('[TTS] Could not create analyser, playing without waveform sync:', analyserErr);
+        }
 
         // Store the audio element so we can stop it if interrupted
         currentAudioRef.current = audio as any;
@@ -1195,6 +1224,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
             setIsSpeaking(false);
             isSpeakingRef.current = false;
             currentAudioRef.current = null;
+            ttsAnalyserRef.current = null;
             URL.revokeObjectURL(blobUrl);
             resolve();
           }
@@ -1218,6 +1248,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           clearTimeout(timeoutId);
           URL.revokeObjectURL(blobUrl);
           currentAudioRef.current = null;
+          ttsAnalyserRef.current = null;
           runFallback();
         };
 
@@ -1740,7 +1771,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
       {/* Horizontal Aura Wave (Full Screen Width) */}
       <div className="absolute bottom-[56px] sm:bottom-[60px] left-0 right-0 z-0 h-48 sm:h-56 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
-         <HorizontalAuraWave state={orbState} analyserRef={analyserRef} />
+         <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
       </div>
 
       {/* Floating Draggable Camera */}
