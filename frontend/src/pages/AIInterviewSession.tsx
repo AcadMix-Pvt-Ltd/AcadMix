@@ -584,6 +584,7 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
 
   const isMountedRef = useRef(true);
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
@@ -1046,6 +1047,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const idleTimerRef = useRef<any>(null);
   const isMountedRef = useRef(true);
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
     };
