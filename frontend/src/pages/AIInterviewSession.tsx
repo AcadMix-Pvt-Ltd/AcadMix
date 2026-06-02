@@ -1279,13 +1279,19 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   // ── Speech Recognition & MediaRecorder (Student speaks) ──
   const startListening = useCallback(async () => {
    // 1. Acquire mic+camera stream if not already active
-    if (!mediaStreamRef.current) {
+    if (!mediaStreamRef.current || mediaStreamRef.current.getAudioTracks().every(t => t.readyState === 'ended')) {
+      // Clear stale stream ref if tracks are dead
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(t => t.stop());
+        mediaStreamRef.current = null;
+      }
+
       try {
-        const constraints = {
+        const constraints: MediaStreamConstraints = {
           audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
           video: sessionVideoIdRef.current ? { deviceId: { ideal: sessionVideoIdRef.current } } : true
         };
-        console.log('[MIC] Requesting getUserMedia with constraints:', constraints);
+        console.log('[MIC] Requesting getUserMedia with constraints:', JSON.stringify(constraints));
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (!isMountedRef.current || (phaseRef.current !== 'active' && phaseRef.current !== 'setup' && phaseRef.current !== 'starting')) {
             console.log('[MIC] Discarding stream, component unmounted or phase inactive');
@@ -1293,34 +1299,62 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
             return;
         }
         mediaStreamRef.current = stream;
-        console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}`));
+        console.log('[MIC] Stream acquired, tracks:', stream.getTracks().map(t => `${t.kind}:${t.label}:${t.readyState}`));
       } catch (err: any) {
-        console.error('[MIC] Camera/Microphone access denied.', err);
-        toast.error('Camera and Microphone access are required for the interview.');
+        console.warn('[MIC] Combined audio+video failed, trying audio-only:', err.message);
+        // Fallback: try audio-only
+        try {
+          const audioOnly: MediaStreamConstraints = {
+            audio: sessionMicIdRef.current ? { deviceId: { ideal: sessionMicIdRef.current } } : true,
+            video: false
+          };
+          const stream = await navigator.mediaDevices.getUserMedia(audioOnly);
+          mediaStreamRef.current = stream;
+          console.log('[MIC] Audio-only stream acquired:', stream.getAudioTracks().map(t => `${t.label}:${t.readyState}`));
+        } catch (audioErr: any) {
+          console.error('[MIC] All microphone access failed:', audioErr);
+          toast.error('Microphone access is required for the interview.');
+          return; // Don't continue without mic
+        }
       }
+    } else {
+      console.log('[MIC] Reusing existing stream, audio tracks:', mediaStreamRef.current.getAudioTracks().map(t => `${t.label}:${t.readyState}`));
     }
 
-    // 2. Connect analyser to stream for visualizer (if not already wired up)
-    if (mediaStreamRef.current && !analyserRef.current) {
+    // 2. Connect analyser to stream for visualizer — always ensure it's healthy
+    const needsAnalyser = !analyserRef.current || !sourceNodeRef.current 
+      || (audioContextRef.current && audioContextRef.current.state === 'closed');
+    
+    if (mediaStreamRef.current && needsAnalyser) {
+      // Clean up stale references
+      if (sourceNodeRef.current) {
+        try { sourceNodeRef.current.disconnect(); } catch {}
+        sourceNodeRef.current = null;
+      }
+      analyserRef.current = null;
+
       try {
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (!audioContextRef.current) {
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
           audioContextRef.current = new AudioContextClass();
+          console.log('[MIC] Created new AudioContext');
         }
         if (audioContextRef.current.state === 'suspended') {
           await audioContextRef.current.resume();
+          console.log('[MIC] Resumed suspended AudioContext');
         }
         analyserRef.current = audioContextRef.current.createAnalyser();
         analyserRef.current.fftSize = 256;
 
         sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(mediaStreamRef.current);
         sourceNodeRef.current.connect(analyserRef.current);
-        console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize);
+        console.log('[MIC] Analyser connected to stream. fftSize:', analyserRef.current.fftSize, 'ctx state:', audioContextRef.current.state);
       } catch (err: any) {
         console.error('[MIC] Failed to connect analyser:', err);
       }
     } else if (audioContextRef.current?.state === 'suspended') {
       await audioContextRef.current.resume();
+      console.log('[MIC] Resumed existing AudioContext');
     }
 
     // 2. Prepare MediaRecorder for High-Fidelity Audio capture
