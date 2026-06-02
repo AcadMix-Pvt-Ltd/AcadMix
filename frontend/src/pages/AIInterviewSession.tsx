@@ -1327,7 +1327,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       // If AI starts speaking, interrupt it
       if (isSpeakingRef.current || currentAudioRef.current) {
         if (currentAudioRef.current) {
-          try { (currentAudioRef.current as any).stop(); } catch {}
+          try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
           currentAudioRef.current = null;
         }
         setIsSpeaking(false);
@@ -1386,7 +1386,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const handleEndInterview = useCallback(async () => {
     stopListening();
     if (currentAudioRef.current) {
-      try { (currentAudioRef.current as any).stop(); } catch {}
+      try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
       currentAudioRef.current = null;
     }
     cleanupAudio(); // Securely close audio hardware streams
@@ -1585,7 +1585,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       stopListening();
       cleanupAudio();
       if (currentAudioRef.current) {
-        try { (currentAudioRef.current as any).stop(); } catch {}
+        try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
         currentAudioRef.current = null;
       }
       clearInterval(timerRef.current);
