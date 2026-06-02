@@ -1279,11 +1279,15 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
           runFallback();
         };
 
+        let hasStarted = false;
         audio.onplay = () => {
-          console.log('[TTS] Audio playback started');
-          setOrbState('speaking');
-          setShowTranscript(true);
-          if (onAudioStart) onAudioStart();
+          if (!hasStarted) {
+            hasStarted = true;
+            console.log('[TTS] Audio playback started');
+            setOrbState('speaking');
+            setShowTranscript(true);
+            if (onAudioStart) onAudioStart();
+          }
         };
 
         // Start playback
