@@ -565,6 +565,7 @@ export const feesAPI = {
 export const interviewAPI = {
   getQuota: () => api.get('/interview/quota'),
   start: (data) => api.post('/interview/start', data),
+  getToken: (id) => api.post(`/interview/${id}/token`),
   sendMessage: (id, data) => api.post(`/interview/${id}/message`, data),
   end: (id) => api.post(`/interview/${id}/end`),
   history: () => api.get('/interview/history'),

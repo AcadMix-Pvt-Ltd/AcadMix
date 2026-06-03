@@ -3,10 +3,13 @@ import logging
 import json
 import os
 import tempfile
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.voice import Agent
-from livekit.plugins import cartesia, silero, google
+from livekit.plugins import cartesia, silero, google, deepgram
 
 from app.core.config import settings
 from app import models
@@ -14,12 +17,22 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 
-# Set up Google Credentials for Vertex AI/STT plugins
+# Parse Google credentials for STT (Cloud Speech API uses service account)
+_vertex_creds_info = None
+_vertex_creds_file = None
 if hasattr(settings, "VERTEX_CREDENTIALS_JSON") and settings.VERTEX_CREDENTIALS_JSON:
-    _fd, _cred_path = tempfile.mkstemp(suffix=".json")
+    try:
+        _vertex_creds_info = json.loads(settings.VERTEX_CREDENTIALS_JSON)
+    except json.JSONDecodeError:
+        pass
+    # Also write to file for GOOGLE_APPLICATION_CREDENTIALS fallback
+    _fd, _vertex_creds_file = tempfile.mkstemp(suffix=".json")
     with os.fdopen(_fd, 'w') as f:
         f.write(settings.VERTEX_CREDENTIALS_JSON)
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _cred_path
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _vertex_creds_file
+
+# Gemini API key for the LLM plugin (loaded by dotenv but not in Settings model)
+_gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 
 logger = logging.getLogger("acadmix.livekit_agent")
 
@@ -73,17 +86,41 @@ async def entrypoint(ctx: JobContext):
             first_q = first_msg["content"]
 
     # Create the voice agent (v1.5 API)
+    _stt_kwargs = {}
+    if _vertex_creds_info:
+        _stt_kwargs["credentials_info"] = _vertex_creds_info
+    elif _vertex_creds_file:
+        _stt_kwargs["credentials_file"] = _vertex_creds_file
+
+    _llm_kwargs = {"model": "gemini-2.5-flash"}
+    if _gemini_api_key:
+        _llm_kwargs["api_key"] = _gemini_api_key
+
     agent = Agent(
         instructions=system_prompt,
-        stt=google.STT(),
-        llm=google.LLM(model="gemini-2.5-flash"),
+        stt=deepgram.STT(),
+        llm=google.LLM(**_llm_kwargs),
         tts=cartesia.TTS(),
         vad=silero.VAD.load(),
         chat_ctx=initial_ctx,
+        use_tts_aligned_transcript=True,
     )
 
-    # Create session and start it in the room
-    session = AgentSession()
+    # Create session with interruption settings:
+    #   - min_words=1: only interrupt if STT detects at least 1 real word (ignores noise)
+    #   - min_duration=0.8: ignore audio bursts shorter than 0.8s
+    #   - resume_false_interruption=True: resume AI speech after a false interruption
+    #   - false_interruption_timeout=3.0: wait 3s of silence before resuming
+    session = AgentSession(
+        turn_handling={
+            "interruption": {
+                "min_words": 1,
+                "min_duration": 0.8,
+                "resume_false_interruption": True,
+                "false_interruption_timeout": 3.0,
+            }
+        },
+    )
     await session.start(
         agent=agent,
         room=ctx.room,
