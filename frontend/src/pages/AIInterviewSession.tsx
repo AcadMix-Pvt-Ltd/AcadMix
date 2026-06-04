@@ -11,7 +11,7 @@ import {
   useVoiceAssistant,
   useTrackTranscription
 } from '@livekit/components-react';
-import { ActiveLiveKitInterview, ConnectingView } from './ActiveLiveKitInterview';
+import { ActiveLiveKitInterview } from './ActiveLiveKitInterview';
 import { interviewAPI, resumeAPI, resumeVaultAPI } from '../services/api';
 import { toast } from 'sonner';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
@@ -1777,8 +1777,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
            />
         </LiveKitRoom>
       );
-    } else {
-       return <ConnectingView dragConstraintsRef={dragConstraintsRef} />;
     }
   }
 
