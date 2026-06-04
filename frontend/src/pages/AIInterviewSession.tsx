@@ -1500,7 +1500,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       toast.error('Failed to generate feedback');
       setPhase('active');
     }
-  }, [interviewId]);
+  }, [conversation, interviewId]);
 
   // ── Submit answer to backend ──
   const submitAnswer = useCallback(async (answer) => {
@@ -1661,9 +1661,13 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
       // Fetch LiveKit Token
       const tokenRes = await interviewAPI.getToken(data.interview_id);
+      const tokenPayload = tokenRes?.data || tokenRes;
+      if (!tokenPayload?.token || !tokenPayload?.url) {
+        throw new Error('LiveKit token response did not include token/url');
+      }
 
-      setLiveKitToken(tokenRes.token);
-      setLiveKitUrl(tokenRes.url);
+      setLiveKitToken(tokenPayload.token);
+      setLiveKitUrl(tokenPayload.url);
 
       // Instantly transition to active session now that credentials are ready
       setPhase('active');
@@ -1761,6 +1765,18 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         </LiveKitRoom>
       );
     }
+
+    return (
+      <div className="fixed inset-0 bg-[#06090e] flex flex-col items-center justify-center z-[9999] overflow-hidden font-sans">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+          <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+        </div>
+        <div className="h-10 w-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mb-6" />
+        <h2 className="text-2xl font-black text-slate-200 uppercase tracking-widest">Connecting...</h2>
+        <p className="text-slate-400 mt-3 font-medium tracking-wide">Establishing WebRTC connection</p>
+      </div>
+    );
   }
 
   return (
