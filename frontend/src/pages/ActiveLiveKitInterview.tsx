@@ -271,13 +271,6 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   const seenIds = useRef(new Set());
   const hasToastedRef = useRef(false);
 
-  // Timeout fallback: if still not connected after 10s, bypass the connecting screen
-  const [connectTimeout, setConnectTimeout] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setConnectTimeout(true), 6000);
-    return () => clearTimeout(timer);
-  }, []);
-
   useEffect(() => {
     if (connectionState === 'connected' && !hasToastedRef.current) {
       toast.success('Interviewer has joined the session');
@@ -339,18 +332,6 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   let orbState = 'idle';
   if (state === 'speaking') orbState = 'speaking';
   if (state === 'listening' || state === 'connecting') orbState = 'listening';
-
-  // Show connecting screen only if not connected AND timeout hasn't fired yet
-  if (connectionState !== 'connected' && !connectTimeout) {
-    return <ConnectingView dragConstraintsRef={dragConstraintsRef} debugInfo={{
-      connectionState,
-      state,
-      audioTrack: !!audioTrack,
-      agentTranscriptions: agentTranscriptions.length,
-      remoteParticipants: remoteParticipants.map(p => ({ identity: p.identity, kind: p.kind })),
-      agent: !!agent
-    }} />;
-  }
 
   return (
     <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
