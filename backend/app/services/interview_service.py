@@ -489,6 +489,71 @@ async def send_message(interview_id: str, content: str, user: dict, session: Asy
     }
 
 
+def _normalize_turn_text(value: str) -> str:
+    return " ".join((value or "").strip().split()).lower()
+
+
+async def append_conversation_turns(interview_id: str, req: dict, user: dict, session: AsyncSession) -> dict:
+    """Persist finalized LiveKit transcript turns for scoring and history."""
+    stmt = select(models.MockInterview).where(
+        models.MockInterview.id == interview_id,
+        models.MockInterview.student_id == user["id"],
+        models.MockInterview.college_id == user["college_id"],
+        models.MockInterview.status.in_(["in_progress", "scoring"]),
+    )
+    result = await session.execute(stmt)
+    interview = result.scalars().first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview session not found")
+
+    raw_turns = req.get("turns") or []
+    if not isinstance(raw_turns, list):
+        raise HTTPException(status_code=400, detail="turns must be a list")
+
+    conversation = list(interview.conversation or [])
+    existing_keys = {
+        (msg.get("role"), _normalize_turn_text(msg.get("content", "")))
+        for msg in conversation
+        if isinstance(msg, dict)
+    }
+
+    appended = 0
+    now = datetime.now(timezone.utc).isoformat()
+    for turn in raw_turns:
+        if not isinstance(turn, dict):
+            continue
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role not in {"assistant", "user"} or not content:
+            continue
+
+        key = (role, _normalize_turn_text(content))
+        if key in existing_keys:
+            continue
+
+        conversation.append({
+            "role": role,
+            "content": content,
+            "timestamp": turn.get("timestamp") or now,
+            "source": turn.get("source") or "livekit",
+        })
+        existing_keys.add(key)
+        appended += 1
+
+    if appended:
+        interview.conversation = conversation
+        interview.question_count = sum(1 for msg in conversation if isinstance(msg, dict) and msg.get("role") == "assistant")
+        flag_modified(interview, "conversation")
+        await session.commit()
+
+    return {
+        "interview_id": interview.id,
+        "appended": appended,
+        "question_count": interview.question_count,
+        "conversation_count": len(conversation),
+    }
+
+
 async def end_interview(interview_id: str, user: dict, session: AsyncSession) -> dict:
     """End the interview session and queue AI feedback generation."""
     stmt = select(models.MockInterview).where(
@@ -515,6 +580,7 @@ async def end_interview(interview_id: str, user: dict, session: AsyncSession) ->
             user["college_id"],
         )
         await pool.close()
+        await session.commit()
         logger.info("Interview feedback queued for background processing: %s", interview_id)
     except Exception as e:
         # Fallback: if ARQ is unavailable, generate inline (blocking)

@@ -62,6 +62,17 @@ async def send_message(
     return await interview_service.send_message(interview_id, content, user, session)
 
 
+@router.post("/interview/{interview_id}/conversation")
+async def append_conversation_turns(
+    interview_id: str,
+    req: dict,
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Persist finalized LiveKit transcript turns for scoring and history."""
+    return await interview_service.append_conversation_turns(interview_id, req, user, session)
+
+
 @router.post("/interview/{interview_id}/end")
 async def end_interview(
     interview_id: str,

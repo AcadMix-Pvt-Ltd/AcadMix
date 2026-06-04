@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Microphone, Clock, Stop, VideoCamera, VideoCameraSlash } from '@phosphor-icons/react';
-import { LiveKitRoom, useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useConnectionState, useTrackTranscription, VideoTrack, useRemoteParticipants } from '@livekit/components-react';
+import { Clock, Stop } from '@phosphor-icons/react';
+import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import Avatar from 'boring-avatars';
 
@@ -180,52 +180,6 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 };
 
 
-const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text: string, isSpeaking: boolean, className?: string, cursorClassName?: string }) => {
-  const [displayLength, setDisplayLength] = useState(0);
-  const startTimeRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  const MS_PER_CHAR = 72;
-
-  useEffect(() => {
-    if (isSpeaking && text) {
-      startTimeRef.current = performance.now();
-      setDisplayLength(0);
-      const animate = () => {
-        if (!startTimeRef.current) return;
-        const elapsed = performance.now() - startTimeRef.current;
-        const chars = Math.floor(elapsed / MS_PER_CHAR);
-        setDisplayLength(Math.min(chars, text.length));
-        if (chars < text.length) {
-          rafRef.current = requestAnimationFrame(animate);
-        }
-      };
-      rafRef.current = requestAnimationFrame(animate);
-    }
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isSpeaking, text]);
-
-  useEffect(() => {
-    if (!isSpeaking && text) {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      setDisplayLength(text.length);
-    }
-  }, [isSpeaking, text]);
-
-  const isComplete = displayLength >= (text?.length || 0);
-
-  return (
-    <motion.p className={className || "text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 tracking-tight leading-tight"}>
-      {text?.slice(0, displayLength)}
-      {!isComplete && <span className={cursorClassName || "inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse"} />}
-    </motion.p>
-  );
-};
-
-
-
 interface ActiveLiveKitInterviewProps {
   elapsed: number;
   isEnding: boolean;
@@ -236,6 +190,7 @@ interface ActiveLiveKitInterviewProps {
   formatTime: (s: number) => string;
   conversation: any[];
   setConversation: React.Dispatch<React.SetStateAction<any[]>>;
+  onTranscriptTurns?: (turns: any[]) => void;
 }
 
 export const ActiveLiveKitInterview = ({
@@ -247,11 +202,10 @@ export const ActiveLiveKitInterview = ({
   dragConstraintsRef,
   formatTime,
   conversation,
-  setConversation
+  setConversation,
+  onTranscriptTurns
 }: ActiveLiveKitInterviewProps) => {
-  const { state, audioTrack, agentTranscriptions, agent } = useVoiceAssistant();
-  const remoteParticipants = useRemoteParticipants();
-  const connectionState = useConnectionState();
+  const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
   const { cameraTrack, localParticipant } = useLocalParticipant();
   const micTrack = localParticipant?.getTrackPublication(Track.Source.Microphone)?.track;
   
@@ -261,23 +215,29 @@ export const ActiveLiveKitInterview = ({
 
   const { segments: userTranscriptions } = useTrackTranscription(userTrackRef);
 
-  const seenIds = useRef(new Set());
+  const seenIds = useRef<Set<string>>(new Set());
+  const endedForQuestionLimitRef = useRef(false);
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
-    let newMsgs: any[] = [];
+    const newMsgs: any[] = [];
     userTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
-      newMsgs.push({ role: 'user', content: s.text });
+      newMsgs.push({ role: 'user', content: s.text, timestamp: new Date().toISOString(), source: 'livekit' });
     });
     agentTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
-      newMsgs.push({ role: 'assistant', content: s.text });
+      newMsgs.push({ role: 'assistant', content: s.text, timestamp: new Date().toISOString(), source: 'livekit' });
     });
     if (newMsgs.length > 0) {
-      setConversation((prev: any[]) => [...prev, ...newMsgs]);
+      setConversation((prev: any[]) => {
+        const existing = new Set(prev.map((msg: any) => `${msg.role}:${String(msg.content || '').trim().toLowerCase()}`));
+        const merged = newMsgs.filter(msg => !existing.has(`${msg.role}:${String(msg.content || '').trim().toLowerCase()}`));
+        return merged.length ? [...prev, ...merged] : prev;
+      });
+      onTranscriptTurns?.(newMsgs);
     }
-  }, [userTranscriptions, agentTranscriptions]);
+  }, [userTranscriptions, agentTranscriptions, setConversation, onTranscriptTurns]);
 
   const currentAgentText = agentTranscriptions.filter(s => !s.final).map(s => s.text).join(' ');
   const currentUserText = userTranscriptions.filter(s => !s.final).map(s => s.text).join(' ');
@@ -318,7 +278,21 @@ export const ActiveLiveKitInterview = ({
   if (state === 'speaking') orbState = 'speaking';
   if (state === 'listening' || state === 'connecting') orbState = 'listening';
 
-  const currentQuestionNumber = Math.max(1, conversation.filter((msg: any) => msg.role === 'assistant').length);
+  const assistantQuestionCount = conversation.filter((msg: any) => msg.role === 'assistant').length;
+  const currentQuestionNumber = Math.min(maxQuestions, Math.max(questionNumber || 1, assistantQuestionCount || 1));
+
+  useEffect(() => {
+    const latestTurn = conversation[conversation.length - 1];
+    if (
+      !endedForQuestionLimitRef.current &&
+      !isEnding &&
+      latestTurn?.role === 'user' &&
+      assistantQuestionCount >= maxQuestions
+    ) {
+      endedForQuestionLimitRef.current = true;
+      onEnd();
+    }
+  }, [assistantQuestionCount, conversation, isEnding, maxQuestions, onEnd]);
 
   return (
     <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
@@ -377,7 +351,7 @@ export const ActiveLiveKitInterview = ({
              {currentAgentText && (
                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex w-full justify-start">
                   <div className="max-w-[85%] md:max-w-[75%] rounded-3xl rounded-bl-sm px-6 py-4 backdrop-blur-md border bg-indigo-500/10 border-indigo-500/20 text-indigo-50 flex flex-col gap-2 shadow-2xl">
-                    <TypewriterText text={currentAgentText} isSpeaking={true} className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium" />
+                    <p className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium">{currentAgentText}</p>
                   </div>
                </motion.div>
              )}
@@ -406,24 +380,30 @@ export const ActiveLiveKitInterview = ({
          <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
       </div>
 
-      {cameraTrack && (
-        <motion.div
-           drag
-           dragConstraints={dragConstraintsRef}
-           dragElastic={0.1}
-           dragMomentum={false}
-           initial={{ opacity: 0, scale: 0.8 }}
-           animate={{ opacity: 1, scale: 1 }}
-           className="absolute right-8 top-32 w-72 h-48 bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 cursor-move hover:border-white/10 transition-colors"
-           style={{ touchAction: 'none' }}
-        >
+      <motion.div
+         drag
+         dragConstraints={dragConstraintsRef}
+         dragElastic={0.1}
+         dragMomentum={false}
+         initial={{ opacity: 0, scale: 0.8 }}
+         animate={{ opacity: 1, scale: 1 }}
+         className="absolute right-8 top-32 w-72 h-48 bg-slate-900 rounded-3xl overflow-hidden border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-50 cursor-move hover:border-white/10 transition-colors"
+         style={{ touchAction: 'none' }}
+      >
+        {cameraTrack ? (
           <VideoTrack trackRef={{ participant: localParticipant, publication: cameraTrack, source: Track.Source.Camera }} className="w-full h-full object-cover scale-x-[-1] pointer-events-none" />
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 pointer-events-none shadow-sm">
-             <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]" />
-             <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Active</span>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-950 text-[10px] font-bold text-slate-500 uppercase tracking-widest pointer-events-none">
+            Camera starting
           </div>
-        </motion.div>
-      )}
+        )}
+        <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 pointer-events-none shadow-sm">
+           <div className={`w-2 h-2 rounded-full ${cameraTrack ? 'bg-emerald-500 shadow-[0_0_10px_#10b981]' : 'bg-amber-400 shadow-[0_0_10px_#fbbf24]'}`} />
+           <span className={`text-[10px] font-bold uppercase tracking-widest ${cameraTrack ? 'text-emerald-400' : 'text-amber-300'}`}>
+             {cameraTrack ? 'Active' : 'Starting'}
+           </span>
+        </div>
+      </motion.div>
 
       <RoomAudioRenderer />
     </div>

@@ -9,7 +9,7 @@ load_dotenv()
 
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.voice import Agent
-from livekit.plugins import cartesia, google, deepgram
+from livekit.plugins import cartesia, google, deepgram, silero
 
 from app.core.config import settings
 from app import models
@@ -66,12 +66,22 @@ async def entrypoint(ctx: JobContext):
         logger.error(f"Interview {interview_id} not found in DB")
         return
 
+    interview_type = interview.interview_type or "technical"
+    difficulty = interview.difficulty or "medium"
+    company = interview.company_name or "the target company"
+    resume_context = interview.resume_content or "No resume context was provided."
+
     # Build system instructions
     system_prompt = (
-        f"You are a professional technical interviewer conducting an interview "
-        f"for the {interview.target_role or 'Software Engineer'} role. "
-        f"Be concise, professional, and ask focused follow-up questions. "
-        f"Start by greeting the candidate and asking your first question."
+        "You are AcadMix Intelligence, a professional AI mock interviewer. "
+        f"Conduct a {difficulty} {interview_type} interview for the "
+        f"{interview.target_role or 'Software Engineer'} role at {company}. "
+        "Start with a brief introduction, then ask one clear question at a time. "
+        "Use the candidate's answers to ask focused follow-up questions. "
+        "Keep the conversation natural and concise; do not monologue. "
+        "Soft-wrap the interview after 8 interviewer questions and never exceed 10 interviewer questions. "
+        "When the interview is complete, thank the candidate and tell them their feedback is being prepared. "
+        f"Candidate resume context:\n{resume_context[:4000]}"
     )
 
     # Build the initial chat context
@@ -101,16 +111,19 @@ async def entrypoint(ctx: JobContext):
         stt=deepgram.STT(),
         llm=google.LLM(**_llm_kwargs),
         tts=cartesia.TTS(),
+        vad=silero.VAD.load(),
         chat_ctx=initial_ctx,
+        use_tts_aligned_transcript=True,
     )
 
-    # Create session with interruptions DISABLED.
-    # Without VAD and with allow_interruptions=False, the AI speaks fully
-    # and only listens after it finishes. No noise can cut it off.
+    # Let genuine candidate speech interrupt the AI, but resume after a short false-start window.
     session = AgentSession(
         turn_handling={
             "interruption": {
-                "enabled": False,
+                "enabled": True,
+                "min_words": 1,
+                "resume_false_interruption": True,
+                "false_interruption_timeout": 3.0,
             }
         },
     )

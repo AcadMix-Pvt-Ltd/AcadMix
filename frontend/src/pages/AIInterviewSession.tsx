@@ -211,59 +211,6 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 };
 
 
-// ─── Voice-Synced Text (Time-Proportional) ────────────────────────────────────────
-// Smooth rAF animation calibrated to TTS speech rate (0.95 × ~150WPM ≈ 70ms/char).
-// No dependency on onboundary — works reliably across all browsers and voices.
-const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text: string, isSpeaking: boolean, className?: string, cursorClassName?: string }) => {
-  const [displayLength, setDisplayLength] = useState(0);
-  const startTimeRef = useRef<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-
-  // Calibrated to match Chrome TTS at rate=0.95
-  // ~150 WPM × 0.95 = ~142 WPM × 5.5 avg chars/word = ~781 chars/min = ~13 chars/sec = ~77ms/char
-  const MS_PER_CHAR = 72;
-
-  // Start animation when isSpeaking becomes true
-  useEffect(() => {
-    if (isSpeaking && text) {
-      startTimeRef.current = performance.now();
-      setDisplayLength(0);
-
-      const animate = () => {
-        if (!startTimeRef.current) return;
-        const elapsed = performance.now() - startTimeRef.current;
-        const chars = Math.floor(elapsed / MS_PER_CHAR);
-        setDisplayLength(Math.min(chars, text.length));
-        if (chars < text.length) {
-          rafRef.current = requestAnimationFrame(animate);
-        }
-      };
-      rafRef.current = requestAnimationFrame(animate);
-    }
-
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [isSpeaking, text]);
-
-  // Force-complete when speech ends
-  useEffect(() => {
-    if (!isSpeaking && text) {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      setDisplayLength(text.length);
-    }
-  }, [isSpeaking, text]);
-
-  const isComplete = displayLength >= (text?.length || 0);
-
-  return (
-    <motion.p className={className || "text-2xl sm:text-3xl lg:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 tracking-tight leading-tight"}>
-      {text?.slice(0, displayLength)}
-      {!isComplete && <span className={cursorClassName || "inline-block w-1.5 h-6 bg-teal-400 ml-1 rounded-sm animate-pulse"} />}
-    </motion.p>
-  );
-};
-
 // ─── Scorecard Component ─────────────────────────────────────────────────────
 const Scorecard = ({ feedback, conversation, onBack, onRetry }) => {
   const { isDark } = useTheme();
@@ -505,7 +452,7 @@ const HardwareDropdown = ({ icon: Icon, label, value, options, onChange }) => {
 };
 
 // ─── Hardware Setup Lobby ──────────────────────────────────────────────────────
-const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
+const HardwareSetupLobby = ({ sessionConfig, isStarting, onStart, onCancel }) => {
   const videoRef = useRef(null);
   const amplitudeBarRef = useRef(null);
   const [devices, setDevices] = useState({ video: [], audio: [] });
@@ -653,42 +600,27 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
         video: selectedVideoId ? { deviceId: { ideal: selectedVideoId } } : true,
       };
       
-      try {
-        // Try audio+video first with a timeout
-        stream = await Promise.race([
-          navigator.mediaDevices.getUserMedia(constraints),
-          new Promise((_, reject) => setTimeout(() => {
-             const err = new Error("Hardware timeout");
-             err.name = "TimeoutError";
-             reject(err);
-          }, 5000))
-        ]);
-      } catch (err: any) {
-        // If video failed, fallback to audio-only
-        if (err.name === "NotFoundError" || err.name === "NotReadableError" || err.name === "TimeoutError") {
-          console.warn("Video failed, falling back to audio-only:", err.name);
-          try {
-            stream = await Promise.race([
-              navigator.mediaDevices.getUserMedia({ audio: selectedAudioId ? { deviceId: { ideal: selectedAudioId } } : true, video: false }),
-              new Promise((_, reject) => setTimeout(() => {
-                const e = new Error("Audio timeout");
-                e.name = "TimeoutError";
-                reject(e);
-              }, 3000))
-            ]);
-          } catch (audioErr: any) {
-            throw audioErr;
-          }
-        } else {
-          throw err;
-        }
-      }
+      stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia(constraints),
+        new Promise((_, reject) => setTimeout(() => {
+           const err = new Error("Hardware timeout");
+           err.name = "TimeoutError";
+           reject(err);
+        }, 5000))
+      ]);
       
       if (!isMountedRef.current) {
         if (stream) stream.getTracks().forEach(t => t.stop());
         return;
       }
       
+      if (!stream.getVideoTracks().some(track => track.readyState === 'live')) {
+        stream.getTracks().forEach(t => t.stop());
+        const err = new Error("Camera is required for the mock interview.");
+        err.name = "NotFoundError";
+        throw err;
+      }
+
       streamRef.current = stream;
       setPermissionsGranted(true);
       setHardwareError('');
@@ -758,9 +690,9 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
          toast.error("Microphone is currently in use by another application.");
          setPermissionsGranted(false);
       } else if (err.name === "NotFoundError") {
-         setHardwareError("No microphone found! Please plug in a microphone.");
-         toast.error("No microphone found!");
-         setPermissionsGranted(true);
+         setHardwareError("Camera and microphone are required for the mock interview.");
+         toast.error("Camera and microphone are required.");
+         setPermissionsGranted(false);
       } else if (err.name === "TimeoutError") {
          setHardwareError("Hardware deadlocked. Your Windows audio driver is unresponsive.");
          toast.error("Hardware took too long to respond.");
@@ -969,18 +901,18 @@ const HardwareSetupLobby = ({ sessionConfig, onStart, onCancel }) => {
               <div className="mt-auto pt-6 border-t border-slate-100">
                 <button
                   onClick={handleStartWrapper}
-                  disabled={!permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
+                  disabled={isStarting || !permissionsGranted || !hasMicSignal || hasResume === false || hasResume === null}
                   className={`group relative w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-2xl font-extrabold text-sm transition-all duration-300 overflow-hidden ${
-                    permissionsGranted && hasMicSignal && hasResume === true
+                    permissionsGranted && hasMicSignal && hasResume === true && !isStarting
                       ? 'bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white shadow-[0_8px_30px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_40px_rgba(99,102,241,0.55)] hover:scale-[1.02] active:scale-[0.98]'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  {permissionsGranted && hasMicSignal && hasResume === true && (
+                  {permissionsGranted && hasMicSignal && hasResume === true && !isStarting && (
                     <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                   )}
-                  <Sparkle size={18} weight="fill" className={permissionsGranted && hasMicSignal && hasResume === true ? 'animate-pulse' : ''} />
-                  {hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Awaiting permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
+                  <Sparkle size={18} weight="fill" className={permissionsGranted && hasMicSignal && hasResume === true && !isStarting ? 'animate-pulse' : ''} />
+                  {isStarting ? 'Starting...' : hasResume === null ? 'Checking resume...' : hasResume === false ? 'Resume required to start' : !permissionsGranted ? 'Awaiting permissions...' : !hasMicSignal ? 'Waiting for mic signal...' : 'Start Interview'}
                 </button>
                 <button 
                   onClick={onCancel}
@@ -1051,6 +983,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const [interviewId, setInterviewId] = useState(null);
   const [liveKitToken, setLiveKitToken] = useState(null);
   const [liveKitUrl, setLiveKitUrl] = useState(null);
+  const [isStarting, setIsStarting] = useState(false);
   const [questionNumber, setQuestionNumber] = useState(0);
   const [maxQuestions] = useState(10);
   const [elapsed, setElapsed] = useState(0);
@@ -1059,7 +992,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const [conversation, setConversation] = useState<any[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showTranscript, setShowTranscript] = useState(false); // Gates TypewriterText — prevents text leak in thinking mode
+  const [showTranscript, setShowTranscript] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [sessionMicId, setSessionMicId] = useState('');
   const [sessionVideoId, setSessionVideoId] = useState('');
@@ -1126,6 +1059,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     if (sessionConfig?.viewId) {
       interviewAPI.get(sessionConfig.viewId).then(res => {
         setViewMode(res.data);
+        setConversation(res.data.conversation || []);
         if (res.data.ai_feedback) {
           setFeedback({ ...res.data.ai_feedback, overall_score: res.data.overall_score, scores: res.data.scores });
           setPhase('scorecard');
@@ -1148,6 +1082,16 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   useEffect(() => { isSpeakingRef.current = isSpeaking; }, [isSpeaking]);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { interviewIdRef.current = interviewId; }, [interviewId]);
+
+  const persistTranscriptTurns = useCallback(async (turns: any[]) => {
+    const activeId = interviewIdRef.current;
+    if (!activeId || !turns?.length) return;
+    try {
+      await interviewAPI.saveConversation(activeId, turns);
+    } catch (err) {
+      console.error('Failed to persist LiveKit transcript turns:', err);
+    }
+  }, []);
 
   // ── Stop Listening ──
   const stopListening = useCallback(() => {
@@ -1368,6 +1312,11 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     }
 
     // 2. Connect analyser to stream for visualizer — always ensure it's healthy
+    if (!mediaStreamRef.current?.getVideoTracks().some(t => t.readyState === 'live')) {
+      toast.error('Camera access is required for the interview.');
+      return;
+    }
+
     const needsAnalyser = !analyserRef.current || !sourceNodeRef.current 
       || (audioContextRef.current && audioContextRef.current.state === 'closed');
     
@@ -1506,10 +1455,47 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     setOrbState('evaluating');
 
     try {
+      if (conversation.length) {
+        try {
+          await interviewAPI.saveConversation(interviewId, conversation);
+        } catch (persistErr) {
+          console.error('Failed to flush transcript before ending interview:', persistErr);
+        }
+      }
+
       const { data } = await interviewAPI.end(interviewId);
-      setFeedback(data.feedback ? { ...data.feedback, overall_score: data.overall_score, scores: data.scores } : data);
+      setFeedback(data.feedback ? { ...data.feedback, overall_score: data.overall_score, scores: data.scores } : {
+        overall_score: 0,
+        scores: {},
+        strengths: [],
+        weaknesses: [],
+        improvement_tips: [],
+        per_question: [],
+        overall_comment: data.message || 'Feedback is being generated. Your transcript is available below.',
+      });
       setPhase('scorecard');
       try { document.exitFullscreen(); } catch {}
+
+      if (data.status === 'scoring' && interviewId) {
+        const pollForFeedback = async () => {
+          for (let attempt = 0; attempt < 30; attempt += 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            const detail = await interviewAPI.get(interviewId);
+            if (detail.data?.conversation) {
+              setConversation(detail.data.conversation);
+            }
+            if (detail.data?.status === 'completed' && detail.data?.ai_feedback) {
+              setFeedback({
+                ...detail.data.ai_feedback,
+                overall_score: detail.data.overall_score,
+                scores: detail.data.scores,
+              });
+              return;
+            }
+          }
+        };
+        pollForFeedback().catch(err => console.error('Failed to poll interview feedback:', err));
+      }
     } catch (err: any) {
       toast.error('Failed to generate feedback');
       setPhase('active');
@@ -1656,9 +1642,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       await document.documentElement.requestFullscreen();
     } catch {}
 
-    setPhase('active');
-    setOrbState('thinking');
-    setShowTranscript(false); // ← Ensure text is hidden on initial start
+    setIsStarting(true);
 
     try {
       const { data } = await interviewAPI.start({
@@ -1677,14 +1661,19 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
       // Fetch LiveKit Token
       const tokenRes = await interviewAPI.getToken(data.interview_id);
+
       setLiveKitToken(tokenRes.token);
       setLiveKitUrl(tokenRes.url);
 
-      // Start continuous listening (UI state)
+      // Instantly transition to active session now that credentials are ready
+      setPhase('active');
       setOrbState('listening');
+      setShowTranscript(false); // ← Ensure text is hidden on initial start
+      setIsStarting(false);
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to start interview');
       setPhase('setup');
+      setIsStarting(false);
       try { document.exitFullscreen(); } catch {}
     }
   };
@@ -1749,7 +1738,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
   // ── Setup Screen (pre-fullscreen) ──
   if (phase === 'setup' && !sessionConfig?.viewId) {
-    return <HardwareSetupLobby sessionConfig={sessionConfig} onStart={handleStart} onCancel={() => navigate('interview-warroom')} />;
+    return <HardwareSetupLobby sessionConfig={sessionConfig} isStarting={isStarting} onStart={handleStart} onCancel={() => navigate('interview-warroom')} />;
   }
 
   // ── Active Interview / Ending ──
@@ -1767,20 +1756,9 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
               dragConstraintsRef={dragConstraintsRef}
               conversation={conversation as { role: 'assistant' | 'user'; content: string }[]}
               setConversation={setConversation}
+              onTranscriptTurns={persistTranscriptTurns}
            />
         </LiveKitRoom>
-      );
-    } else {
-      return (
-        <div className="fixed inset-0 bg-[#06090e] flex flex-col items-center justify-center z-[9999] overflow-hidden font-sans">
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
-            <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
-          </div>
-          <div className="h-10 w-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mb-6" />
-          <h2 className="text-2xl font-black text-slate-200 uppercase tracking-widest">Connecting...</h2>
-          <p className="text-slate-400 mt-3 font-medium tracking-wide">Establishing WebRTC connection</p>
-        </div>
       );
     }
   }
@@ -1825,9 +1803,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         >
            {/* Conversation History */}
            {conversation.map((msg, i) => {
-             const isLast = i === conversation.length - 1;
-             const isAI = msg.role === 'assistant';
-             
              return (
                <motion.div 
                  key={i} 
@@ -1840,18 +1815,9 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-50 rounded-br-sm'
                      : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-50 rounded-bl-sm'
                  }`}>
-                   {isLast && isAI && isSpeaking && showTranscript ? (
-                      <TypewriterText 
-                        text={msg.content} 
-                        isSpeaking={isSpeaking} 
-                        className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium"
-                        cursorClassName="inline-block w-1.5 h-4 ml-1.5 bg-indigo-400 animate-pulse align-middle"
-                      />
-                   ) : (
-                      <p className={`text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'opacity-90 font-medium' : 'text-slate-200'}`}>
-                        {msg.content}
-                      </p>
-                   )}
+                   <p className={`text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'opacity-90 font-medium' : 'text-slate-200'}`}>
+                     {msg.content}
+                   </p>
                  </div>
                </motion.div>
              );
