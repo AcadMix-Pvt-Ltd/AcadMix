@@ -274,7 +274,7 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   // Timeout fallback: if still not connected after 10s, bypass the connecting screen
   const [connectTimeout, setConnectTimeout] = useState(false);
   useEffect(() => {
-    const timer = setTimeout(() => setConnectTimeout(true), 10000);
+    const timer = setTimeout(() => setConnectTimeout(true), 6000);
     return () => clearTimeout(timer);
   }, []);
 
