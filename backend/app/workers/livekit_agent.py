@@ -9,7 +9,7 @@ load_dotenv()
 
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.voice import Agent
-from livekit.plugins import cartesia, silero, google, deepgram
+from livekit.plugins import cartesia, google, deepgram
 
 from app.core.config import settings
 from app import models
@@ -101,23 +101,16 @@ async def entrypoint(ctx: JobContext):
         stt=deepgram.STT(),
         llm=google.LLM(**_llm_kwargs),
         tts=cartesia.TTS(),
-        vad=silero.VAD.load(),
         chat_ctx=initial_ctx,
-        use_tts_aligned_transcript=True,
     )
 
-    # Create session with interruption settings:
-    #   - min_words=1: only interrupt if STT detects at least 1 real word (ignores noise)
-    #   - min_duration=0.8: ignore audio bursts shorter than 0.8s
-    #   - resume_false_interruption=True: resume AI speech after a false interruption
-    #   - false_interruption_timeout=3.0: wait 3s of silence before resuming
+    # Create session with interruptions DISABLED.
+    # Without VAD and with allow_interruptions=False, the AI speaks fully
+    # and only listens after it finishes. No noise can cut it off.
     session = AgentSession(
         turn_handling={
             "interruption": {
-                "min_words": 1,
-                "min_duration": 0.8,
-                "resume_false_interruption": True,
-                "false_interruption_timeout": 3.0,
+                "enabled": False,
             }
         },
     )

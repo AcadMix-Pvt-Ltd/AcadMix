@@ -271,6 +271,13 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   const seenIds = useRef(new Set());
   const hasToastedRef = useRef(false);
 
+  // Timeout fallback: if still not connected after 10s, bypass the connecting screen
+  const [connectTimeout, setConnectTimeout] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setConnectTimeout(true), 10000);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     if (connectionState === 'connected' && !hasToastedRef.current) {
       toast.success('Interviewer has joined the session');
@@ -333,7 +340,8 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   if (state === 'speaking') orbState = 'speaking';
   if (state === 'listening' || state === 'connecting') orbState = 'listening';
 
-  if (connectionState !== 'connected') {
+  // Show connecting screen only if not connected AND timeout hasn't fired yet
+  if (connectionState !== 'connected' && !connectTimeout) {
     return <ConnectingView dragConstraintsRef={dragConstraintsRef} debugInfo={{
       connectionState,
       state,
