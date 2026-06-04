@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Stop } from '@phosphor-icons/react';
 import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack } from '@livekit/components-react';
@@ -341,14 +341,125 @@ export const ActiveLiveKitInterview = ({
   const seenIds = useRef<Set<string>>(new Set());
   const endedForQuestionLimitRef = useRef(false);
   const conversationRef = useRef(conversation);
+  const agentStateRef = useRef(state);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const bottomSentinelRef = useRef<HTMLDivElement>(null);
   const shouldStickToBottomRef = useRef(true);
   const scrollFrameRef = useRef<number | null>(null);
+  const browserSpeechRecognitionRef = useRef<any>(null);
+  const browserSpeechBufferRef = useRef('');
+  const browserSpeechTimerRef = useRef<number | null>(null);
+  const lastBrowserSpeechRef = useRef('');
+  const browserSpeechSeqRef = useRef(0);
+  const [browserSpeechText, setBrowserSpeechText] = useState('');
 
   useEffect(() => {
     conversationRef.current = conversation;
   }, [conversation]);
+
+  useEffect(() => {
+    agentStateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition || !micTrack?.mediaStreamTrack || isEnding) return;
+
+    const flushBrowserSpeech = () => {
+      const content = browserSpeechBufferRef.current.replace(/\s+/g, ' ').trim();
+      browserSpeechBufferRef.current = '';
+      setBrowserSpeechText('');
+
+      if (!content || isBackgroundOrNoise(content)) return;
+      if (normalizeTranscriptText(content) === normalizeTranscriptText(lastBrowserSpeechRef.current)) return;
+      if (conversationRef.current.some((existing: any) => isDuplicateTurn(existing, { role: 'user', content }))) return;
+
+      lastBrowserSpeechRef.current = content;
+      const msg = {
+        id: `browser-speech-${Date.now()}-${browserSpeechSeqRef.current++}`,
+        role: 'user',
+        content,
+        timestamp: new Date().toISOString(),
+        source: 'browser-speech',
+        kind: 'answer',
+      };
+
+      setConversation((prev: any[]) => {
+        if (prev.some((existing: any) => isDuplicateTurn(existing, msg))) return prev;
+        const next = [...prev, msg];
+        conversationRef.current = next;
+        return next;
+      });
+      onTranscriptTurns?.([msg]);
+    };
+
+    const scheduleFlush = () => {
+      if (browserSpeechTimerRef.current) window.clearTimeout(browserSpeechTimerRef.current);
+      browserSpeechTimerRef.current = window.setTimeout(flushBrowserSpeech, 1400);
+    };
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-IN';
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      if (agentStateRef.current === 'speaking') return;
+
+      let finalText = '';
+      let interimText = '';
+      for (let i = event.resultIndex; i < event.results.length; i += 1) {
+        const text = event.results[i]?.[0]?.transcript || '';
+        if (event.results[i].isFinal) {
+          finalText += `${text} `;
+        } else {
+          interimText += `${text} `;
+        }
+      }
+
+      if (finalText.trim()) {
+        browserSpeechBufferRef.current = `${browserSpeechBufferRef.current} ${finalText}`.replace(/\s+/g, ' ').trim();
+        scheduleFlush();
+      }
+
+      const displayed = `${browserSpeechBufferRef.current} ${interimText}`.replace(/\s+/g, ' ').trim();
+      setBrowserSpeechText(displayed && !isBackgroundOrNoise(displayed) ? displayed : '');
+    };
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== 'no-speech' && event.error !== 'aborted') {
+        console.error('Browser speech recognition error:', event.error);
+      }
+    };
+
+    recognition.onend = () => {
+      if (!isEnding && micTrack?.mediaStreamTrack?.readyState === 'live') {
+        window.setTimeout(() => {
+          try {
+            recognition.start();
+          } catch {}
+        }, 300);
+      }
+    };
+
+    browserSpeechRecognitionRef.current = recognition;
+    try {
+      recognition.start();
+    } catch {}
+
+    return () => {
+      if (browserSpeechTimerRef.current) window.clearTimeout(browserSpeechTimerRef.current);
+      flushBrowserSpeech();
+      try {
+        recognition.onend = null;
+        recognition.stop();
+      } catch {}
+      if (browserSpeechRecognitionRef.current === recognition) {
+        browserSpeechRecognitionRef.current = null;
+      }
+    };
+  }, [micTrack, isEnding, onTranscriptTurns, setConversation]);
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
@@ -396,9 +507,10 @@ export const ActiveLiveKitInterview = ({
   const currentUserText = useMemo(
     () => {
       const text = latestLiveText(userTranscriptions, 'user', conversation);
-      return isBackgroundOrNoise(text) ? '' : text;
+      if (text && !isBackgroundOrNoise(text)) return text;
+      return browserSpeechText;
     },
-    [userTranscriptions, conversation],
+    [userTranscriptions, conversation, browserSpeechText],
   );
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
