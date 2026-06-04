@@ -180,6 +180,31 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 };
 
 
+const normalizeTranscriptText = (value: string) =>
+  String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+const isDuplicateTurn = (existing: any, incoming: any) => {
+  if (!existing || !incoming || existing.role !== incoming.role) return false;
+  const existingText = normalizeTranscriptText(existing.content);
+  const incomingText = normalizeTranscriptText(incoming.content);
+  if (!existingText || !incomingText) return false;
+  if (existingText === incomingText) return true;
+
+  const shorter = existingText.length < incomingText.length ? existingText : incomingText;
+  const longer = existingText.length >= incomingText.length ? existingText : incomingText;
+  return shorter.length > 40 && longer.includes(shorter);
+};
+
+const latestLiveText = (segments: any[], role: 'assistant' | 'user', conversation: any[]) => {
+  const activeSegments = segments.filter(segment => !segment.final && segment.text?.trim());
+  const latest = activeSegments[activeSegments.length - 1];
+  const text = latest?.text?.trim() || '';
+  if (!text) return '';
+
+  const lastFinal = [...conversation].reverse().find((msg: any) => msg.role === role);
+  return isDuplicateTurn(lastFinal, { role, content: text }) ? '' : text;
+};
+
 interface ActiveLiveKitInterviewProps {
   elapsed: number;
   isEnding: boolean;
@@ -217,6 +242,11 @@ export const ActiveLiveKitInterview = ({
 
   const seenIds = useRef<Set<string>>(new Set());
   const endedForQuestionLimitRef = useRef(false);
+  const conversationRef = useRef(conversation);
+
+  useEffect(() => {
+    conversationRef.current = conversation;
+  }, [conversation]);
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
@@ -230,17 +260,25 @@ export const ActiveLiveKitInterview = ({
       newMsgs.push({ role: 'assistant', content: s.text, timestamp: new Date().toISOString(), source: 'livekit' });
     });
     if (newMsgs.length > 0) {
+      const accepted = newMsgs.filter(msg => !conversationRef.current.some((existing: any) => isDuplicateTurn(existing, msg)));
       setConversation((prev: any[]) => {
-        const existing = new Set(prev.map((msg: any) => `${msg.role}:${String(msg.content || '').trim().toLowerCase()}`));
-        const merged = newMsgs.filter(msg => !existing.has(`${msg.role}:${String(msg.content || '').trim().toLowerCase()}`));
+        const merged = newMsgs.filter(msg => !prev.some((existing: any) => isDuplicateTurn(existing, msg)));
         return merged.length ? [...prev, ...merged] : prev;
       });
-      onTranscriptTurns?.(newMsgs);
+      if (accepted.length) {
+        onTranscriptTurns?.(accepted);
+      }
     }
   }, [userTranscriptions, agentTranscriptions, setConversation, onTranscriptTurns]);
 
-  const currentAgentText = agentTranscriptions.filter(s => !s.final).map(s => s.text).join(' ');
-  const currentUserText = userTranscriptions.filter(s => !s.final).map(s => s.text).join(' ');
+  const currentAgentText = useMemo(
+    () => latestLiveText(agentTranscriptions, 'assistant', conversation),
+    [agentTranscriptions, conversation],
+  );
+  const currentUserText = useMemo(
+    () => latestLiveText(userTranscriptions, 'user', conversation),
+    [userTranscriptions, conversation],
+  );
 
   const ttsAnalyserRef = useRef(null);
   const analyserRef = useRef(null);
