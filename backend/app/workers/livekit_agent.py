@@ -68,17 +68,9 @@ _VALID_SHORT_RESPONSES = {
     "could you repeat",
 }
 
-_SHORT_NOISE_SNIPPETS = {
-    "uh",
-    "um",
-    "hmm",
-    "mm",
-    "hm",
-    "hello",
-    "hey",
+_SHORT_BACKGROUND_SNIPPETS = {
     "subscribe",
     "breaking news",
-    "thank you",
 }
 
 
@@ -98,7 +90,7 @@ def _is_background_or_noise(text: str) -> bool:
     if normalized in _VALID_SHORT_RESPONSES:
         return False
 
-    if normalized in _SHORT_NOISE_SNIPPETS:
+    if normalized in _SHORT_BACKGROUND_SNIPPETS:
         return True
 
     words = _word_count(normalized)

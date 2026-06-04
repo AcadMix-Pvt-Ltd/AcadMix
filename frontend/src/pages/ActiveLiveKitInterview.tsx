@@ -214,17 +214,9 @@ const VALID_SHORT_RESPONSES = new Set([
   'could you repeat',
 ]);
 
-const SHORT_NOISE_SNIPPETS = new Set([
-  'uh',
-  'um',
-  'hmm',
-  'mm',
-  'hm',
-  'hello',
-  'hey',
+const SHORT_BACKGROUND_SNIPPETS = new Set([
   'subscribe',
   'breaking news',
-  'thank you',
 ]);
 
 const wordCount = (value: string) => (value.match(/[a-zA-Z0-9']+/g) || []).length;
@@ -233,7 +225,7 @@ const isBackgroundOrNoise = (value: string) => {
   const normalized = normalizeTranscriptText(value);
   if (!normalized) return true;
   if (VALID_SHORT_RESPONSES.has(normalized)) return false;
-  if (SHORT_NOISE_SNIPPETS.has(normalized)) return true;
+  if (SHORT_BACKGROUND_SNIPPETS.has(normalized)) return true;
 
   const words = wordCount(normalized);
   if (words <= 8 && BRAND_NOISE_PHRASES.some(phrase => normalized.includes(phrase))) return true;
