@@ -224,33 +224,72 @@ const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text
   );
 };
 
-export const ConnectingView = ({ dragConstraintsRef, debugInfo }: { dragConstraintsRef?: any, debugInfo?: any }) => {
+// ─── Session Entry Overlay (3-step transition) ─────────────────────────────
+// Step 1: "Connecting to Interviewer..." (while room connects)
+// Step 2: "Interviewer joined. Session will begin in a moment" (2.5s after connected)
+// Step 3: Overlay fades out → interview begins
+const SessionEntryOverlay = ({ connectionState }: { connectionState: string }) => {
+  const [phase, setPhase] = useState<'connecting' | 'joined' | 'done'>('connecting');
+
+  useEffect(() => {
+    if (connectionState === 'connected' && phase === 'connecting') {
+      setPhase('joined');
+      const timer = setTimeout(() => setPhase('done'), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [connectionState, phase]);
+
+  // Auto-dismiss after 8s even if connection state never becomes 'connected'
+  useEffect(() => {
+    const fallback = setTimeout(() => setPhase('done'), 8000);
+    return () => clearTimeout(fallback);
+  }, []);
+
+  if (phase === 'done') return null;
+
   return (
-    <div className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
-      {/* Debug Info Overlay */}
-      <div className="absolute top-4 left-4 z-50 text-xs text-white bg-black/80 p-4 font-mono max-w-sm rounded">
-        <p>Debug State:</p>
-        <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
-      </div>
-
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
-        <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
-      </div>
-
-      <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6 border-b border-white/[0.03]">
-        <div className="flex items-center gap-4">
-          <Avatar size={36} name="AcadMix Intelligence" variant="beam" colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} />
-          <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">AcadMix Intelligence</span>
+    <AnimatePresence>
+      <motion.div
+        key="session-entry"
+        initial={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed inset-0 bg-[#06090e] flex flex-col z-[99999] overflow-hidden font-sans"
+      >
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+          <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
         </div>
-      </div>
 
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
-         <div className="h-10 w-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mb-6" />
-         <h2 className="text-2xl font-black text-slate-200 uppercase tracking-widest">Connecting...</h2>
-         <p className="text-slate-400 mt-3 font-medium tracking-wide">Waiting for interviewer to join...</p>
-      </div>
-    </div>
+        <div className="relative z-10 flex items-center justify-between px-6 sm:px-10 py-6 border-b border-white/[0.03]">
+          <div className="flex items-center gap-4">
+            <Avatar size={36} name="AcadMix Intelligence" variant="beam" colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} />
+            <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">AcadMix Intelligence</span>
+          </div>
+        </div>
+
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
+          <AnimatePresence mode="wait">
+            {phase === 'connecting' && (
+              <motion.div key="connecting" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center">
+                <div className="h-10 w-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mb-6" />
+                <h2 className="text-2xl font-black text-slate-200 uppercase tracking-widest">Connecting...</h2>
+                <p className="text-slate-400 mt-3 font-medium tracking-wide">Connecting to Interviewer</p>
+              </motion.div>
+            )}
+            {phase === 'joined' && (
+              <motion.div key="joined" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center">
+                <div className="h-14 w-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center mb-6">
+                  <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h2 className="text-2xl font-black text-emerald-300 uppercase tracking-widest">Interviewer Joined</h2>
+                <p className="text-slate-400 mt-3 font-medium tracking-wide">Session will begin in a moment</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
@@ -269,14 +308,6 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
 
   const [conversation, setConversation] = useState([]);
   const seenIds = useRef(new Set());
-  const hasToastedRef = useRef(false);
-
-  useEffect(() => {
-    if (connectionState === 'connected' && !hasToastedRef.current) {
-      toast.success('Interviewer has joined the session');
-      hasToastedRef.current = true;
-    }
-  }, [connectionState]);
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
@@ -335,6 +366,7 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
 
   return (
     <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
+      <SessionEntryOverlay connectionState={connectionState} />
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
         <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />

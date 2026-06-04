@@ -120,7 +120,7 @@ async def entrypoint(ctx: JobContext):
     )
 
     # Wait for audio transport to be fully established before greeting
-    await asyncio.sleep(2)
+    await asyncio.sleep(4.5)
     await session.say(first_q)
 
 
