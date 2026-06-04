@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Stop } from '@phosphor-icons/react';
 import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack } from '@livekit/components-react';
@@ -239,6 +239,22 @@ const turnKind = (role: 'assistant' | 'user', content: string) => {
   return normalizeTranscriptText(content) === normalizeTranscriptText(NOISE_NUDGE) ? 'nudge' : 'question';
 };
 
+const USER_TURN_FINALIZE_DELAY_MS = 2800;
+
+const mergeUserTurnText = (existing: string, incoming: string) => {
+  const current = String(existing || '').trim();
+  const next = String(incoming || '').trim();
+  if (!current) return next;
+  if (!next) return current;
+
+  const currentNorm = normalizeTranscriptText(current);
+  const nextNorm = normalizeTranscriptText(next);
+  if (currentNorm === nextNorm) return next.length > current.length ? next : current;
+  if (nextNorm.includes(currentNorm)) return next;
+  if (currentNorm.includes(nextNorm)) return current;
+  return `${current} ${next}`.replace(/\s+/g, ' ').trim();
+};
+
 const isDuplicateTurn = (existing: any, incoming: any) => {
   if (!existing || !incoming || existing.role !== incoming.role) return false;
   const existingText = normalizeTranscriptText(existing.content);
@@ -344,6 +360,9 @@ export const ActiveLiveKitInterview = ({
   const lastBrowserSpeechRef = useRef('');
   const browserSpeechSeqRef = useRef(0);
   const [browserSpeechText, setBrowserSpeechText] = useState('');
+  const pendingUserTurnRef = useRef<any | null>(null);
+  const pendingUserTimerRef = useRef<number | null>(null);
+  const [pendingUserText, setPendingUserText] = useState('');
 
   useEffect(() => {
     conversationRef.current = conversation;
@@ -352,6 +371,98 @@ export const ActiveLiveKitInterview = ({
   useEffect(() => {
     agentStateRef.current = state;
   }, [state]);
+
+  const clearPendingUserTimer = useCallback(() => {
+    if (pendingUserTimerRef.current) {
+      window.clearTimeout(pendingUserTimerRef.current);
+      pendingUserTimerRef.current = null;
+    }
+  }, []);
+
+  const flushPendingUserTurn = useCallback(() => {
+    clearPendingUserTimer();
+
+    const pending = pendingUserTurnRef.current;
+    pendingUserTurnRef.current = null;
+    setPendingUserText('');
+
+    const content = (pending?.content || '').trim();
+    if (!content || isBackgroundOrNoise(content)) return [];
+
+    const msg = {
+      id: pending.id,
+      role: 'user',
+      content,
+      timestamp: pending.timestamp || new Date().toISOString(),
+      source: pending.source || 'livekit',
+      kind: 'answer',
+    };
+
+    if (conversationRef.current.some((existing: any) => isDuplicateTurn(existing, msg))) {
+      return [];
+    }
+
+    const lastTurn = conversationRef.current[conversationRef.current.length - 1];
+    if (lastTurn?.role === 'user') {
+      const mergedMsg = {
+        ...lastTurn,
+        content: mergeUserTurnText(lastTurn.content, msg.content),
+        timestamp: msg.timestamp,
+        kind: 'answer',
+      };
+      conversationRef.current = [
+        ...conversationRef.current.slice(0, -1),
+        mergedMsg,
+      ];
+      setConversation((prev: any[]) => {
+        const last = prev[prev.length - 1];
+        if (last?.role !== 'user') return prev;
+        return [
+          ...prev.slice(0, -1),
+          {
+            ...last,
+            content: mergeUserTurnText(last.content, msg.content),
+            timestamp: msg.timestamp,
+            kind: 'answer',
+          },
+        ];
+      });
+      return [];
+    }
+
+    conversationRef.current = [...conversationRef.current, msg];
+    setConversation((prev: any[]) => {
+      if (prev.some((existing: any) => isDuplicateTurn(existing, msg))) return prev;
+      return [...prev, msg];
+    });
+    onTranscriptTurns?.([msg]);
+    return [msg];
+  }, [clearPendingUserTimer, onTranscriptTurns, setConversation]);
+
+  const schedulePendingUserFlush = useCallback(() => {
+    clearPendingUserTimer();
+    pendingUserTimerRef.current = window.setTimeout(() => {
+      flushPendingUserTurn();
+    }, USER_TURN_FINALIZE_DELAY_MS);
+  }, [clearPendingUserTimer, flushPendingUserTurn]);
+
+  const bufferUserSegment = useCallback((segment: any) => {
+    const text = (segment?.text || '').trim();
+    if (!text || isBackgroundOrNoise(text)) return;
+
+    const pending = pendingUserTurnRef.current;
+    const content = mergeUserTurnText(pending?.content || '', text);
+    pendingUserTurnRef.current = {
+      id: pending?.id || segment.id || `user-turn-${Date.now()}`,
+      role: 'user',
+      content,
+      timestamp: pending?.timestamp || new Date().toISOString(),
+      source: segment.source || 'livekit',
+      kind: 'answer',
+    };
+    setPendingUserText(content);
+    schedulePendingUserFlush();
+  }, [schedulePendingUserFlush]);
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -364,30 +475,19 @@ export const ActiveLiveKitInterview = ({
 
       if (!content || isBackgroundOrNoise(content)) return;
       if (normalizeTranscriptText(content) === normalizeTranscriptText(lastBrowserSpeechRef.current)) return;
-      if (conversationRef.current.some((existing: any) => isDuplicateTurn(existing, { role: 'user', content }))) return;
 
       lastBrowserSpeechRef.current = content;
-      const msg = {
+      bufferUserSegment({
         id: `browser-speech-${Date.now()}-${browserSpeechSeqRef.current++}`,
-        role: 'user',
-        content,
-        timestamp: new Date().toISOString(),
+        text: content,
         source: 'browser-speech',
-        kind: 'answer',
-      };
-
-      setConversation((prev: any[]) => {
-        if (prev.some((existing: any) => isDuplicateTurn(existing, msg))) return prev;
-        const next = [...prev, msg];
-        conversationRef.current = next;
-        return next;
       });
-      onTranscriptTurns?.([msg]);
+      flushPendingUserTurn();
     };
 
     const scheduleFlush = () => {
       if (browserSpeechTimerRef.current) window.clearTimeout(browserSpeechTimerRef.current);
-      browserSpeechTimerRef.current = window.setTimeout(flushBrowserSpeech, 1400);
+      browserSpeechTimerRef.current = window.setTimeout(flushBrowserSpeech, USER_TURN_FINALIZE_DELAY_MS);
     };
 
     const recognition = new SpeechRecognition();
@@ -451,26 +551,18 @@ export const ActiveLiveKitInterview = ({
         browserSpeechRecognitionRef.current = null;
       }
     };
-  }, [micTrack, isEnding, onTranscriptTurns, setConversation]);
+  }, [micTrack, isEnding, bufferUserSegment, flushPendingUserTurn]);
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
     const newMsgs: any[] = [];
     userTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
-      if (!isBackgroundOrNoise(s.text)) {
-        newMsgs.push({
-          id: s.id,
-          role: 'user',
-          content: s.text,
-          timestamp: new Date().toISOString(),
-          source: 'livekit',
-          kind: 'answer',
-        });
-      }
+      bufferUserSegment(s);
     });
     agentTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
+      flushPendingUserTurn();
       newMsgs.push({
         id: s.id,
         role: 'assistant',
@@ -490,7 +582,7 @@ export const ActiveLiveKitInterview = ({
         onTranscriptTurns?.(accepted);
       }
     }
-  }, [userTranscriptions, agentTranscriptions, setConversation, onTranscriptTurns]);
+  }, [userTranscriptions, agentTranscriptions, bufferUserSegment, flushPendingUserTurn, setConversation, onTranscriptTurns]);
 
   const currentAgentText = useMemo(
     () => latestLiveText(agentTranscriptions, 'assistant', conversation),
@@ -499,10 +591,10 @@ export const ActiveLiveKitInterview = ({
   const currentUserText = useMemo(
     () => {
       const text = latestLiveText(userTranscriptions, 'user', conversation);
-      if (text && !isBackgroundOrNoise(text)) return text;
-      return browserSpeechText;
+      const liveText = isBackgroundOrNoise(text) ? '' : text;
+      return mergeUserTurnText(pendingUserText, liveText || browserSpeechText);
     },
-    [userTranscriptions, conversation, browserSpeechText],
+    [userTranscriptions, conversation, browserSpeechText, pendingUserText],
   );
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -520,8 +612,9 @@ export const ActiveLiveKitInterview = ({
   useEffect(() => {
     return () => {
       if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+      clearPendingUserTimer();
     };
-  }, []);
+  }, [clearPendingUserTimer]);
 
   const ttsAnalyserRef = useRef(null);
   const analyserRef = useRef(null);

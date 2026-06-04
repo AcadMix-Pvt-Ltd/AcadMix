@@ -195,6 +195,11 @@ async def entrypoint(ctx: JobContext):
     # Let genuine candidate speech interrupt the AI, but resume after a short false-start window.
     session = AgentSession(
         turn_handling={
+            "endpointing": {
+                "mode": "fixed",
+                "min_delay": 2.5,
+                "max_delay": 5.0,
+            },
             "interruption": {
                 "enabled": True,
                 "min_words": 3,
