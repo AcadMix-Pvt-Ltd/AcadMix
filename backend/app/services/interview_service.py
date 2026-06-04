@@ -493,6 +493,18 @@ def _normalize_turn_text(value: str) -> str:
     return " ".join((value or "").strip().split()).lower()
 
 
+def _conversation_question_count(conversation: list) -> int:
+    return sum(
+        1
+        for msg in conversation
+        if (
+            isinstance(msg, dict)
+            and msg.get("role") == "assistant"
+            and msg.get("kind", "question") == "question"
+        )
+    )
+
+
 async def append_conversation_turns(interview_id: str, req: dict, user: dict, session: AsyncSession) -> dict:
     """Persist finalized LiveKit transcript turns for scoring and history."""
     stmt = select(models.MockInterview).where(
@@ -526,6 +538,9 @@ async def append_conversation_turns(interview_id: str, req: dict, user: dict, se
         content = (turn.get("content") or "").strip()
         if role not in {"assistant", "user"} or not content:
             continue
+        kind = turn.get("kind") or ("answer" if role == "user" else "question")
+        if kind not in {"question", "answer", "nudge"}:
+            kind = "answer" if role == "user" else "question"
 
         key = (role, _normalize_turn_text(content))
         if key in existing_keys:
@@ -536,13 +551,14 @@ async def append_conversation_turns(interview_id: str, req: dict, user: dict, se
             "content": content,
             "timestamp": turn.get("timestamp") or now,
             "source": turn.get("source") or "livekit",
+            "kind": kind,
         })
         existing_keys.add(key)
         appended += 1
 
     if appended:
         interview.conversation = conversation
-        interview.question_count = sum(1 for msg in conversation if isinstance(msg, dict) and msg.get("role") == "assistant")
+        interview.question_count = _conversation_question_count(conversation)
         flag_modified(interview, "conversation")
         await session.commit()
 

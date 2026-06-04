@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Clock, Stop } from '@phosphor-icons/react';
 import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack } from '@livekit/components-react';
 import { Track } from 'livekit-client';
@@ -172,7 +172,7 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 
   return (
     <div className="w-full flex flex-col items-center pointer-events-none">
-      <div ref={containerRef} className="w-full h-48 sm:h-56 relative flex items-center justify-center [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+      <div ref={containerRef} className="w-full h-32 sm:h-36 relative flex items-center justify-center [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
         <canvas ref={canvasRef} className="w-full h-full" />
       </div>
     </div>
@@ -182,6 +182,70 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 
 const normalizeTranscriptText = (value: string) =>
   String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+const NOISE_NUDGE = 'I heard some background audio. Please answer the current question when ready.';
+
+const BRAND_NOISE_PHRASES = [
+  'hdfc sky',
+  'hdfc securities',
+  'zerodha',
+  'groww',
+  'upstox',
+  'angel one',
+  'mutual fund',
+  'stock market',
+  'demat account',
+];
+
+const VALID_SHORT_RESPONSES = new Set([
+  'yes',
+  'yeah',
+  'yep',
+  'okay',
+  'ok',
+  'sure',
+  'no',
+  'nope',
+  "i don't know",
+  'i dont know',
+  'please repeat',
+  'repeat',
+  'can you repeat',
+  'could you repeat',
+]);
+
+const SHORT_NOISE_SNIPPETS = new Set([
+  'uh',
+  'um',
+  'hmm',
+  'mm',
+  'hm',
+  'hello',
+  'hey',
+  'subscribe',
+  'breaking news',
+  'thank you',
+]);
+
+const wordCount = (value: string) => (value.match(/[a-zA-Z0-9']+/g) || []).length;
+
+const isBackgroundOrNoise = (value: string) => {
+  const normalized = normalizeTranscriptText(value);
+  if (!normalized) return true;
+  if (VALID_SHORT_RESPONSES.has(normalized)) return false;
+  if (SHORT_NOISE_SNIPPETS.has(normalized)) return true;
+
+  const words = wordCount(normalized);
+  if (words <= 8 && BRAND_NOISE_PHRASES.some(phrase => normalized.includes(phrase))) return true;
+
+  const adLike = ['download', 'invest', 'offer', 'ad'].some(term => normalized.includes(term));
+  return words <= 10 && adLike && BRAND_NOISE_PHRASES.some(phrase => normalized.includes(phrase));
+};
+
+const turnKind = (role: 'assistant' | 'user', content: string) => {
+  if (role === 'user') return 'answer';
+  return normalizeTranscriptText(content) === normalizeTranscriptText(NOISE_NUDGE) ? 'nudge' : 'question';
+};
 
 const isDuplicateTurn = (existing: any, incoming: any) => {
   if (!existing || !incoming || existing.role !== incoming.role) return false;
@@ -203,6 +267,40 @@ const latestLiveText = (segments: any[], role: 'assistant' | 'user', conversatio
 
   const lastFinal = [...conversation].reverse().find((msg: any) => msg.role === role);
   return isDuplicateTurn(lastFinal, { role, content: text }) ? '' : text;
+};
+
+const transcriptKey = (msg: any, index: number) =>
+  msg.id || msg.segmentId || `${msg.role}-${msg.timestamp || 'turn'}-${index}`;
+
+const TranscriptRow = ({ role, content, isLive = false }: { role: 'assistant' | 'user'; content: string; isLive?: boolean }) => {
+  const isUser = role === 'user';
+  const label = isUser ? 'You' : 'Ami';
+  const status = isLive ? (isUser ? 'Listening' : 'Speaking') : null;
+
+  return (
+    <motion.div
+      initial={isLive ? { opacity: 0, y: 6 } : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
+      <div className={`w-full ${isUser ? 'max-w-[68%] ml-auto' : 'max-w-[76%] mr-auto'}`}>
+        <div className={`mb-2 flex items-center gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}>
+          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{label}</span>
+          {status && (
+            <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-teal-300/80">{status}</span>
+          )}
+        </div>
+        <div className={`rounded-lg border bg-[#0d121b]/95 px-5 py-4 ${
+          isUser
+            ? 'border-slate-600/40 border-r-teal-400/70 text-slate-100'
+            : 'border-slate-700/60 border-l-teal-400/70 text-slate-200'
+        }`}>
+          <p className="text-[15px] md:text-[16px] leading-7 whitespace-pre-wrap font-medium">{content}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
 };
 
 interface ActiveLiveKitInterviewProps {
@@ -243,6 +341,10 @@ export const ActiveLiveKitInterview = ({
   const seenIds = useRef<Set<string>>(new Set());
   const endedForQuestionLimitRef = useRef(false);
   const conversationRef = useRef(conversation);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
+  const shouldStickToBottomRef = useRef(true);
+  const scrollFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     conversationRef.current = conversation;
@@ -253,11 +355,27 @@ export const ActiveLiveKitInterview = ({
     const newMsgs: any[] = [];
     userTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
-      newMsgs.push({ role: 'user', content: s.text, timestamp: new Date().toISOString(), source: 'livekit' });
+      if (!isBackgroundOrNoise(s.text)) {
+        newMsgs.push({
+          id: s.id,
+          role: 'user',
+          content: s.text,
+          timestamp: new Date().toISOString(),
+          source: 'livekit',
+          kind: 'answer',
+        });
+      }
     });
     agentTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
-      newMsgs.push({ role: 'assistant', content: s.text, timestamp: new Date().toISOString(), source: 'livekit' });
+      newMsgs.push({
+        id: s.id,
+        role: 'assistant',
+        content: s.text,
+        timestamp: new Date().toISOString(),
+        source: 'livekit',
+        kind: turnKind('assistant', s.text),
+      });
     });
     if (newMsgs.length > 0) {
       const accepted = newMsgs.filter(msg => !conversationRef.current.some((existing: any) => isDuplicateTurn(existing, msg)));
@@ -276,9 +394,30 @@ export const ActiveLiveKitInterview = ({
     [agentTranscriptions, conversation],
   );
   const currentUserText = useMemo(
-    () => latestLiveText(userTranscriptions, 'user', conversation),
+    () => {
+      const text = latestLiveText(userTranscriptions, 'user', conversation);
+      return isBackgroundOrNoise(text) ? '' : text;
+    },
     [userTranscriptions, conversation],
   );
+
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (!shouldStickToBottomRef.current || !bottomSentinelRef.current) return;
+    if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+    scrollFrameRef.current = requestAnimationFrame(() => {
+      bottomSentinelRef.current?.scrollIntoView({ behavior, block: 'end' });
+    });
+  };
+
+  useEffect(() => {
+    scrollToBottom('smooth');
+  }, [conversation.length, currentAgentText, currentUserText]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollFrameRef.current) cancelAnimationFrame(scrollFrameRef.current);
+    };
+  }, []);
 
   const ttsAnalyserRef = useRef(null);
   const analyserRef = useRef(null);
@@ -316,7 +455,9 @@ export const ActiveLiveKitInterview = ({
   if (state === 'speaking') orbState = 'speaking';
   if (state === 'listening' || state === 'connecting') orbState = 'listening';
 
-  const assistantQuestionCount = conversation.filter((msg: any) => msg.role === 'assistant').length;
+  const assistantQuestionCount = conversation.filter((msg: any) => (
+    msg.role === 'assistant' && (msg.kind || 'question') === 'question'
+  )).length;
   const currentQuestionNumber = Math.min(maxQuestions, Math.max(questionNumber || 1, assistantQuestionCount || 1));
 
   useEffect(() => {
@@ -362,59 +503,34 @@ export const ActiveLiveKitInterview = ({
 
       <div className="relative z-10 flex-1 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
         <div 
-          className="flex-1 w-full overflow-y-auto flex flex-col gap-6 pt-10 pb-8 [mask-image:linear-gradient(to_bottom,transparent,black_5%,black_90%,transparent)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          ref={(el) => { if (el) { el.scrollTop = el.scrollHeight; } }}
+          ref={chatScrollRef}
+          onScroll={(event) => {
+            const el = event.currentTarget;
+            shouldStickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 180;
+          }}
+          className="flex-1 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-56 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         >
            {conversation.map((msg, i) => (
-             <motion.div 
-               key={i} 
-               initial={{ opacity: 0, y: 10, scale: 0.98 }}
-               animate={{ opacity: 1, y: 0, scale: 1 }}
-               className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-             >
-               <div className={`max-w-[85%] md:max-w-[75%] rounded-3xl px-6 py-4 backdrop-blur-md border shadow-2xl ${
-                 msg.role === 'user'
-                   ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-50 rounded-br-sm'
-                   : 'bg-indigo-500/10 border-indigo-500/20 text-indigo-50 rounded-bl-sm'
-               }`}>
-                  <p className={`text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap ${msg.role === 'user' ? 'opacity-90 font-medium' : 'text-slate-200'}`}>
-                    {msg.content}
-                  </p>
-               </div>
-             </motion.div>
+             <TranscriptRow
+               key={transcriptKey(msg, i)}
+               role={msg.role}
+               content={msg.content}
+             />
            ))}
 
-           {/* Live AI Transcript Bubble */}
-           <AnimatePresence>
-             {currentAgentText && (
-               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex w-full justify-start">
-                  <div className="max-w-[85%] md:max-w-[75%] rounded-3xl rounded-bl-sm px-6 py-4 backdrop-blur-md border bg-indigo-500/10 border-indigo-500/20 text-indigo-50 flex flex-col gap-2 shadow-2xl">
-                    <p className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium">{currentAgentText}</p>
-                  </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
+           {currentAgentText && (
+             <TranscriptRow role="assistant" content={currentAgentText} isLive />
+           )}
 
-           {/* Live Student Transcript Bubble */}
-           <AnimatePresence>
-             {currentUserText && (
-               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex w-full justify-end">
-                  <div className="max-w-[85%] md:max-w-[75%] rounded-3xl rounded-br-sm px-6 py-4 backdrop-blur-md border bg-emerald-500/10 border-emerald-500/20 text-emerald-50 flex flex-col gap-2 shadow-2xl">
-                    <div className="flex items-center gap-2 mb-1">
-                       <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
-                       <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-400 opacity-80">Listening...</span>
-                    </div>
-                    <p className="text-[15px] md:text-[17px] leading-relaxed whitespace-pre-wrap font-medium opacity-90">{currentUserText}</p>
-                  </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-           
-           <div className="h-40 shrink-0" />
+           {currentUserText && (
+             <TranscriptRow role="user" content={currentUserText} isLive />
+           )}
+
+           <div ref={bottomSentinelRef} className="h-1 shrink-0" />
         </div>
       </div>
 
-      <div className="absolute bottom-[56px] sm:bottom-[60px] left-0 right-0 z-0 h-48 sm:h-56 w-full flex items-center justify-center pointer-events-none opacity-90 mix-blend-screen">
+      <div className="absolute -bottom-6 sm:-bottom-8 left-0 right-0 z-0 h-36 sm:h-40 w-full flex items-center justify-center pointer-events-none opacity-55 mix-blend-screen">
          <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
       </div>
 

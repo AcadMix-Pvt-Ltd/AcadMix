@@ -2,12 +2,13 @@ import asyncio
 import logging
 import json
 import os
+import re
 import tempfile
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
+from livekit.agents import AutoSubscribe, JobContext, AgentSession, StopResponse, WorkerOptions, cli, llm
 from livekit.agents.voice import Agent
 from livekit.plugins import cartesia, google, deepgram, silero
 
@@ -35,6 +36,89 @@ if hasattr(settings, "VERTEX_CREDENTIALS_JSON") and settings.VERTEX_CREDENTIALS_
 _gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 
 logger = logging.getLogger("acadmix.livekit_agent")
+
+NOISE_NUDGE = "I heard some background audio. Please answer the current question when ready."
+
+_BRAND_NOISE_PHRASES = {
+    "hdfc sky",
+    "hdfc securities",
+    "zerodha",
+    "groww",
+    "upstox",
+    "angel one",
+    "mutual fund",
+    "stock market",
+    "demat account",
+}
+
+_VALID_SHORT_RESPONSES = {
+    "yes",
+    "yeah",
+    "yep",
+    "okay",
+    "ok",
+    "sure",
+    "no",
+    "nope",
+    "i don't know",
+    "i dont know",
+    "please repeat",
+    "repeat",
+    "can you repeat",
+    "could you repeat",
+}
+
+_SHORT_NOISE_SNIPPETS = {
+    "uh",
+    "um",
+    "hmm",
+    "mm",
+    "hm",
+    "hello",
+    "hey",
+    "subscribe",
+    "breaking news",
+    "thank you",
+}
+
+
+def _normalize_candidate_text(value: str) -> str:
+    return re.sub(r"\s+", " ", (value or "").strip().lower())
+
+
+def _word_count(value: str) -> int:
+    return len(re.findall(r"[a-zA-Z0-9']+", value or ""))
+
+
+def _is_background_or_noise(text: str) -> bool:
+    normalized = _normalize_candidate_text(text)
+    if not normalized:
+        return True
+
+    if normalized in _VALID_SHORT_RESPONSES:
+        return False
+
+    if normalized in _SHORT_NOISE_SNIPPETS:
+        return True
+
+    words = _word_count(normalized)
+    if words <= 8 and any(phrase in normalized for phrase in _BRAND_NOISE_PHRASES):
+        return True
+
+    ad_like = ("download" in normalized or "invest" in normalized or "offer" in normalized or "ad" in normalized)
+    if words <= 10 and ad_like and any(phrase in normalized for phrase in _BRAND_NOISE_PHRASES):
+        return True
+
+    return False
+
+
+class InterviewAgent(Agent):
+    async def on_user_turn_completed(self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage) -> None:
+        text = new_message.text_content or ""
+        if _is_background_or_noise(text):
+            logger.info("Ignoring likely background audio in interview room: %s", text)
+            await self.session.say(NOISE_NUDGE, allow_interruptions=True, add_to_chat_ctx=True)
+            raise StopResponse()
 
 
 # ── Database helpers (use NullPool to avoid asyncio cross-loop issues) ────────
@@ -106,7 +190,7 @@ async def entrypoint(ctx: JobContext):
     if _gemini_api_key:
         _llm_kwargs["api_key"] = _gemini_api_key
 
-    agent = Agent(
+    agent = InterviewAgent(
         instructions=system_prompt,
         stt=deepgram.STT(),
         llm=google.LLM(**_llm_kwargs),
@@ -121,7 +205,8 @@ async def entrypoint(ctx: JobContext):
         turn_handling={
             "interruption": {
                 "enabled": True,
-                "min_words": 1,
+                "min_words": 3,
+                "min_duration": 0.7,
                 "resume_false_interruption": True,
                 "false_interruption_timeout": 3.0,
             }
