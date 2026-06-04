@@ -605,37 +605,41 @@ export const ActiveLiveKitInterview = ({
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden h-full">
-        <div 
-          ref={chatScrollRef}
-          onScroll={(event) => {
-            const el = event.currentTarget;
-            shouldStickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 180;
-          }}
-          className="flex-1 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-56 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-        >
-           {conversation.map((msg, i) => (
-             <TranscriptRow
-               key={transcriptKey(msg, i)}
-               role={msg.role}
-               content={msg.content}
-             />
-           ))}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden">
+          <div
+            ref={chatScrollRef}
+            onScroll={(event) => {
+              const el = event.currentTarget;
+              shouldStickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 180;
+            }}
+            className="flex-1 min-h-0 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          >
+             {conversation.map((msg, i) => (
+               <TranscriptRow
+                 key={transcriptKey(msg, i)}
+                 role={msg.role}
+                 content={msg.content}
+               />
+             ))}
 
-           {currentAgentText && (
-             <TranscriptRow role="assistant" content={currentAgentText} isLive />
-           )}
+             {currentAgentText && (
+               <TranscriptRow role="assistant" content={currentAgentText} isLive />
+             )}
 
-           {currentUserText && (
-             <TranscriptRow role="user" content={currentUserText} isLive />
-           )}
+             {currentUserText && (
+               <TranscriptRow role="user" content={currentUserText} isLive />
+             )}
 
-           <div ref={bottomSentinelRef} className="h-1 shrink-0" />
+             <div ref={bottomSentinelRef} className="h-1 shrink-0" />
+          </div>
         </div>
-      </div>
 
-      <div className="absolute -bottom-6 sm:-bottom-8 left-0 right-0 z-0 h-36 sm:h-40 w-full flex items-center justify-center pointer-events-none opacity-55 mix-blend-screen">
-         <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
+        <div className="relative z-0 h-36 sm:h-40 shrink-0 w-full overflow-hidden pointer-events-none opacity-55 mix-blend-screen">
+          <div className="absolute inset-x-0 bottom-0 h-full flex items-center justify-center">
+            <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
+          </div>
+        </div>
       </div>
 
       <motion.div
