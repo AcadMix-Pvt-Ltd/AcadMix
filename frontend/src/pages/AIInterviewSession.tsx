@@ -1056,7 +1056,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   const [elapsed, setElapsed] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [transcript, setTranscript] = useState('');
-  const [conversation, setConversation] = useState([]);
+  const [conversation, setConversation] = useState<any[]>([]);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false); // Gates TypewriterText — prevents text leak in thinking mode
@@ -1502,12 +1502,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
   // ── End Interview (defined before submitAnswer) ──
   const handleEndInterview = useCallback(async () => {
-    stopListening();
-    if (currentAudioRef.current) {
-      try { const a = currentAudioRef.current as any; if (a?.pause) { a.pause(); a.src = ''; } } catch {}
-      currentAudioRef.current = null;
-    }
-    cleanupAudio(); // Securely close audio hardware streams
     setPhase('ending');
     setOrbState('evaluating');
 
@@ -1519,10 +1513,8 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     } catch (err: any) {
       toast.error('Failed to generate feedback');
       setPhase('active');
-      setOrbState('listening');
-      startListening();
     }
-  }, [interviewId, stopListening, startListening]);
+  }, [interviewId]);
 
   // ── Submit answer to backend ──
   const submitAnswer = useCallback(async (answer) => {
@@ -1690,7 +1682,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
 
       // Start continuous listening (UI state)
       setOrbState('listening');
-      startListening();
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to start interview');
       setPhase('setup');
@@ -1768,14 +1759,28 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         <LiveKitRoom audio video token={liveKitToken} serverUrl={liveKitUrl} connect options={{ adaptiveStream: true, dynacast: true }}>
            <ActiveLiveKitInterview 
               elapsed={elapsed} 
-              isEnding={phase === 'ending' || isEnding}
+              isEnding={phase === 'ending'}
               formatTime={formatTime}
               questionNumber={questionNumber}
               maxQuestions={maxQuestions}
               onEnd={handleEndInterview}
               dragConstraintsRef={dragConstraintsRef}
+              conversation={conversation as { role: 'assistant' | 'user'; content: string }[]}
+              setConversation={setConversation}
            />
         </LiveKitRoom>
+      );
+    } else {
+      return (
+        <div className="fixed inset-0 bg-[#06090e] flex flex-col items-center justify-center z-[9999] overflow-hidden font-sans">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-1/4 -left-1/4 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] mix-blend-screen opacity-50" />
+            <div className="absolute -bottom-1/4 -right-1/4 w-[800px] h-[800px] bg-teal-600/10 rounded-full blur-[150px] mix-blend-screen opacity-50" />
+          </div>
+          <div className="h-10 w-10 rounded-full border-[3px] border-indigo-500 border-t-transparent animate-spin mb-6" />
+          <h2 className="text-2xl font-black text-slate-200 uppercase tracking-widest">Connecting...</h2>
+          <p className="text-slate-400 mt-3 font-medium tracking-wide">Establishing WebRTC connection</p>
+        </div>
       );
     }
   }

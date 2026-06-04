@@ -226,7 +226,29 @@ const TypewriterText = ({ text, isSpeaking, className, cursorClassName }: { text
 
 
 
-export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questionNumber, onEnd, dragConstraintsRef, formatTime }) => {
+interface ActiveLiveKitInterviewProps {
+  elapsed: number;
+  isEnding: boolean;
+  maxQuestions: number;
+  questionNumber: number;
+  onEnd: () => void;
+  dragConstraintsRef: any;
+  formatTime: (s: number) => string;
+  conversation: any[];
+  setConversation: React.Dispatch<React.SetStateAction<any[]>>;
+}
+
+export const ActiveLiveKitInterview = ({
+  elapsed,
+  isEnding,
+  maxQuestions,
+  questionNumber,
+  onEnd,
+  dragConstraintsRef,
+  formatTime,
+  conversation,
+  setConversation
+}: ActiveLiveKitInterviewProps) => {
   const { state, audioTrack, agentTranscriptions, agent } = useVoiceAssistant();
   const remoteParticipants = useRemoteParticipants();
   const connectionState = useConnectionState();
@@ -239,12 +261,11 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
 
   const { segments: userTranscriptions } = useTrackTranscription(userTrackRef);
 
-  const [conversation, setConversation] = useState([]);
   const seenIds = useRef(new Set());
 
   // Aggregate finalized segments into historical conversation
   useEffect(() => {
-    let newMsgs = [];
+    let newMsgs: any[] = [];
     userTranscriptions.filter(s => s.final && !seenIds.current.has(s.id)).forEach(s => {
       seenIds.current.add(s.id);
       newMsgs.push({ role: 'user', content: s.text });
@@ -254,7 +275,7 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
       newMsgs.push({ role: 'assistant', content: s.text });
     });
     if (newMsgs.length > 0) {
-      setConversation(prev => [...prev, ...newMsgs]);
+      setConversation((prev: any[]) => [...prev, ...newMsgs]);
     }
   }, [userTranscriptions, agentTranscriptions]);
 
@@ -297,6 +318,8 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
   if (state === 'speaking') orbState = 'speaking';
   if (state === 'listening' || state === 'connecting') orbState = 'listening';
 
+  const currentQuestionNumber = Math.max(1, conversation.filter((msg: any) => msg.role === 'assistant').length);
+
   return (
     <div ref={dragConstraintsRef} className="fixed inset-0 bg-[#06090e] flex flex-col z-[9999] overflow-hidden font-sans">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -315,7 +338,7 @@ export const ActiveLiveKitInterview = ({ elapsed, isEnding, maxQuestions, questi
             <span className="text-sm font-bold text-slate-200 tabular-nums">{formatTime(elapsed)}</span>
           </div>
           <div className="flex items-center justify-center bg-indigo-500/10 border border-indigo-500/20 px-4 py-2 rounded-full backdrop-blur-md shadow-sm">
-            <span className="text-sm font-bold text-indigo-400">Q {questionNumber}/{maxQuestions}</span>
+            <span className="text-sm font-bold text-indigo-400">Q {currentQuestionNumber}/{maxQuestions}</span>
           </div>
           <button onClick={onEnd} disabled={isEnding}
             className="flex items-center gap-2 px-5 py-2 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/20 hover:text-red-300 transition-all disabled:opacity-50 group shadow-sm">
