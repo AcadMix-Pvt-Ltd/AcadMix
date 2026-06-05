@@ -2,6 +2,7 @@ import asyncio
 import logging
 import json
 import os
+import re
 import tempfile
 from dotenv import load_dotenv
 
@@ -43,6 +44,129 @@ NO_RESPONSE_END_MESSAGE = (
     "I still have not heard a response, so I will end the mock interview now. "
     "You can start another session when you are ready."
 )
+MAX_DEEPGRAM_KEYTERMS = 80
+COMMON_DEEPGRAM_KEYTERMS = (
+    "AcadMix",
+    "SDE",
+    "SDE-1",
+    "software developer",
+    "software engineering",
+    "data structures",
+    "algorithms",
+    "object oriented programming",
+    "OOP",
+    "operating system",
+    "DBMS",
+    "database management system",
+    "computer networks",
+    "REST API",
+    "CI/CD",
+    "GitHub",
+    "Git",
+    "Docker",
+    "Kubernetes",
+    "OpenCV",
+    "Python",
+    "Java",
+    "JavaScript",
+    "TypeScript",
+    "React",
+    "Node.js",
+    "FastAPI",
+    "PostgreSQL",
+    "MongoDB",
+    "Redis",
+    "SQL",
+    "NoSQL",
+    "machine learning",
+    "artificial intelligence",
+    "computer vision",
+    "Vertex AI",
+    "Gemini",
+    "LLM",
+    "STT",
+    "TTS",
+    "VAD",
+    "LiveKit",
+    "Deepgram",
+    "Cartesia",
+    "Silero",
+)
+KEYTERM_STOPWORDS = {
+    "and",
+    "are",
+    "for",
+    "from",
+    "with",
+    "this",
+    "that",
+    "the",
+    "was",
+    "were",
+    "your",
+    "resume",
+    "project",
+    "projects",
+    "experience",
+    "education",
+    "skills",
+    "college",
+    "university",
+}
+KEYTERM_PATTERN = re.compile(
+    r"\b(?:[A-Z][A-Za-z0-9+#./-]{1,}(?:\s+[A-Z][A-Za-z0-9+#./-]{1,}){0,3}|"
+    r"[A-Za-z]+(?:\+\+|#)|[A-Za-z0-9]+(?:[./-][A-Za-z0-9]+)+)\b"
+)
+
+
+def _clean_keyterm(value: str) -> str | None:
+    cleaned = re.sub(r"\s+", " ", str(value or "")).strip(" \t\r\n,.;:()[]{}<>|")
+    if len(cleaned) < 2 or len(cleaned) > 64:
+        return None
+    if cleaned.lower() in KEYTERM_STOPWORDS or cleaned.isdigit():
+        return None
+    return cleaned
+
+
+def build_deepgram_keyterms(
+    *,
+    target_role: str | None,
+    company: str,
+    interview_type: str,
+    resume_context: str,
+) -> list[str]:
+    keyterms: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str):
+        if len(keyterms) >= MAX_DEEPGRAM_KEYTERMS:
+            return
+        cleaned = _clean_keyterm(value)
+        if not cleaned:
+            return
+        normalized = cleaned.lower()
+        if normalized in seen:
+            return
+        seen.add(normalized)
+        keyterms.append(cleaned)
+
+    for value in (target_role, company, interview_type):
+        if value:
+            add(value)
+
+    resume_sample = (resume_context or "")[:6000]
+    resume_lower = resume_sample.lower()
+    for term in COMMON_DEEPGRAM_KEYTERMS:
+        if term.lower() in resume_lower:
+            add(term)
+
+    for match in KEYTERM_PATTERN.finditer(resume_sample):
+        add(match.group(0))
+
+    for term in COMMON_DEEPGRAM_KEYTERMS:
+        add(term)
+
+    return keyterms
 
 
 class NoResponseController:
@@ -243,9 +367,27 @@ async def entrypoint(ctx: JobContext):
     if _gemini_api_key:
         _llm_kwargs["api_key"] = _gemini_api_key
 
+    deepgram_keyterms = build_deepgram_keyterms(
+        target_role=interview.target_role,
+        company=company,
+        interview_type=interview_type,
+        resume_context=resume_context,
+    )
+    _stt_options = {
+        "model": "nova-3",
+        "language": "en-IN",
+        "interim_results": True,
+        "punctuate": True,
+        "smart_format": True,
+        "filler_words": True,
+        "vad_events": True,
+    }
+    if deepgram_keyterms:
+        _stt_options["keyterm"] = deepgram_keyterms
+
     agent = InterviewAgent(
         instructions=system_prompt,
-        stt=deepgram.STT(),
+        stt=deepgram.STT(**_stt_options),
         llm=google.LLM(**_llm_kwargs),
         tts=cartesia.TTS(),
         vad=silero.VAD.load(),
