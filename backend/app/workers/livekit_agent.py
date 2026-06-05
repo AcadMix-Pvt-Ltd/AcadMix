@@ -36,6 +36,138 @@ _gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 
 logger = logging.getLogger("acadmix.livekit_agent")
 
+NO_RESPONSE_DELAY_SECONDS = 15.0
+NO_RESPONSE_PROMPT_1 = "I am still listening. Please answer when you are ready."
+NO_RESPONSE_PROMPT_2 = "I still have not heard your response. Please answer now, or I will end the session shortly."
+NO_RESPONSE_END_MESSAGE = (
+    "I still have not heard a response, so I will end the mock interview now. "
+    "You can start another session when you are ready."
+)
+
+
+class NoResponseController:
+    def __init__(self, *, session: AgentSession, ctx: JobContext):
+        self._session = session
+        self._ctx = ctx
+        self._task: asyncio.Task | None = None
+        self._generation = 0
+        self._ignore_next_speech_events = 0
+        self._closed = False
+        self._user_speech_active = False
+
+    def ignore_next_speech_event(self) -> bool:
+        if self._ignore_next_speech_events <= 0:
+            return False
+        self._ignore_next_speech_events -= 1
+        return True
+
+    def watch_assistant_speech(self, speech_handle):
+        if self._closed:
+            return
+        self._generation += 1
+        generation = self._generation
+        self._cancel_task()
+        self._task = asyncio.create_task(self._start_after_playout(speech_handle, generation))
+
+    def note_user_speech_started(self):
+        if self._closed:
+            return
+        self._user_speech_active = True
+        self._generation += 1
+        self._cancel_task()
+
+    def note_user_speech_stopped(self):
+        if self._closed or not self._user_speech_active:
+            return
+        self._user_speech_active = False
+        self._generation += 1
+        generation = self._generation
+        self._cancel_task()
+        self._task = asyncio.create_task(self._run_reminder_flow(generation))
+
+    def note_user_turn_completed(self):
+        if self._closed:
+            return
+        self._user_speech_active = False
+        self._generation += 1
+        self._cancel_task()
+
+    def close(self):
+        self._closed = True
+        self._generation += 1
+        self._cancel_task()
+
+    def _cancel_task(self):
+        if self._task and not self._task.done():
+            self._task.cancel()
+        self._task = None
+
+    async def _start_after_playout(self, speech_handle, generation: int):
+        try:
+            await speech_handle.wait_for_playout()
+            if speech_handle.interrupted or not self._is_current(generation):
+                return
+            await self._run_reminder_flow(generation)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("No-response timer failed after assistant speech")
+
+    async def _run_reminder_flow(self, generation: int):
+        try:
+            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+            if not self._is_current(generation):
+                return
+
+            first_prompt = self._say_idle_message(NO_RESPONSE_PROMPT_1)
+            await first_prompt.wait_for_playout()
+            if first_prompt.interrupted or not self._is_current(generation):
+                return
+
+            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+            if not self._is_current(generation):
+                return
+
+            second_prompt = self._say_idle_message(NO_RESPONSE_PROMPT_2)
+            await second_prompt.wait_for_playout()
+            if second_prompt.interrupted or not self._is_current(generation):
+                return
+
+            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+            if not self._is_current(generation):
+                return
+
+            end_message = self._say_idle_message(NO_RESPONSE_END_MESSAGE)
+            await end_message.wait_for_playout()
+            if end_message.interrupted or not self._is_current(generation):
+                return
+
+            self._closed = True
+            self._ctx.shutdown("mock interview ended after repeated no-response prompts")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("No-response reminder flow failed")
+
+    def _say_idle_message(self, message: str):
+        self._ignore_next_speech_events += 1
+        return self._session.say(message, allow_interruptions=True)
+
+    def _is_current(self, generation: int) -> bool:
+        return not self._closed and generation == self._generation and not self._user_speech_active
+
+
+class InterviewAgent(Agent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.no_response_controller: NoResponseController | None = None
+
+    async def on_user_turn_completed(
+        self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
+    ) -> None:
+        if self.no_response_controller:
+            self.no_response_controller.note_user_turn_completed()
+
 
 # ── Database helpers (use NullPool to avoid asyncio cross-loop issues) ────────
 
@@ -111,7 +243,7 @@ async def entrypoint(ctx: JobContext):
     if _gemini_api_key:
         _llm_kwargs["api_key"] = _gemini_api_key
 
-    agent = Agent(
+    agent = InterviewAgent(
         instructions=system_prompt,
         stt=deepgram.STT(),
         llm=google.LLM(**_llm_kwargs),
@@ -138,6 +270,28 @@ async def entrypoint(ctx: JobContext):
             }
         },
     )
+    no_response_controller = NoResponseController(session=session, ctx=ctx)
+    agent.no_response_controller = no_response_controller
+
+    async def _close_no_response_controller(reason: str):
+        no_response_controller.close()
+
+    ctx.add_shutdown_callback(_close_no_response_controller)
+
+    def _on_speech_created(ev):
+        if no_response_controller.ignore_next_speech_event():
+            return
+        no_response_controller.watch_assistant_speech(ev.speech_handle)
+
+    def _on_user_state_changed(ev):
+        if ev.new_state == "speaking":
+            no_response_controller.note_user_speech_started()
+        elif ev.new_state == "listening":
+            no_response_controller.note_user_speech_stopped()
+
+    session.on("speech_created", _on_speech_created)
+    session.on("user_state_changed", _on_user_state_changed)
+
     await session.start(
         agent=agent,
         room=ctx.room,

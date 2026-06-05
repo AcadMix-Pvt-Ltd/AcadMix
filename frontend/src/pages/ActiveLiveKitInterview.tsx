@@ -203,6 +203,9 @@ const isClarificationTurn = (content: string) => {
     'could you continue',
     'please continue',
     'could you answer',
+    'i am still listening',
+    'i still have not heard your response',
+    'i still have not heard a response',
   ].some(phrase => normalized.includes(phrase));
 };
 
