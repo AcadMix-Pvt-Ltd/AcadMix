@@ -183,60 +183,32 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 const normalizeTranscriptText = (value: string) =>
   String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-const NOISE_NUDGE = 'I heard some background audio. Please answer the current question when ready.';
-
-const BRAND_NOISE_PHRASES = [
-  'hdfc sky',
-  'hdfc securities',
-  'zerodha',
-  'groww',
-  'upstox',
-  'angel one',
-  'mutual fund',
-  'stock market',
-  'demat account',
-];
-
-const VALID_SHORT_RESPONSES = new Set([
-  'yes',
-  'yeah',
-  'yep',
-  'okay',
-  'ok',
-  'sure',
-  'no',
-  'nope',
-  "i don't know",
-  'i dont know',
-  'please repeat',
-  'repeat',
-  'can you repeat',
-  'could you repeat',
-]);
-
-const SHORT_BACKGROUND_SNIPPETS = new Set([
-  'subscribe',
-  'breaking news',
-]);
-
-const wordCount = (value: string) => (value.match(/[a-zA-Z0-9']+/g) || []).length;
-
-const isBackgroundOrNoise = (value: string) => {
-  const normalized = normalizeTranscriptText(value);
-  if (!normalized) return true;
-  if (VALID_SHORT_RESPONSES.has(normalized)) return false;
-  if (SHORT_BACKGROUND_SNIPPETS.has(normalized)) return true;
-
-  const words = wordCount(normalized);
-  if (words <= 8 && BRAND_NOISE_PHRASES.some(phrase => normalized.includes(phrase))) return true;
-
-  const adLike = ['download', 'invest', 'offer', 'ad'].some(term => normalized.includes(term));
-  return words <= 10 && adLike && BRAND_NOISE_PHRASES.some(phrase => normalized.includes(phrase));
+const isClarificationTurn = (content: string) => {
+  const normalized = normalizeTranscriptText(content);
+  if (!normalized) return false;
+  return [
+    'i did not quite understand',
+    "i didn't quite understand",
+    'i do not understand',
+    "i don't understand",
+    'not quite sure how',
+    'not sure how',
+    'how that connects',
+    'how this connects',
+    'how that relates',
+    'how this relates',
+    'could you clarify',
+    'can you clarify',
+    'please clarify',
+    'could you continue',
+    'please continue',
+    'could you answer',
+  ].some(phrase => normalized.includes(phrase));
 };
 
 const turnKind = (role: 'assistant' | 'user', content: string) => {
   if (role === 'user') return 'answer';
-  return normalizeTranscriptText(content) === normalizeTranscriptText(NOISE_NUDGE) ? 'nudge' : 'question';
+  return isClarificationTurn(content) ? 'clarification' : 'question';
 };
 
 const USER_TURN_FINALIZE_DELAY_MS = 2800;
@@ -387,7 +359,7 @@ export const ActiveLiveKitInterview = ({
     setPendingUserText('');
 
     const content = (pending?.content || '').trim();
-    if (!content || isBackgroundOrNoise(content)) return [];
+    if (!content) return [];
 
     const msg = {
       id: pending.id,
@@ -448,7 +420,7 @@ export const ActiveLiveKitInterview = ({
 
   const bufferUserSegment = useCallback((segment: any) => {
     const text = (segment?.text || '').trim();
-    if (!text || isBackgroundOrNoise(text)) return;
+    if (!text) return;
 
     const pending = pendingUserTurnRef.current;
     const content = mergeUserTurnText(pending?.content || '', text);
@@ -473,7 +445,7 @@ export const ActiveLiveKitInterview = ({
       browserSpeechBufferRef.current = '';
       setBrowserSpeechText('');
 
-      if (!content || isBackgroundOrNoise(content)) return;
+      if (!content) return;
       if (normalizeTranscriptText(content) === normalizeTranscriptText(lastBrowserSpeechRef.current)) return;
 
       lastBrowserSpeechRef.current = content;
@@ -516,7 +488,7 @@ export const ActiveLiveKitInterview = ({
       }
 
       const displayed = `${browserSpeechBufferRef.current} ${interimText}`.replace(/\s+/g, ' ').trim();
-      setBrowserSpeechText(displayed && !isBackgroundOrNoise(displayed) ? displayed : '');
+      setBrowserSpeechText(displayed);
     };
 
     recognition.onerror = (event: any) => {
@@ -591,8 +563,7 @@ export const ActiveLiveKitInterview = ({
   const currentUserText = useMemo(
     () => {
       const text = latestLiveText(userTranscriptions, 'user', conversation);
-      const liveText = isBackgroundOrNoise(text) ? '' : text;
-      return mergeUserTurnText(pendingUserText, liveText || browserSpeechText);
+      return mergeUserTurnText(pendingUserText, text || browserSpeechText);
     },
     [userTranscriptions, conversation, browserSpeechText, pendingUserText],
   );

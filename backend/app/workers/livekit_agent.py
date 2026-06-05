@@ -2,13 +2,12 @@ import asyncio
 import logging
 import json
 import os
-import re
 import tempfile
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from livekit.agents import AutoSubscribe, JobContext, AgentSession, StopResponse, WorkerOptions, cli, llm
+from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.voice import Agent
 from livekit.plugins import cartesia, google, deepgram, silero
 
@@ -36,81 +35,6 @@ if hasattr(settings, "VERTEX_CREDENTIALS_JSON") and settings.VERTEX_CREDENTIALS_
 _gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 
 logger = logging.getLogger("acadmix.livekit_agent")
-
-NOISE_NUDGE = "I heard some background audio. Please answer the current question when ready."
-
-_BRAND_NOISE_PHRASES = {
-    "hdfc sky",
-    "hdfc securities",
-    "zerodha",
-    "groww",
-    "upstox",
-    "angel one",
-    "mutual fund",
-    "stock market",
-    "demat account",
-}
-
-_VALID_SHORT_RESPONSES = {
-    "yes",
-    "yeah",
-    "yep",
-    "okay",
-    "ok",
-    "sure",
-    "no",
-    "nope",
-    "i don't know",
-    "i dont know",
-    "please repeat",
-    "repeat",
-    "can you repeat",
-    "could you repeat",
-}
-
-_SHORT_BACKGROUND_SNIPPETS = {
-    "subscribe",
-    "breaking news",
-}
-
-
-def _normalize_candidate_text(value: str) -> str:
-    return re.sub(r"\s+", " ", (value or "").strip().lower())
-
-
-def _word_count(value: str) -> int:
-    return len(re.findall(r"[a-zA-Z0-9']+", value or ""))
-
-
-def _is_background_or_noise(text: str) -> bool:
-    normalized = _normalize_candidate_text(text)
-    if not normalized:
-        return True
-
-    if normalized in _VALID_SHORT_RESPONSES:
-        return False
-
-    if normalized in _SHORT_BACKGROUND_SNIPPETS:
-        return True
-
-    words = _word_count(normalized)
-    if words <= 8 and any(phrase in normalized for phrase in _BRAND_NOISE_PHRASES):
-        return True
-
-    ad_like = ("download" in normalized or "invest" in normalized or "offer" in normalized or "ad" in normalized)
-    if words <= 10 and ad_like and any(phrase in normalized for phrase in _BRAND_NOISE_PHRASES):
-        return True
-
-    return False
-
-
-class InterviewAgent(Agent):
-    async def on_user_turn_completed(self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage) -> None:
-        text = new_message.text_content or ""
-        if _is_background_or_noise(text):
-            logger.info("Ignoring likely background audio in interview room: %s", text)
-            await self.session.say(NOISE_NUDGE, allow_interruptions=True, add_to_chat_ctx=True)
-            raise StopResponse()
 
 
 # ── Database helpers (use NullPool to avoid asyncio cross-loop issues) ────────
@@ -154,6 +78,11 @@ async def entrypoint(ctx: JobContext):
         f"{interview.target_role or 'Software Engineer'} role at {company}. "
         "Start with a brief introduction, then ask one clear question at a time. "
         "Use the candidate's answers to ask focused follow-up questions. "
+        "If the candidate's response is unclear, unrelated, too fragmented, or does not answer the current question, "
+        "ask one brief clarification that keeps them on the same topic. Do not treat random phrases as useful interview content, "
+        "and do not jump to a new topic until the current question has a meaningful answer. "
+        "For example, if the candidate says 'HDFC Sky' while answering why they chose software development, say: "
+        "'I did not quite understand how that connects to your answer. Could you continue with what drew you to software development?' "
         "Keep the conversation natural and concise; do not monologue. "
         "Soft-wrap the interview after 8 interviewer questions and never exceed 10 interviewer questions. "
         "When the interview is complete, thank the candidate and tell them their feedback is being prepared. "
@@ -182,7 +111,7 @@ async def entrypoint(ctx: JobContext):
     if _gemini_api_key:
         _llm_kwargs["api_key"] = _gemini_api_key
 
-    agent = InterviewAgent(
+    agent = Agent(
         instructions=system_prompt,
         stt=deepgram.STT(),
         llm=google.LLM(**_llm_kwargs),
