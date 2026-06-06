@@ -1,879 +1,159 @@
 # Repository Analysis Report
-## Quiz-and-results Platform
+## AcadMix — B2B Multi-Tenant Academic SaaS Platform
 
-**Analysis Date**: March 30, 2025  
-**Commit**: 5928b9c (Auto-generated changes)  
-**Total Commits Analyzed**: 10
+**Analysis Date**: June 6, 2026  
+**Status**: Modular Monorepo (Production-Ready)  
 
 ---
 
 ## 📊 Executive Summary
 
-This is a **production-ready full-stack college quiz and results management platform** with advanced features including:
-- Multi-role authentication system (5 roles)
-- Comprehensive quiz engine with anti-cheat measures
-- Academic marks workflow system
-- Live code execution playground
-- Rich analytics and reporting
+AcadMix is a multi-tenant B2B academic administration and analytics platform designed for colleges and universities. The monorepo has evolved from a monolithic prototype into a hardened, modular, and highly secure multi-tenant SaaS architecture.
 
-**Tech Maturity**: **MVP+** (beyond MVP, production features implemented)  
-**Code Quality**: **High** (consistent patterns, well-structured)  
-**Documentation**: **Good** (PRD, design guidelines, test protocols)
-
----
-
-## 🏛️ Architecture Overview
-
-### System Design
-```
-┌─────────────────┐
-│   React SPA     │ ←→ HTTP/REST/JSON ←→ ┌──────────────┐
-│  (Port 3000)    │                      │ FastAPI      │
-│                 │                      │ (Port 8001)  │
-│ - Page Routing  │                      │              │
-│ - State Mgmt    │                      │ - JWT Auth   │
-│ - API Client    │                      │ - RBAC       │
-│ - UI Components │                      │ - Business   │
-└─────────────────┘                      │   Logic      │
-                                         └──────┬───────┘
-                                                │
-                                                ↓
-                                         ┌──────────────┐
-                                         │ PostgreSQL   │
-                                         │   (RLS)      │
-                                         │ SQLAlchemy   │
-                                         └──────────────┘
-```
-
-### Technology Stack Analysis
-
-| Layer | Technology | Version | Purpose |
-|-------|-----------|---------|---------|
-| **Frontend** | React | 19.0.0 | UI Framework |
-| | Tailwind CSS | 3.4.17 | Styling |
-| | Shadcn UI | Latest | Component Library |
-| | Phosphor Icons | 2.1.10 | Icon System |
-| | Axios | 1.14.0 | HTTP Client |
-| | Monaco Editor | 4.7.0 | Code Editor |
-| | Recharts | 3.8.1 | Data Visualization |
-| **Backend** | FastAPI | 0.115.x | API Framework |
-| | SQLAlchemy | 2.x | Async ORM |
-| | asyncpg | Latest | PostgreSQL Async Driver |
-| | Pydantic | 2.12.5 | Data Validation |
-| | bcrypt | 4.1.3 | Password Hashing |
-| | PyJWT | 2.12.1 | JWT Tokens |
-| | openpyxl | 3.1.5 | Excel Processing |
-| | pandas | 3.0.1 | Data Processing |
-| **Database** | PostgreSQL | 15+ | Relational DB with RLS |
-| **Build** | CRACO | 7.1.0 | CRA Configuration |
-| | Yarn | 1.22.22 | Package Manager |
+Key platform features include:
+1. **Multi-Tenant Routing & Isolation**: Domain/subdomain-based tenant routing resolving to strict PostgreSQL Row-Level Security (RLS) policies.
+2. **Modular FastAPI Backend**: Clean separation of routes, models, schemas, and services with APM instrumentation (Datadog, Sentry, Prometheus).
+3. **TypeScript React Frontend**: Vite-powered client with active TSX migration, structured around role-based dashboards (Student, Faculty, HOD, Exam Cell, TPO, Principal, Warden, etc.).
+4. **Sandboxed Code Execution**: Independent resource-limited microservice supporting 10 languages for student coding questions and playgrounds.
+5. **AI Analytics Edge Function**: Deno/Supabase edge function using Vertex AI (Gemini Flash/Pro) with query classification, SQL validation, and self-healing query execution.
+6. **Robust Marks Revision Workflows**: Fine-grained faculty marks entry with mandatory HOD review and audit logs for revisions on approved marks.
 
 ---
 
-## 📂 Codebase Metrics
+## 🏛️ Monorepo Architecture Overview
 
-### File Structure
+The codebase is organized as a monorepo containing multiple decoupled services and applications:
+
 ```
-Total Files: ~100+
-- Frontend: ~80 files
-  - Pages: 15 files
-  - Components: 50+ files (mostly Shadcn UI)
-  - Services: 1 API abstraction file
-  - Hooks: Custom hooks
-- Backend: 4 Python files
-  - server.py: 1,185 lines (monolithic)
-  - Tests: 3 test files
-- Config: 10+ configuration files
-- Documentation: 4 files
+c:/AcadMix/
+├── backend/            # FastAPI API server, SQLAlchemy, Alembic migrations, ARQ workers
+├── frontend/           # React + Vite client (tenant dashboards for students/faculty/staff)
+├── platform-admin/     # React + Vite + Tailwind v4 platform portal for super-admins
+├── website/            # React + Vite marketing and landing pages
+├── marketing-test/     # TanStack Start SSR web application targeting Cloudflare Workers
+├── code-runner/        # Dockerized FastAPI sandboxed code execution service
+├── insights-query/     # Supabase Edge function for natural language analytics
+└── k8s/                # Kubernetes manifests for backend deployment, HPA, and PgBouncer
 ```
 
-### Lines of Code (Estimated)
-- **Backend**: ~1,500 lines
-- **Frontend**: ~5,000+ lines
-- **Total**: ~6,500+ lines
+### System Architecture Diagram
 
-### Code Organization Score: **7/10**
-- ✅ Clear separation of concerns
-- ✅ Consistent naming conventions
-- ✅ Good component reusability
-- ⚠️ Backend could benefit from modularization (single 1,185-line file)
-- ⚠️ No TypeScript (uses JavaScript)
-
----
-
-## 🎯 Feature Completeness
-
-### Implemented Features (✅)
-
-#### Core Platform (Phase 1)
-- ✅ JWT Authentication (cookie + bearer token)
-- ✅ Role-based access control (5 roles)
-- ✅ Student Dashboard with analytics
-- ✅ Teacher Dashboard with quiz management
-- ✅ Admin Dashboard with user management
-- ✅ HOD Dashboard with faculty management
-- ✅ Exam Cell Dashboard with results publishing
-- ✅ Responsive design (mobile-friendly)
-
-#### Quiz System (Phase 1-2)
-- ✅ Quiz Builder (MCQ, True/False, Short Answer, Coding)
-- ✅ Quiz Attempt flow with timer
-- ✅ Auto-grading engine
-- ✅ Manual grading for short answers
-- ✅ Quiz results with detailed breakdown
-- ✅ Leaderboard system
-- ✅ Code Playground (6 challenges)
-- ✅ Live code execution (Python, JS, Java)
-
-#### Anti-Cheat & Proctoring (Phase 3)
-- ✅ Tab-switch detection
-- ✅ Fullscreen enforcement
-- ✅ Webcam monitoring
-- ✅ Violation tracking
-
-#### Marks Workflow (Phase 3)
-- ✅ HOD Faculty Management (assign teachers to subjects)
-- ✅ Teacher Marks Entry (Mid-1, Mid-2)
-- ✅ Save as draft / Submit for approval
-- ✅ HOD Review (Approve/Reject with remarks)
-- ✅ Exam Cell view approved marks
-- ✅ Exam Cell upload end-term marks (CSV/XLSX)
-- ✅ Publish semester results
-
-#### Analytics & Results (Phase 1-4)
-- ✅ Student analytics (quiz + semester tabs)
-- ✅ Semester results with SGPA/CGPA
-- ✅ Tab-based semester UI (Sem 1-8)
-- ✅ Performance trends (Recharts)
-- ✅ Subject-wise breakdown
-
-#### UI/UX Enhancements (Phase 4)
-- ✅ Smooth rounded design system
-- ✅ Soft shadows and hover effects
-- ✅ Glass morphism headers
-- ✅ Pill-style tab navigation
-- ✅ Consistent color coding
-- ✅ Loading states
-- ✅ Empty states
-
-### Pending Features (📋)
-
-#### P1 - Medium Priority
-- 📋 Teacher Quiz Builder improvements (save complex quizzes)
-- 📋 Live Monitor for active quizzes (polling)
-- 📋 Exam Cell manual end-term entry form
-
-#### P2 - Lower Priority
-- 📋 Notification System (Push, Email, In-app)
-- 📋 Admin ERP Sync
-- 📋 Backend modularization (split server.py)
-- 📋 Webcam snapshot storage
-
----
-
-## 🎨 Design System Analysis
-
-### Design Maturity: **9/10**
-
-**Strengths:**
-1. **Comprehensive Design Guidelines**: `design_guidelines.json` with complete color palette, typography, spacing rules
-2. **Custom Utility Classes**: Well-defined reusable classes (.soft-card, .btn-primary, etc.)
-3. **Consistent Patterns**: Same header structure, card design across all pages
-4. **Accessibility**: Uses semantic HTML, proper labels, data-testid attributes
-5. **Professional Aesthetic**: Cohesive pastel theme, soft shadows, no harsh borders
-
-**Design Principles Adherence:**
-- ✅ No hard borders (everything rounded-2xl or rounded-3xl)
-- ✅ Generous spacing (p-6, p-8, gap-6)
-- ✅ Soft ambient shadows
-- ✅ Phosphor icons in duotone
-- ✅ Nunito for headings, DM Sans for body
-- ✅ Consistent color coding by role/feature
-
-**Example Design Pattern:**
-```jsx
-// Consistent across 15+ pages
-<div className="soft-card-hover p-6">
-  <div className="flex items-center justify-between mb-4">
-    <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
-      LABEL
-    </span>
-    <div className="bg-indigo-50 text-indigo-600 p-2.5 rounded-xl">
-      <Icon size={20} weight="duotone" />
-    </div>
-  </div>
-  <p className="text-3xl font-extrabold tracking-tight text-slate-900">
-    VALUE
-  </p>
-</div>
+```
+                             ┌───────────────────────────────────┐
+                             │          Marketing Page           │
+                             │        (website, marketing)       │
+                             └───────────────────────────────────┘
+                                               │
+                                               ▼
+┌──────────────────────────┐     HTTPS REST / JSON API (Nginx)     ┌──────────────────────────┐
+│      Tenant Client       │ ◄───────────────────────────────────► │  Platform-Admin Client   │
+│   (frontend / React)     │                                       │ (platform-admin / Vite)  │
+│  - Role Dashboards       │                                       │  - Tenant Provisioning   │
+│  - Quiz & Exam UI        │                                       │  - Global Billing        │
+│  - Career & Placements   │                                       │  - Template Designer     │
+└──────────┬───────────────┘                                       └─────────────┬────────────┘
+           │ (Subdomain Headers)                                                 │ (Super-admin Token)
+           ▼                                                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                FastAPI Backend Service (backend/)                           │
+│  - Port 8000/8001, Async Uvicorn, Gunicorn                                                 │
+│  - Middleware: TenantMiddleware (resolves X-Tenant to College ID), CORS, correlation ID,     │
+│    Tenant Rate Limiter (Noisy Neighbor Protection), Datadog APM, Sentry                       │
+│  - Role-Specific Routers (~75 modules in app/routers/ resolving permissions)                │
+└──────┬──────────────────────────┬───────────────────────────────┬───────────────────────────┘
+       │                          │                               │
+       │ HTTP/JSON                │ Redis (ARQ/Cache)             │ Async PG (SQLAlchemy)
+       ▼                          ▼                               ▼
+┌──────────────┐          ┌──────────────┐          ┌─────────────────────────────────────────┐
+│ Code Runner  │          │ Redis Broker │          │         PostgreSQL Database             │
+│ (code-runner)│          │ (arq_worker) │          │  - Row-Level Security (RLS)             │
+│  - Sandbox   │          │  - AI review │          │  - ORM-Level Soft-Delete/Tenant Filters │
+│  - Docker    │          │  - Push Notif│          │  - Dual Engines:                        │
+│  - Cgroups   │          │  - PDF Gen   │          │    * Tenant Engine (authenticated role) │
+│  - Iptables  │          │  - Whatsapp  │          │    * Admin Engine (RLS bypass)          │
+└──────────────┘          └──────────────┘          └─────────────────────────────────────────┘
+                                                                  ▲
+                                                                  │ RPC / Direct SELECT
+                                                    ┌─────────────┴─────────────┐
+                                                    │    AI Insights Engine     │
+                                                    │     (insights-query)      │
+                                                    │  - Supabase Edge Function │
+                                                    │  - Vertex AI (Gemini Pro) │
+                                                    │  - Auto-healing queries   │
+                                                    └───────────────────────────┘
 ```
 
 ---
 
-## 🔐 Security Analysis
+## 📂 Codebase Details
 
-### Security Score: **7/10**
+### 1. Backend Service (`backend/`)
+- **Main App (`app/main.py`)**: Initializes lifespan hooks (seeds database defaults, verifies Redis and GPU status, starts WebSocket Redis Pub/Sub subscriber). Integrates CORS (explicit origins), correlation IDs, slowapi tenant-level rate limiters, Prometheus metrics, and mounts `/api/v1` routes.
+- **Database Engine (`database.py`)**: 
+  - *Tenant Engine*: Configures SQLAlchemy connection pools optimized for PgBouncer. Employs `sync_session_class` event listeners using `do_orm_execute` to inject global soft-delete criteria (`is_deleted == False`) and tenant isolation constraints dynamically. On session generation, GUC variables are set (`SET LOCAL ROLE authenticated; SELECT set_config('app.college_id', ...)`).
+  - *Admin Engine*: Uses `NullPool` to bypass RLS. Includes a `SecurityHardeningError` context guard to trigger a runtime crash if an admin session is mistakenly requested inside a user-scoped tenant request context.
+  - *Shadow Mode (`RLS_SHADOW_MODE`)*: Active scanning of ORM output rows to catch cross-tenant leaks, missing college IDs, or soft-delete leaks, logging violations to the audit logs via the admin engine.
+- **Modular Routers (`app/routers/`)**: Contains role-segregated files matching individual permission boundaries (e.g., `student_core.py`, `faculty_core.py`, `hod_core.py`, `principal.py`, `exam_cell_core.py`, `nodal_routes.py`, `tpo.py`, `superadmin.py`).
 
-**Implemented Security Measures:**
-- ✅ Password hashing with bcrypt
-- ✅ JWT token authentication
-- ✅ HTTP-only cookies for token storage
-- ✅ Role-based access control
-- ✅ Input validation with Pydantic
-- ✅ CORS configuration
-- ✅ College ID auto-uppercase (prevents case issues)
-- ✅ Code execution timeout limits (10s)
-- ✅ Code length limits (10,000 chars)
+### 2. Frontend Application (`frontend/`)
+- **Routing & Guarding (`src/App.tsx`)**: Lazy-loads dashboards. Controls transitions and correlation via React Query and React Router. Provides a compatibility bridge translating old-style page navigation calls (`navigate('page-name')`) to standard React Router URLs. Implements `ProtectedRoute` role verification checks.
+- **Client Configuration (`src/services/api.ts`)**: Initializes Axios clients. Extracts subdomains dynamically (e.g., `demo.localhost` -> `demo`, `aits.acadmix.org` -> `aits`) to inject `X-Tenant` headers. Handles token refresh cycles on `401` errors transparently, queuing requests until the session is re-authenticated.
 
-**Security Concerns:**
-- ⚠️ JWT_SECRET should be rotated regularly
-- ⚠️ No rate limiting on login endpoint
-- ⚠️ Code execution uses subprocess (potential security risk)
-- ⚠️ No input sanitization for short answer questions
-- ⚠️ Missing HTTPS enforcement (assumes deployment handles it)
-- ℹ️ Webcam snapshots not stored (privacy-first but limits review)
+### 3. Code Runner Sandbox (`code-runner/main.py`)
+- Executes student coding assignments securely.
+- Applies strict sandbox restrictions on Linux: drops privileges to standard user (`1001:1001`), limits execution memory (`MAX_MEMORY_BYTES`), processes/threads (`MAX_PROCESSES`), and CPU seconds (`RLIMIT_CPU`).
+- Parses source code with abstract syntax trees (AST) to block malicious Python commands (`os`, `sys`, `builtins`, `eval`, `exec`) and utilizes regex match blockers for compiled languages.
+- Supports Python, JavaScript, Java, C, C++, SQL (via SQLite memory DBs), Octave/MATLAB (rendering plots to SVG/PNG), Bash, Go, and C#.
 
-**Recommendations:**
-1. Add rate limiting middleware
-2. Implement refresh token rotation
-3. Sanitize user-generated content
-4. Add security headers (CSP, X-Frame-Options)
-5. Consider sandboxed code execution (Docker containers)
-
----
-
-## 🗄️ Database Design Analysis
-
-### Schema Quality: **8/10**
-
-**Tables (50+):**
-1. `users` - User accounts (14+ roles)
-2. `colleges` / `departments` - Multi-tenant structure
-3. `quizzes` / `questions` / `options` - Quiz definitions
-4. `quiz_attempts` / `quiz_answers` - Student attempts
-5. `semester_grades` - Academic results
-6. `faculty_assignments` - Teacher-subject mapping
-7. `mark_submissions` / `mark_submission_entries` - Marks workflow
-8. `coding_challenges` / `challenge_progress` - Code playground
-
-**Strengths:**
-- ✅ Clear separation of concerns
-- ✅ Proper indexing potential (college_id, email)
-- ✅ Normalized structure (no excessive nesting)
-- ✅ Timestamp tracking (created_at, updated_at)
-- ✅ Status tracking for workflows
-
-**Areas for Improvement:**
-- ⚠️ Uses ObjectId (converted to strings) - consider UUIDs for consistency
-- ⚠️ No database indexes defined in code
-- ⚠️ Missing migration system
-- ⚠️ No data archival strategy
-
-**Recommended Indexes (already implemented):**
-```sql
--- Compound indexes on high-traffic tables
-CREATE INDEX ix_quiz_attempts_q_s_s ON quiz_attempts(quiz_id, student_id, status);
-CREATE INDEX ix_mark_sub_fac_course_exam ON mark_submissions(faculty_id, subject_code, exam_type);
-CREATE INDEX ix_attendance_student_subject ON attendance(student_id, subject_code, date);
-CREATE INDEX ix_sem_grades_s_s ON semester_grades(student_id, semester);
-```
+### 4. Insights Query Edge Function (`insights-query/index.ts`)
+- Implements a natural language data query interface for college administrators.
+- Utilizes Vertex AI (Gemini 2.5 Pro, Flash, Lite) for three-tier classification:
+  - `KNOWN`: Resolves to pre-computed PostgreSQL materialized views (e.g., fee collection rates, attendance, GPAs) with parameterized filter values.
+  - `SIMPLE` / `COMPLEX`: Dynamically constructs PostgreSQL SELECT statements based on schema catalogs.
+  - `VAGUE`: Gracefully handles off-topic questions.
+- Sanitizes generated query text and validates SELECT structures (blocking DML commands).
+- Implements an automated self-healing loop: if an execution fails, Gemini Pro receives the traceback error context to generate, validate, and retry a corrected SQL query.
 
 ---
 
-## 🧪 Testing Infrastructure
+## 🔄 Core Workflows & Governance
 
-### Testing Maturity: **6/10**
+### 1. Marks Entry, Approval, and Revision Flow
+- **Faculty Entry**: Faculty members enter midterm or assignments marks in a grid layout, validating that all student grades are filled before submitting. 
+- **HOD Review**: Submissions are queued in `hod_core.py` and reviewed via HOD dashboards. HODs can either approve (finalizing the marks) or reject them back to faculty with remarks.
+- **Revision Tracking**: If approved marks require modification (governed by `APPROVED_MARKS_EDITING_WORKFLOW.md`):
+  1. HOD clicks "Edit Approved Marks" and must supply a mandatory explanation.
+  2. Marks become editable; status reverts to `draft`.
+  3. A history payload containing the timestamp, editor, reason, and previous metrics is recorded in the database.
+  4. Modified entries are resubmitted for HOD re-approval.
 
-**Implemented:**
-- ✅ Pytest for backend testing
-- ✅ Test protocol file (test_result.md)
-- ✅ Test reports in JSON format
-- ✅ data-testid attributes throughout frontend
-- ✅ Manual testing workflow documented
-
-**Existing Tests:**
-- `test_code_playground.py` - Code execution tests
-- `test_hod_examcell_marks.py` - Marks workflow tests
-- `test_new_features.py` - Feature tests
-
-**Missing:**
-- ❌ No frontend unit tests
-- ❌ No E2E tests (Playwright/Cypress)
-- ❌ No API integration tests
-- ❌ No load/performance tests
-- ❌ No test coverage reporting
-
-**Recommendations:**
-1. Add Playwright E2E tests (data-testid ready)
-2. Add backend test coverage (aim for 70%+)
-3. Add CI/CD pipeline with automated testing
-4. Add load testing for code execution endpoint
+### 2. Multi-Tenant Cache Hierarchy
+To prevent connection pool exhaustion and database bottlenecks during traffic surges:
+- `TenantMiddleware` processes slugs in order: **In-Memory TTL Cache (2 min)** ➔ **Redis Cache (5 min)** ➔ **PostgreSQL Lookup**.
+- In-memory caching ensures that even if Redis fails, the PostgreSQL database is hit at most once per tenant slug per cache window.
 
 ---
 
-## 📈 Code Quality Analysis
+## 🎨 UI/UX Design Standards
 
-### Frontend Quality: **8/10**
-
-**Strengths:**
-- ✅ Consistent component structure
-- ✅ Proper error handling
-- ✅ Loading states everywhere
-- ✅ Clean separation of concerns
-- ✅ Reusable components (Shadcn UI)
-- ✅ Centralized API layer
-- ✅ Proper prop drilling
-- ✅ useEffect cleanup (where needed)
-
-**Areas for Improvement:**
-- ⚠️ No TypeScript (limits type safety)
-- ⚠️ Some large components (could be split)
-- ⚠️ No custom hooks for shared logic
-- ⚠️ No error boundary components
-- ⚠️ Limited code comments
-
-**Example Good Pattern:**
-```jsx
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const { data } = await someAPI.fetch();
-      setData(data);
-    } catch (err) {
-      console.error(err);
-    }
-    setLoading(false);
-  };
-  fetchData();
-}, []);
-```
-
-### Backend Quality: **7/10**
-
-**Strengths:**
-- ✅ Async/await throughout
-- ✅ Pydantic validation
-- ✅ Role-based access control
-- ✅ Consistent error handling
-- ✅ Helper functions for reusability
-- ✅ Environment variable usage
-- ✅ Seed data for development
-
-**Areas for Improvement:**
-- ⚠️ Monolithic server.py (1,185 lines)
-- ⚠️ No logging framework
-- ⚠️ Limited code comments
-- ⚠️ No API versioning
-- ⚠️ Hardcoded business logic
-
-**Recommended Refactoring:**
-```
-/backend/
-├── server.py (main app + startup)
-├── models.py (Pydantic models)
-├── database.py (DB connection)
-├── auth.py (auth helpers)
-├── routes/
-│   ├── auth.py
-│   ├── users.py
-│   ├── quizzes.py
-│   ├── marks.py
-│   └── ...
-└── utils/
-    ├── security.py
-    └── helpers.py
-```
+The monorepo conforms to the styling guidelines in `STYLE_GUIDE.md`:
+- **Aesthetic Principles**: Curved borders (no sharp edges, `rounded-xl` or `rounded-2xl` minimums), soft shadows, pastel palettes, and glassmorphism.
+- **Tab Layouts**: Pill-shaped container layouts for navigation menus.
+- **Tabs Consistency**: Active tab container shape must always match the external container shape.
+- **Popups & Alerts**: No generic browser `window.alert` calls are permitted. All modal overlays use the stylized, premium `AlertModal` or `PromptModal` React components.
 
 ---
 
-## 🚀 Performance Analysis
-
-### Frontend Performance: **7/10**
-
-**Optimizations:**
-- ✅ Code splitting potential (React.lazy not used yet)
-- ✅ Image optimization (external CDN images)
-- ✅ Minimal bundle size (no heavy libraries)
-- ⚠️ No memoization (React.memo, useMemo)
-- ⚠️ No virtual scrolling for long lists
-
-**Bundle Analysis Needed:**
-- Recommend using `webpack-bundle-analyzer`
-- Check for duplicate dependencies
-- Consider lazy loading Monaco Editor
-
-### Backend Performance: **7/10**
-
-**Optimizations:**
-- ✅ Async PostgreSQL operations (SQLAlchemy async)
-- ✅ Query limits (.to_list(100))
-- ✅ Field projection ({ password_hash: 0 })
-- ⚠️ No caching layer (Redis)
-- ⚠️ No connection pooling config
-- ⚠️ Code execution not queued (could overwhelm server)
-
-**Recommendations:**
-1. Add Redis for session caching
-2. Implement pagination for large lists
-3. Add database query logging
-4. Use task queue for code execution (Celery)
-5. Add API rate limiting
-
----
-
-## 🌟 Unique Features & Innovations
-
-1. **Multi-role Workflow System**
-   - Teacher → HOD → Exam Cell approval chain
-   - Unique to academic institutions
-
-2. **Live Code Execution**
-   - Supports 3 languages (Python, JS, Java)
-   - Real-time feedback in quiz environment
-
-3. **Anti-Cheat Integration**
-   - Tab-switch + Fullscreen + Webcam
-   - Built into quiz attempt flow
-
-4. **Unified Analytics**
-   - Quiz performance + Semester results in one place
-   - CGPA tracking across semesters
-
-5. **CSV/Excel Upload**
-   - Bulk marks entry for exam cell
-   - pandas processing backend
-
----
-
-## 📊 Technical Debt Assessment
-
-### Debt Level: **Medium**
-
-**High Priority:**
-1. **Backend Modularization** (Effort: 2-3 days)
-   - Split server.py into modules
-   - Impact: Maintainability, scalability
-
-2. **Add TypeScript** (Effort: 1 week)
-   - Migrate frontend to TypeScript
-   - Impact: Type safety, fewer runtime errors
-
-3. **Logging & Monitoring** (Effort: 1 day)
-   - Add structured logging
-   - Error tracking (Sentry)
-   - Impact: Debugging, production monitoring
-
-**Medium Priority:**
-4. **Test Coverage** (Effort: 1 week)
-   - E2E tests with Playwright
-   - Backend test coverage 70%+
-   - Impact: Confidence in deployments
-
-5. **API Documentation** (Effort: 1 day)
-   - Enhance FastAPI auto-docs
-   - Add request/response examples
-   - Impact: Developer experience
-
-**Low Priority:**
-6. **Code Comments** (Effort: 2 days)
-   - Add JSDoc comments
-   - Document complex logic
-   - Impact: Onboarding, understanding
-
-7. **Performance Optimization** (Effort: 3 days)
-   - Add memoization
-   - Lazy loading
-   - Redis caching
-   - Impact: User experience, scalability
-
----
-
-## 🎓 Development Patterns Observed
-
-### 1. Component Pattern (Frontend)
-```jsx
-// Standard structure across all pages
-const PageName = ({ navigate, user, onLogout }) => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { /* fetch data */ }, []);
-
-  if (loading) return <LoadingSpinner />;
-
-  return (
-    <div className="min-h-screen bg-[#F8FAFC]">
-      <header className="glass-header">...</header>
-      <div className="max-w-7xl mx-auto px-6 py-8">...</div>
-    </div>
-  );
-};
-```
-
-### 2. API Route Pattern (Backend)
-```python
-@app.post("/api/resource")
-async def create_resource(
-    req: RequestModel,
-    user: dict = Depends(require_role("admin"))
-):
-    # 1. Additional validation
-    # 2. Database operation
-    result = await db.collection.insert_one(doc)
-    # 3. Serialize and return
-    return serialize_doc(result)
-```
-
-### 3. Navigation Pattern
-```jsx
-// Centralized in App.js
-const navigate = (page, data = null) => {
-  setCurrentPage(page);
-  if (data) setSelectedData(data);
-};
-
-// Usage
-<button onClick={() => navigate('quiz-attempt', quizData)}>
-  Start Quiz
-</button>
-```
-
-### 4. Error Handling Pattern
-```python
-# Backend
-if not resource:
-    raise HTTPException(status_code=404, detail="Resource not found")
-
-# Frontend
-try {
-  const { data } = await api.fetch();
-  setData(data);
-} catch (err) {
-  console.error(err);
-}
-```
-
----
-
-## 🔄 Git Activity Analysis
-
-**Commit History:**
-- 10 commits analyzed
-- All auto-commits (UUID-based)
-- No manual commits visible
-
-**Branching Strategy:**
-- Single branch development
-- No feature branches observed
-
-**Commit Message Quality:**
-- Generic auto-generated messages
-- Recommend: Conventional commits (feat:, fix:, docs:)
-
-**Collaboration:**
-- Solo developer project
-- No pull requests
-- No code reviews
-
----
-
-## 🎯 Recommendations by Priority
-
-### 🔴 Critical (Do First)
-1. **Add Environment Files**
-   - Create `.env` templates
-   - Document required variables
-   - Add `.env.example`
-
-2. **Backend Modularization**
-   - Split server.py into routes
-   - Improve maintainability
-   - Easier testing
-
-3. **Add Logging**
-   - Structured logging (JSON)
-   - Error tracking
-   - Request logging
-
-### 🟡 Important (Do Soon)
-4. **TypeScript Migration**
-   - Start with new components
-   - Gradual migration
-   - Better DX
-
-5. **E2E Testing**
-   - Playwright tests
-   - Cover critical flows
-   - CI/CD integration
-
-6. **Performance Optimization**
-   - Add Redis caching
-   - Code execution queue
-   - Database indexes
-
-### 🟢 Nice to Have (Do Later)
-7. **API Versioning**
-   - /api/v1/...
-   - Future-proofing
-
-8. **Documentation**
-   - API documentation
-   - Architecture diagrams
-   - Onboarding guide
-
-9. **Monitoring & Analytics**
-   - Application metrics
-   - User analytics
-   - Error dashboards
-
----
-
-## 📚 Documentation Quality
-
-### Existing Docs: **8/10**
-
-**Available Documentation:**
-- ✅ PRD (memory/PRD.md) - Comprehensive
-- ✅ Design Guidelines (design_guidelines.json) - Detailed
-- ✅ Test Protocol (test_result.md) - Clear structure
-- ✅ README.md - Minimal placeholder
-- ✅ Test Reports - JSON format
-
-**Missing Documentation:**
-- ❌ API documentation (beyond auto-docs)
-- ❌ Deployment guide
-- ❌ Contributing guide
-- ❌ Architecture diagrams
-- ❌ Environment setup guide
-
----
-
-## 🌐 Deployment Readiness
-
-### Production Readiness: **7/10**
-
-**Ready:**
-- ✅ Environment variable usage
-- ✅ CORS configuration
-- ✅ Error handling
-- ✅ Seed data for initial setup
-- ✅ Health check endpoint
-
-**Needs Work:**
-- ⚠️ No Docker setup
-- ⚠️ No CI/CD pipeline
-- ⚠️ No monitoring/alerting
-- ⚠️ No backup strategy
-- ⚠️ No load balancing config
-
-**Deployment Checklist:**
-```bash
-# Required
-1. Set production environment variables
-2. Set secure JWT_SECRET (rotate regularly)
-3. Enable HTTPS
-4. Configure PostgreSQL with RLS policies + PgBouncer
-5. Set up file storage for uploads
-6. Configure email service (future notifications)
-7. Add reverse proxy (nginx)
-8. Set up monitoring (Sentry, DataDog)
-9. Database backups
-10. Rate limiting
-```
-
----
-
-## 📈 Scalability Assessment
-
-### Current Scalability: **6/10**
-
-**Scalability Strengths:**
-- ✅ Stateless API (horizontal scaling ready)
-- ✅ Async database operations
-- ✅ JWT authentication (no session storage)
-
-**Scalability Bottlenecks:**
-1. **Code Execution** - subprocess per request
-   - Solution: Task queue (Celery + Redis)
-2. **No Caching** - Repeated DB queries
-   - Solution: Redis cache layer
-3. **Monolithic Backend** - Single process
-   - Solution: Microservices (optional)
-4. **No CDN** - Static assets from server
-   - Solution: CloudFront/Cloudflare
-5. **File Uploads** - Local storage
-   - Solution: S3/Cloud storage
-
-**Scalability Roadmap:**
-```
-Current: 100 concurrent users
-With Redis: 500 concurrent users
-With Task Queue: 1,000 concurrent users
-With Microservices: 10,000+ concurrent users
-```
-
----
-
-## 🎨 UI/UX Assessment
-
-### UX Quality: **8/10**
-
-**Strengths:**
-- ✅ Consistent navigation
-- ✅ Clear visual hierarchy
-- ✅ Loading states
-- ✅ Empty states
-- ✅ Error feedback
-- ✅ Responsive design
-- ✅ Intuitive workflows
-- ✅ Role-appropriate dashboards
-
-**Areas for Improvement:**
-- ⚠️ No toast notifications (uses console.error)
-- ⚠️ No confirmation dialogs
-- ⚠️ No keyboard shortcuts
-- ⚠️ Limited accessibility (ARIA labels)
-- ⚠️ No dark mode
-
-**Accessibility Score: 6/10**
-- ✅ Semantic HTML
-- ✅ Proper headings
-- ⚠️ Missing ARIA labels
-- ⚠️ No focus indicators
-- ⚠️ Color contrast (check amber/warning)
-
----
-
-## 🔍 Code Smells Detected
-
-### Minor Issues:
-1. **Large Component Files** - Some pages 150+ lines
-2. **Hardcoded Strings** - No i18n/localization
-3. **Console Logging** - Should use proper logger
-4. **Magic Numbers** - Timeouts, limits not constants
-5. **Duplicate Code** - Similar patterns across pages
-
-### Moderate Issues:
-1. **Monolithic Backend** - 1,185 line server.py
-2. **No Error Boundaries** - Frontend crash recovery
-3. **Subprocess Security** - Code execution risk
-4. **No Request Validation** - File upload size limits
-
-### Not Critical:
-- Most code follows good patterns
-- Consistent style throughout
-- No major anti-patterns detected
-
----
-
-## 🏆 Overall Assessment
-
-### Strengths Summary
-1. **Well-Designed UI** - Beautiful, consistent, professional
-2. **Complete Feature Set** - MVP+ with advanced features
-3. **Good Architecture** - Clear separation, RESTful API
-4. **Security Conscious** - Auth, validation, RBAC
-5. **Production Quality** - Error handling, loading states
-6. **Excellent Documentation** - PRD, design guidelines
-
-### Weaknesses Summary
-1. **Monolithic Backend** - Needs modularization
-2. **Limited Testing** - Needs E2E + unit tests
-3. **No TypeScript** - Type safety missing
-4. **Performance** - No caching, no optimization
-5. **Scalability** - Code execution bottleneck
-
-### Final Score: **8.2/10**
-
-**Grade: A-**
-
-This is a **high-quality, production-ready application** with room for improvement in testing, scalability, and code organization. The design system is exceptional, and the feature set is comprehensive.
-
----
-
-## 🎯 Next Steps Roadmap
-
-### Week 1: Foundation
-- [ ] Create environment file templates
-- [ ] Add structured logging
-- [ ] Set up Sentry error tracking
-
-### Week 2: Testing
-- [ ] Add Playwright E2E tests
-- [ ] Backend test coverage 50%+
-- [ ] Set up CI/CD pipeline
-
-### Week 3: Performance
-- [ ] Add Redis caching
-- [ ] Implement code execution queue
-- [ ] Add database indexes
-
-### Week 4: Refactoring
-- [ ] Split backend into modules
-- [ ] Add TypeScript to new components
-- [ ] Optimize bundle size
-
-### Month 2: Scale
-- [ ] Add monitoring dashboards
-- [ ] Implement rate limiting
-- [ ] Set up CDN for static assets
-- [ ] Load testing
-
-### Month 3: Polish
-- [ ] Accessibility improvements
-- [ ] Dark mode support
-- [ ] Notification system
-- [ ] Mobile app (React Native)
-
----
-
-## 📞 Support & Maintenance
-
-**Estimated Effort:**
-- **Bug Fixes**: 2-4 hours/week
-- **New Features**: 8-16 hours/week
-- **Infrastructure**: 4-8 hours/month
-- **Security Updates**: 2-4 hours/month
-
-**Team Size Recommendation:**
-- 1-2 Full-stack developers
-- 1 DevOps engineer (part-time)
-- 1 QA engineer (part-time)
-
----
-
-## 🎓 Learning Outcomes
-
-**Skills Demonstrated:**
-1. Full-stack development (React + FastAPI)
-2. PostgreSQL schema design with RLS
-3. JWT authentication
-4. Role-based access control
-5. File processing (Excel/CSV)
-6. Live code execution
-7. Real-time features (webcam, timers)
-8. Complex workflows (approval chains)
-9. Data visualization (Recharts)
-10. Design system implementation
-
-**Best Practices Followed:**
-- ✅ Environment variables
-- ✅ Error handling
-- ✅ Input validation
-- ✅ Password hashing
-- ✅ API abstraction layer
-- ✅ Consistent code style
-- ✅ Component reusability
-- ✅ Responsive design
-
----
-
-## 📄 License & Credits
-
-**Original Developer**: Akanksh (GitHub: Akanksh2144)  
-**Repository**: Quiz-and-results  
-**License**: Not specified (recommend adding MIT or Apache 2.0)
-
----
-
-*This analysis was generated based on the repository state as of commit 5928b9c (March 30, 2025)*
+## 🛠️ Tech Debt & Roadmap Recommendations
+
+### 1. TypeScript Migration (High Priority)
+- **Status**: Frontend migration is ongoing. Pages like `App.tsx`, `LoginPage.tsx`, `HodDashboard.tsx`, and `AIInterviewSession.tsx` are fully migrated.
+- **Action**: Ensure any JSX file modified in the future is immediately converted to TypeScript (`.tsx`).
+
+### 2. Procuring Real APIs (Medium Priority)
+- **Status**: Several secondary routes (e.g., specific NAAC templates, IoT webhooks, complex curriculum feedback loops) rely on structured mock parameters.
+- **Action**: Gradually hook endpoints to backend PG tables via Alembic migrations.
+
+### 3. Connection and Rate Limiter Tuning (Medium Priority)
+- **Status**: Local database connection timeouts are set high to accommodate cold starts from Supabase.
+- **Action**: Optimize connection pooling settings and configure Redis cache policies for heavy API routers.
