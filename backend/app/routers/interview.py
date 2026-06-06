@@ -6,21 +6,20 @@ This router handles: HTTP interface, auth guards, DB session injection.
 """
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from app.core.security import require_role
 from app.services import interview_service, voice_service
+from app.core.cache import _get_redis
 from app.core.config import settings
 from app import models
 from livekit import api
 
 router = APIRouter()
 
-# Per-session voice lock: ensures the same random voice is used throughout one interview
-_session_voices: dict[str, str] = {}
 
 
 @router.get("/interview/quota")
@@ -44,11 +43,13 @@ async def start_interview(
     interview_id = result.get("interview_id") if isinstance(result, dict) else None
     if interview_id:
         voice_id = req.get("voice_id")
-        if voice_id:
-            _session_voices[interview_id] = voice_id
-        else:
+        if not voice_id:
             interview_type = req.get("interview_type", "technical")
-            _session_voices[interview_id] = voice_service.get_persona_voice(interview_type)
+            voice_id = voice_service.get_persona_voice(interview_type)
+            
+        redis = await _get_redis()
+        if redis:
+            await redis.set(f"interview_voice:{interview_id}", voice_id, ex=3600)
     return result
 
 
@@ -82,8 +83,10 @@ async def end_interview(
     session: AsyncSession = Depends(get_db),
 ):
     """End the interview session and queue AI feedback generation."""
-    # Clean up session voice lock
-    _session_voices.pop(interview_id, None)
+    # Clean up session voice lock from Redis
+    redis = await _get_redis()
+    if redis:
+        await redis.delete(f"interview_voice:{interview_id}")
     return await interview_service.end_interview(interview_id, user, session)
 
 
@@ -127,8 +130,13 @@ async def speak_text(
     if not text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
         
-    # Use the session's locked voice if available
-    voice_id = _session_voices.get(interview_id)
+    # Fetch the session's locked voice from Redis if available
+    redis = await _get_redis()
+    voice_id = None
+    if redis:
+        raw_voice = await redis.get(f"interview_voice:{interview_id}")
+        if raw_voice:
+            voice_id = raw_voice.decode("utf-8") if isinstance(raw_voice, bytes) else raw_voice
     
     audio_bytes = await voice_service.text_to_speech(text, voice_id)
     return Response(content=audio_bytes, media_type="audio/mpeg")
@@ -214,6 +222,7 @@ async def get_livekit_token(
 @router.post("/interview/{interview_id}/audio_eval")
 async def evaluate_audio(
     interview_id: str,
+    request: Request,
     file: UploadFile = File(...),
     user: dict = Depends(require_role("student")),
     session: AsyncSession = Depends(get_db),
@@ -223,6 +232,14 @@ async def evaluate_audio(
     if not content:
         raise HTTPException(status_code=400, detail="Audio file cannot be empty")
     
+    base_url = str(request.base_url)
     # We pass this to the interview service which will handle the AssemblyAI call and DB update
-    return await interview_service.process_audio_evaluation(interview_id, content, file.content_type, user, session)
+    return await interview_service.process_audio_evaluation(interview_id, content, file.content_type, user, session, base_url)
 
+
+
+@router.post("/interview/assemblyai_webhook")
+async def assemblyai_webhook(request: Request, session: AsyncSession = Depends(get_db)):
+    """Handle async callbacks from AssemblyAI for audio evaluation."""
+    payload = await request.json()
+    return await interview_service.handle_assemblyai_webhook(payload, session)
