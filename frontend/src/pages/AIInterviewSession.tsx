@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Brain, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera, VideoCameraSlash, ArrowElbowLeftUp, LockKey } from '@phosphor-icons/react';
+import { Microphone, MicrophoneSlash, Clock, ArrowsOut, X, Warning, Sparkle, Stop, ChatCircleDots, FileText, Upload, ArrowRight, VideoCamera, VideoCameraSlash, ArrowElbowLeftUp, LockKey } from '@phosphor-icons/react';
 import {
   BarVisualizer,
   LiveKitRoom,
@@ -973,114 +973,12 @@ const HardwareSetupLobby = ({ sessionConfig, isStarting, onStart, onCancel }) =>
 
 // ─── Main Interview Session ──────────────────────────────────────────────────
 
-const InterviewConnectingLobby = ({ stage }: { stage: 'connecting' | 'joined' }) => {
-  const isJoined = stage === 'joined';
-  const steps = [
-    { label: 'Creating session', active: true },
-    { label: 'Inviting Ami', active: true },
-    { label: 'Joining room', active: isJoined },
-  ];
-
-  return (
-    <div className="fixed inset-0 z-[9999] overflow-hidden bg-[#05080d] text-slate-100 font-sans">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(99,102,241,0.14),transparent_34%),linear-gradient(315deg,rgba(20,184,166,0.12),transparent_38%)]" />
-        <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.8)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.8)_1px,transparent_1px)] [background-size:72px_72px]" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
-      </div>
-
-      <div className="relative z-10 flex min-h-screen flex-col">
-        <header className="flex items-center justify-between px-8 py-7">
-          <div className="flex items-center gap-4">
-            <Avatar size={38} name="AcadMix Intelligence" variant="beam" colors={['#6366f1', '#14b8a6', '#8b5cf6', '#06b6d4', '#34d399']} />
-            <span className="text-sm font-black uppercase tracking-[0.22em] text-slate-300">AcadMix Intelligence</span>
-          </div>
-          <div className="hidden rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 sm:block">
-            Private Mock Interview
-          </div>
-        </header>
-
-        <main className="flex flex-1 items-center justify-center px-6 pb-12">
-          <motion.section
-            initial={{ opacity: 0, y: 18, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.45, ease: 'easeOut' }}
-            className="w-full max-w-3xl text-center"
-          >
-            <div className="mx-auto mb-8 flex h-28 w-28 items-center justify-center rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_rgba(15,23,42,0.55)]">
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 to-teal-400">
-                <motion.div
-                  className="absolute inset-[-10px] rounded-[2rem] border border-cyan-300/30"
-                  animate={{ scale: [1, 1.14, 1], opacity: [0.35, 0.75, 0.35] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-                />
-                {isJoined ? <Sparkle size={34} weight="fill" /> : <Brain size={36} weight="duotone" />}
-              </div>
-            </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={stage}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-              >
-                <p className="mb-3 text-sm font-black uppercase tracking-[0.24em] text-cyan-300/80">
-                  {isJoined ? 'Interviewer joined' : 'Waiting lobby'}
-                </p>
-                <h1 className="text-3xl font-black tracking-tight text-white sm:text-5xl">
-                  {isJoined ? 'Ami joined the room' : 'Connecting to Ami'}
-                </h1>
-                <p className="mx-auto mt-5 max-w-xl text-base font-medium leading-7 text-slate-400 sm:text-lg">
-                  {isJoined
-                    ? 'Your session will start in a moment.'
-                    : 'Preparing your private interview room and inviting your AI interviewer.'}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="mx-auto mt-10 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
-              {steps.map((step, index) => (
-                <div
-                  key={step.label}
-                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${
-                    step.active
-                      ? 'border-cyan-300/25 bg-cyan-300/[0.08] text-slate-100'
-                      : 'border-white/10 bg-white/[0.03] text-slate-500'
-                  }`}
-                >
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Step {index + 1}</span>
-                    <span className={`h-2.5 w-2.5 rounded-full ${step.active ? 'bg-teal-300 shadow-[0_0_16px_rgba(45,212,191,0.8)]' : 'bg-slate-700'}`} />
-                  </div>
-                  <p className="text-sm font-extrabold">{step.label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mx-auto mt-9 h-1.5 max-w-md overflow-hidden rounded-full bg-white/[0.06]">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-400 via-cyan-300 to-teal-300"
-                initial={{ width: '24%' }}
-                animate={{ width: isJoined ? '100%' : ['34%', '72%', '48%'] }}
-                transition={isJoined ? { duration: 0.45, ease: 'easeOut' } : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-              />
-            </div>
-          </motion.section>
-        </main>
-      </div>
-    </div>
-  );
-};
-
 const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
   // If viewing a past interview
   const [viewMode, setViewMode] = useState(null);
 
   // Interview state
-  const [phase, setPhase] = useState('setup'); // setup | connecting | active | ending | scorecard
-  const [connectingStage, setConnectingStage] = useState<'connecting' | 'joined'>('connecting');
+  const [phase, setPhase] = useState('setup'); // setup | active | ending | scorecard
   const [orbState, setOrbState] = useState('idle');
   const [interviewId, setInterviewId] = useState(null);
   const [liveKitToken, setLiveKitToken] = useState(null);
@@ -1745,8 +1643,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
     } catch {}
 
     setIsStarting(true);
-    setConnectingStage('connecting');
-    setPhase('connecting');
 
     try {
       const { data } = await interviewAPI.start({
@@ -1761,7 +1657,14 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       interviewIdRef.current = data.interview_id; // Sync ref immediately — useEffect is async
       setQuestionNumber(1);
       setCurrentQuestion(data.first_question);
-      setConversation([]);
+      setConversation(data.first_question ? [{
+        id: `initial-${data.interview_id}`,
+        role: 'assistant',
+        content: data.first_question,
+        timestamp: new Date().toISOString(),
+        source: 'initial',
+        kind: 'question',
+      }] : []);
 
       // Fetch LiveKit Token
       const tokenRes = await interviewAPI.getToken(data.interview_id);
@@ -1773,16 +1676,12 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       setLiveKitToken(tokenPayload.token);
       setLiveKitUrl(tokenPayload.url);
 
-      setConnectingStage('joined');
-      await new Promise(resolve => setTimeout(resolve, 800));
-
       setPhase('active');
       setOrbState('listening');
       setShowTranscript(false); // ← Ensure text is hidden on initial start
       setIsStarting(false);
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to start interview');
-      setConnectingStage('connecting');
       setPhase('setup');
       setIsStarting(false);
       try { document.exitFullscreen(); } catch {}
@@ -1845,10 +1744,6 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
         onRetry={() => navigate('interview-warroom')}
       />
     );
-  }
-
-  if (phase === 'connecting') {
-    return <InterviewConnectingLobby stage={connectingStage} />;
   }
 
   // ── Setup Screen (pre-fullscreen) ──
