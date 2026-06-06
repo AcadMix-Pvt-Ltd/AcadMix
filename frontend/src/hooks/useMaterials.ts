@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { materialsAPI } from '../services/api';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export const useCourseMaterials = (courseId: string | null) => {
   const [materials, setMaterials] = useState<any[]>([]);
