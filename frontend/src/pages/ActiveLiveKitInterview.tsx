@@ -570,6 +570,21 @@ export const ActiveLiveKitInterview = ({
     },
     [userTranscriptions, conversation, browserSpeechText, pendingUserText],
   );
+  const lastConversationTurn = conversation[conversation.length - 1];
+  const shouldMergeLiveUserIntoLastTurn = Boolean(currentUserText && lastConversationTurn?.role === 'user');
+  const visibleConversation = useMemo(() => {
+    if (!shouldMergeLiveUserIntoLastTurn) return conversation;
+
+    const lastTurn = conversation[conversation.length - 1];
+    const mergedContent = mergeUserTurnText(lastTurn.content, currentUserText);
+    return [
+      ...conversation.slice(0, -1),
+      {
+        ...lastTurn,
+        content: mergedContent,
+      },
+    ];
+  }, [conversation, currentUserText, shouldMergeLiveUserIntoLastTurn]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (!shouldStickToBottomRef.current || !bottomSentinelRef.current) return;
@@ -581,7 +596,7 @@ export const ActiveLiveKitInterview = ({
 
   useEffect(() => {
     scrollToBottom('smooth');
-  }, [conversation.length, currentAgentText, currentUserText]);
+  }, [visibleConversation.length, currentAgentText, currentUserText]);
 
   useEffect(() => {
     return () => {
@@ -682,7 +697,7 @@ export const ActiveLiveKitInterview = ({
             }}
             className="flex-1 min-h-0 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
-             {conversation.map((msg, i) => (
+             {visibleConversation.map((msg, i) => (
                <TranscriptRow
                  key={transcriptKey(msg, i)}
                  role={msg.role}
@@ -694,7 +709,7 @@ export const ActiveLiveKitInterview = ({
                <TranscriptRow role="assistant" content={currentAgentText} isLive />
              )}
 
-             {currentUserText && (
+             {currentUserText && !shouldMergeLiveUserIntoLastTurn && (
                <TranscriptRow role="user" content={currentUserText} isLive />
              )}
 
