@@ -183,10 +183,30 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
 const normalizeTranscriptText = (value: string) =>
   String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
 
-const isClarificationTurn = (content: string) => {
+const isRepeatRequest = (text: string): boolean => {
+  const normalized = normalizeTranscriptText(text);
+  if (!normalized) return false;
+  return [
+    'repeat',
+    'say that again',
+    'say it again',
+    'come again',
+    'pardon',
+    'one more time',
+    'could you repeat',
+    'can you repeat',
+    'please repeat',
+    'what did you say',
+    'sorry what',
+    'i missed that',
+  ].some(phrase => normalized.includes(phrase));
+};
+
+const isClarificationTurn = (content: string): boolean => {
   const normalized = normalizeTranscriptText(content);
   if (!normalized) return false;
   return [
+    // Original clarification phrases
     'i did not quite understand',
     "i didn't quite understand",
     'i do not understand',
@@ -203,15 +223,37 @@ const isClarificationTurn = (content: string) => {
     'could you continue',
     'please continue',
     'could you answer',
+    // No-response nudge phrases
     'i am still listening',
     'i still have not heard your response',
     'i still have not heard a response',
+    // Elaboration / follow-up phrases
+    'elaborate',
+    'explain why',
+    'explain how',
+    'explain further',
+    'explain more',
+    'explain in detail',
+    'tell me more',
+    'what do you mean',
+    'could you explain',
+    'can you explain',
+    'clarify',
+    'more details',
+    'specific example',
+    'concrete example',
+    'elaborate on',
+    'could you walk me through',
+    'can you walk me through',
+    'please expand on',
+    'go deeper',
   ].some(phrase => normalized.includes(phrase));
 };
 
-const turnKind = (role: 'assistant' | 'user', content: string) => {
+const turnKind = (role: 'assistant' | 'user', content: string): string => {
   if (role === 'user') return 'answer';
-  return isClarificationTurn(content) ? 'clarification' : 'question';
+  if (isClarificationTurn(content) || isRepeatRequest(content)) return 'nudge';
+  return 'question';
 };
 
 const USER_TURN_FINALIZE_DELAY_MS = 2800;

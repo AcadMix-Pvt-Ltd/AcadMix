@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
+from livekit.agents.llm import StopResponse
 from livekit.agents.voice import Agent
 from livekit.plugins import cartesia, google, deepgram, silero
 
@@ -39,11 +40,34 @@ logger = logging.getLogger("acadmix.livekit_agent")
 
 NO_RESPONSE_DELAY_SECONDS = 15.0
 NO_RESPONSE_PROMPT_1 = "I am still listening. Please answer when you are ready."
-NO_RESPONSE_PROMPT_2 = "I still have not heard your response. Please answer now, or I will end the session shortly."
 NO_RESPONSE_END_MESSAGE = (
     "I still have not heard a response, so I will end the mock interview now. "
     "You can start another session when you are ready."
 )
+
+# Filler / non-answer fragments that should NOT trigger Gemini
+_FILLER_WORDS = frozenset({
+    "so", "ok", "okay", "hmm", "hm", "um", "uh", "yeah", "yes", "no",
+    "yep", "nope", "right", "sure", "ah", "oh", "like", "well", "and",
+    "but", "mm", "mhm", "mmm", "huh", "alright", "actually", "basically",
+})
+
+
+def is_meaningful_candidate_answer(text: str) -> bool:
+    """Return True only if *text* looks like a real candidate answer.
+
+    Rejects empty/near-empty turns, single filler words, and 1-2 word
+    non-answers so that Gemini is not invoked on noise.
+    """
+    cleaned = re.sub(r"\s+", " ", (text or "")).strip().lower()
+    if not cleaned:
+        return False
+    words = cleaned.split()
+    if len(words) <= 2 and all(w.strip(".,!?") in _FILLER_WORDS for w in words):
+        return False
+    return True
+
+
 MAX_DEEPGRAM_KEYTERMS = 80
 COMMON_DEEPGRAM_KEYTERMS = (
     "AcadMix",
@@ -170,14 +194,31 @@ def build_deepgram_keyterms(
 
 
 class NoResponseController:
+    """Manages the 2-stage no-response flow.
+
+    Stage 0 (default): After assistant speech finishes playing, wait 15 s.
+        → If silence, speak ``NO_RESPONSE_PROMPT_1`` ("I am still listening…"),
+          then move to Stage 1.
+    Stage 1: Wait another 15 s.
+        → If silence, speak ``NO_RESPONSE_END_MESSAGE`` and shut down.
+
+    Any *meaningful* user speech at any stage cancels/resets the flow.
+    Non-meaningful fragments ("so", "hmm") restart the 15 s timer
+    for the *current* stage via ``note_non_answer_fragment()``.
+    """
+
     def __init__(self, *, session: AgentSession, ctx: JobContext):
         self._session = session
         self._ctx = ctx
         self._task: asyncio.Task | None = None
         self._generation = 0
+        self._stage = 0  # 0 = first wait, 1 = after first nudge
+        self._speaking_nudge = False  # True while a nudge is being spoken
         self._ignore_next_speech_events = 0
         self._closed = False
         self._user_speech_active = False
+
+    # ── public API ────────────────────────────────────────────────────────
 
     def ignore_next_speech_event(self) -> bool:
         if self._ignore_next_speech_events <= 0:
@@ -186,14 +227,19 @@ class NoResponseController:
         return True
 
     def watch_assistant_speech(self, speech_handle):
-        if self._closed:
+        """Called when a *real* assistant turn (not a nudge) starts."""
+        if self._closed or self._speaking_nudge:
             return
         self._generation += 1
+        self._stage = 0
         generation = self._generation
         self._cancel_task()
-        self._task = asyncio.create_task(self._start_after_playout(speech_handle, generation))
+        self._task = asyncio.create_task(
+            self._start_after_playout(speech_handle, generation)
+        )
 
     def note_user_speech_started(self):
+        """User started speaking – cancel any pending reminder."""
         if self._closed:
             return
         self._user_speech_active = True
@@ -201,25 +247,53 @@ class NoResponseController:
         self._cancel_task()
 
     def note_user_speech_stopped(self):
+        """User stopped speaking – do NOT restart the timer here.
+
+        We wait for ``on_user_turn_completed`` to verify meaningfulness.
+        """
         if self._closed or not self._user_speech_active:
+            return
+        self._user_speech_active = False
+        # Intentionally do NOT restart the reminder flow here.
+        # The timer will restart from ``note_user_turn_completed``
+        # (meaningful answer → reset to stage 0) or
+        # ``note_non_answer_fragment`` (filler → restart current stage).
+
+    def note_user_turn_completed(self):
+        """Called when a *meaningful* user turn is finalized.
+
+        Resets the stage to 0 and cancels any pending task so that the
+        next assistant response re-arms the flow via ``watch_assistant_speech``.
+        """
+        if self._closed:
+            return
+        self._user_speech_active = False
+        self._stage = 0
+        self._generation += 1
+        self._cancel_task()
+
+    def note_non_answer_fragment(self):
+        """Called when the user uttered a filler / non-meaningful fragment.
+
+        Restarts the 15 s timer for the *current* stage so that the flow
+        is not permanently stalled by fillers.
+        """
+        if self._closed:
             return
         self._user_speech_active = False
         self._generation += 1
         generation = self._generation
         self._cancel_task()
-        self._task = asyncio.create_task(self._run_reminder_flow(generation))
-
-    def note_user_turn_completed(self):
-        if self._closed:
-            return
-        self._user_speech_active = False
-        self._generation += 1
-        self._cancel_task()
+        self._task = asyncio.create_task(
+            self._run_reminder_flow(generation)
+        )
 
     def close(self):
         self._closed = True
         self._generation += 1
         self._cancel_task()
+
+    # ── internals ─────────────────────────────────────────────────────────
 
     def _cancel_task(self):
         if self._task and not self._task.done():
@@ -227,6 +301,7 @@ class NoResponseController:
         self._task = None
 
     async def _start_after_playout(self, speech_handle, generation: int):
+        """Wait for the assistant speech to finish, then start the timer."""
         try:
             await speech_handle.wait_for_playout()
             if speech_handle.interrupted or not self._is_current(generation):
@@ -238,47 +313,57 @@ class NoResponseController:
             logger.exception("No-response timer failed after assistant speech")
 
     async def _run_reminder_flow(self, generation: int):
+        """Execute the 2-stage no-response reminder logic."""
         try:
+            # ── Stage 0 → wait 15 s then nudge ────────────────────────────
+            if self._stage == 0:
+                await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+                if not self._is_current(generation):
+                    return
+
+                nudge = self._say_nudge(NO_RESPONSE_PROMPT_1)
+                await nudge.wait_for_playout()
+                if nudge.interrupted or not self._is_current(generation):
+                    return
+                self._stage = 1
+
+            # ── Stage 1 → wait 15 s then close ───────────────────────────
             await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
             if not self._is_current(generation):
                 return
 
-            first_prompt = self._say_idle_message(NO_RESPONSE_PROMPT_1)
-            await first_prompt.wait_for_playout()
-            if first_prompt.interrupted or not self._is_current(generation):
-                return
-
-            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
-            if not self._is_current(generation):
-                return
-
-            second_prompt = self._say_idle_message(NO_RESPONSE_PROMPT_2)
-            await second_prompt.wait_for_playout()
-            if second_prompt.interrupted or not self._is_current(generation):
-                return
-
-            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
-            if not self._is_current(generation):
-                return
-
-            end_message = self._say_idle_message(NO_RESPONSE_END_MESSAGE)
-            await end_message.wait_for_playout()
-            if end_message.interrupted or not self._is_current(generation):
+            end_msg = self._say_nudge(NO_RESPONSE_END_MESSAGE)
+            await end_msg.wait_for_playout()
+            if end_msg.interrupted or not self._is_current(generation):
                 return
 
             self._closed = True
-            self._ctx.shutdown("mock interview ended after repeated no-response prompts")
+            self._ctx.shutdown(
+                "mock interview ended – no response after reminder"
+            )
         except asyncio.CancelledError:
             raise
         except Exception:
             logger.exception("No-response reminder flow failed")
 
-    def _say_idle_message(self, message: str):
+    def _say_nudge(self, message: str):
+        """Speak a nudge/closure message without re-triggering watch."""
+        self._speaking_nudge = True
         self._ignore_next_speech_events += 1
-        return self._session.say(message, allow_interruptions=True)
+        handle = self._session.say(message, allow_interruptions=True)
+        # Reset the flag after the event loop has processed the speech_created event
+        asyncio.get_event_loop().call_soon(self._clear_nudge_flag)
+        return handle
+
+    def _clear_nudge_flag(self):
+        self._speaking_nudge = False
 
     def _is_current(self, generation: int) -> bool:
-        return not self._closed and generation == self._generation and not self._user_speech_active
+        return (
+            not self._closed
+            and generation == self._generation
+            and not self._user_speech_active
+        )
 
 
 class InterviewAgent(Agent):
@@ -289,6 +374,16 @@ class InterviewAgent(Agent):
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
     ) -> None:
+        user_text = new_message.text_content if new_message else ""
+        if not is_meaningful_candidate_answer(user_text):
+            logger.info(
+                "Non-meaningful user turn suppressed: %r", user_text
+            )
+            if self.no_response_controller:
+                self.no_response_controller.note_non_answer_fragment()
+            raise StopResponse()
+
+        # Meaningful answer – reset the no-response flow
         if self.no_response_controller:
             self.no_response_controller.note_user_turn_completed()
 
@@ -396,12 +491,14 @@ async def entrypoint(ctx: JobContext):
     )
 
     # Let genuine candidate speech interrupt the AI, but resume after a short false-start window.
+    # Endpointing min_delay=3.0 gives the student a 3-second buffer to pause/think.
+    # preemptive_generation=False prevents Gemini from generating before the user finishes.
     session = AgentSession(
         turn_handling={
             "endpointing": {
                 "mode": "fixed",
-                "min_delay": 2.5,
-                "max_delay": 5.0,
+                "min_delay": 3.0,
+                "max_delay": 6.0,
             },
             "interruption": {
                 "enabled": True,
@@ -409,7 +506,8 @@ async def entrypoint(ctx: JobContext):
                 "min_duration": 0.7,
                 "resume_false_interruption": True,
                 "false_interruption_timeout": 3.0,
-            }
+            },
+            "preemptive_generation": False,
         },
     )
     no_response_controller = NoResponseController(session=session, ctx=ctx)
