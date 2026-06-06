@@ -324,8 +324,8 @@ async def entrypoint(ctx: JobContext):
 
     interview_type = interview.interview_type or "technical"
     difficulty = interview.difficulty or "medium"
-    company = interview.company_name or "the target company"
-    resume_context = interview.resume_content or "No resume context was provided."
+    company = interview.target_company or "the target company"
+    resume_context = interview.resume_context or "No resume context was provided."
 
     # Build system instructions
     system_prompt = (
