@@ -4,6 +4,8 @@ Interview War Room — AI Mock Interview Router (thin layer).
 All business logic lives in app.services.interview_service.
 This router handles: HTTP interface, auth guards, DB session injection.
 """
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -172,6 +174,31 @@ async def get_livekit_token(
 
     if not settings.LIVEKIT_API_KEY or not settings.LIVEKIT_API_SECRET:
         raise HTTPException(status_code=500, detail="LiveKit keys not configured")
+
+    lk = api.LiveKitAPI(settings.LIVEKIT_URL, settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
+    try:
+        rooms = await lk.room.list_rooms(api.ListRoomsRequest(names=[interview_id]))
+        if not rooms.rooms:
+            await lk.room.create_room(api.CreateRoomRequest(
+                name=interview_id,
+                empty_timeout=300,
+                max_participants=4,
+            ))
+
+        existing_dispatches = await lk.agent_dispatch.list_dispatch(interview_id)
+        if not existing_dispatches:
+            await lk.agent_dispatch.create_dispatch(api.CreateAgentDispatchRequest(
+                room=interview_id,
+                metadata=json.dumps({
+                    "interview_id": interview_id,
+                    "student_id": str(user["id"]),
+                    "college_id": str(user["college_id"]),
+                }),
+            ))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="AI interviewer is not available. Please try again.") from exc
+    finally:
+        await lk.aclose()
 
     token = api.AccessToken(
         settings.LIVEKIT_API_KEY,

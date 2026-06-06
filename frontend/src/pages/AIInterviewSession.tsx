@@ -1657,14 +1657,7 @@ const AIInterviewSession = ({ navigate, user, quizData: sessionConfig }) => {
       interviewIdRef.current = data.interview_id; // Sync ref immediately — useEffect is async
       setQuestionNumber(1);
       setCurrentQuestion(data.first_question);
-      setConversation(data.first_question ? [{
-        id: `initial-${data.interview_id}`,
-        role: 'assistant',
-        content: data.first_question,
-        timestamp: new Date().toISOString(),
-        source: 'initial',
-        kind: 'question',
-      }] : []);
+      setConversation([]);
 
       // Fetch LiveKit Token
       const tokenRes = await interviewAPI.getToken(data.interview_id);

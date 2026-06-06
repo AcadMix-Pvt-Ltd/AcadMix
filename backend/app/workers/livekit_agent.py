@@ -443,7 +443,9 @@ async def entrypoint(ctx: JobContext):
     await ctx.wait_for_participant()
     # Wait a moment for audio track subscription to stabilize
     await asyncio.sleep(2.0)
-    await session.say(first_q)
+    logger.info("speaking initial interview question")
+    first_speech = session.say(first_q, allow_interruptions=True)
+    await first_speech.wait_for_playout()
 
 
 # ── CLI entry ─────────────────────────────────────────────────────────────────
