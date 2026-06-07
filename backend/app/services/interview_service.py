@@ -79,10 +79,13 @@ BALANCED STRUCTURE (Ensure your questions are balanced across these phases):
        # buggy implementation...
    ```"
 4. Role-Specific Case Study (1 question): Ask a case study based on the target role:
-   * SDE / Backend Developer: Ask a System Design / Scale case study (e.g. Designing a URL shortener, rate-limiter, database indexing/sharding, or API caching). Append `[SHOW_CODE_EDITOR: text]` so they can sketch out tables/APIs.
-   * Data Analyst / Engineer / BI: Ask a Data-Driven business decision case study (e.g. "If Puma wants to set up a showroom in a particular area, what geographical, demographic, competitor, and product-demand factors does the company need to decide/analyze?"). Append `[SHOW_CODE_EDITOR: text]` so they can list factors and schemas.
-   * Frontend Developer / UI: Ask a User Experience, page load speed, or state management optimization case study (e.g. rendering high-res image catalogs or bundle size optimization). Append `[SHOW_CODE_EDITOR: text]`.
-5. Return to Oral: When done with coding/editor tasks, return to verbal dialogue and append `[HIDE_CODE_EDITOR]`.
+   * SDE / Backend Developer: Ask a System Design / Scale case study (e.g. Designing a URL shortener, rate-limiter, database indexing/sharding, or API caching). Ask them to draw the system architecture or schema on the whiteboard, and append `[SHOW_WHITEBOARD]`.
+   * Data Analyst / Engineer / BI: Ask a Data-Driven business decision case study (e.g. "If Puma wants to set up a showroom in a particular area, what geographical, demographic, competitor, and product-demand factors does the company need to decide/analyze?"). Ask them to sketch out their analysis schema/factors on the whiteboard, and append `[SHOW_WHITEBOARD]`.
+   * Frontend Developer / UI: Ask a User Experience, page load speed, or state management optimization case study (e.g. rendering high-res image catalogs or bundle size optimization). Ask them to wireframe their design layout on the whiteboard, and append `[SHOW_WHITEBOARD]`.
+5. Code Complexity & Optimization: Once the candidate submits a coding or debugging solution, analyze its time and space complexity.
+   - If sub-optimal, ask them: "Excellent job getting a working solution! Can we optimize the time complexity to a better big-O runtime (like O(N)) or reduce space complexity?"
+   - If optimal, ask about scale limits, edge cases, concurrency, or trade-offs.
+6. Return to Oral: When done with coding/whiteboard tasks, return to verbal dialogue and append `[HIDE_CODE_EDITOR]`.
 """
     elif int_type == "hr":
         role_instructions = """
@@ -105,9 +108,10 @@ FOCUS: A complete placement-day simulation containing a mix of all rounds.
 STRUCTURE (Mimic a complete placement loop):
 1. Introduction & Resume walk-through (Oral).
 2. Deep Technical / Coding or Debugging question: Present a programming task or buggy block and use `[SHOW_CODE_EDITOR: <language>]`.
-3. Case Study (SDE system design OR Data Analytics showroom factors like Puma, depending on role): Present the case study and append `[SHOW_CODE_EDITOR: text]` for sketching.
-4. Behavioral / HR question: Ask a situational conflict question (using STAR method).
-5. Wrap up: Close professionally and ask if they have questions for you.
+3. Case Study (SDE system design OR Data Analytics showroom factors like Puma, depending on role): Present the case study and append `[SHOW_WHITEBOARD]` for sketching.
+4. Code Complexity & Optimization: Ask the candidate to analyze and optimize their solution's time and space complexity.
+5. Behavioral / HR question: Ask a situational conflict question (using STAR method).
+6. Wrap up: Close professionally and ask if they have questions for you.
 """
     else:
         role_instructions = """

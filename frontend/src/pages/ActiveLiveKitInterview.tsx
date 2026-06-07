@@ -6,6 +6,7 @@ import { api } from '../services/api';
 import Editor from '@monaco-editor/react';
 import { Track } from 'livekit-client';
 import Avatar from 'boring-avatars';
+import { toast } from 'sonner';
 
 // ─── Orb State Colors ────────────────────────────────────────────────────────
 const ORB_STATES = {
@@ -131,8 +132,9 @@ const HorizontalAuraWave = ({ state, analyserRef, ttsAnalyserRef }: { state: str
         smoothedData[i] += (targetData[i] - smoothedData[i]) * 0.12;
       }
 
-      const orbColor1 = ORB_STATES[state === 'connecting' ? 'thinking' : state]?.color1 || '#14b8a6';
-      const orbColor2 = ORB_STATES[state === 'connecting' ? 'thinking' : state]?.color2 || '#06b6d4';
+      const stateKey = (state === 'connecting' ? 'thinking' : state) as keyof typeof ORB_STATES;
+      const orbColor1 = ORB_STATES[stateKey]?.color1 || '#14b8a6';
+      const orbColor2 = ORB_STATES[stateKey]?.color2 || '#06b6d4';
       const colors = [orbColor1, orbColor2, '#ffffff'];
 
       ctx.globalCompositeOperation = 'screen';
@@ -335,6 +337,260 @@ const TranscriptRow = ({ role, content, isLive = false }: { role: 'assistant' | 
   );
 };
 
+const WhiteboardPanel = ({
+  room,
+  localParticipant,
+  onClose
+}: {
+  room: any;
+  localParticipant: any;
+  onClose: () => void;
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [color, setColor] = useState('#14b8a6');
+  const [brushSize, setBrushSize] = useState(5);
+  const [mode, setMode] = useState<'draw' | 'erase'>('draw');
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const resizeCanvas = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) tempCtx.drawImage(canvas, 0, 0);
+      
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      
+      ctx.drawImage(tempCanvas, 0, 0, rect.width, rect.height);
+    };
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+  
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (mode === 'erase') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = brushSize * 3;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = brushSize;
+    }
+    
+    const rect = canvas.getBoundingClientRect();
+    let x = 0;
+    let y = 0;
+    if ('touches' in e) {
+      if (e.touches.length === 0) return;
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+  
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    let x = 0;
+    let y = 0;
+    if ('touches' in e) {
+      if (e.touches.length === 0) return;
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
+    
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+  
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+  
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    toast.success("Whiteboard cleared");
+  };
+  
+  const submitDesign = async () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const imgData = canvas.toDataURL('image/png');
+    try {
+      const payload = JSON.stringify({ image: imgData });
+      const encoder = new TextEncoder();
+      const data = encoder.encode(payload);
+      if (localParticipant) {
+        localParticipant.publishData(data, { topic: 'whiteboard_state' });
+        toast.success("Whiteboard architecture submitted successfully!");
+      }
+    } catch (err) {
+      console.error("Failed to publish whiteboard data:", err);
+      toast.error("Failed to submit whiteboard design");
+    }
+  };
+  
+  return (
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0b0e14]">
+      <div className="px-6 py-4 border-b border-white/[0.03] flex items-center justify-between shrink-0 bg-[#0d111b]/80">
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-bold text-slate-200 uppercase tracking-widest text-indigo-400">Whiteboard Sketchpad</span>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-slate-900 border border-white/5 p-0.5 rounded-full">
+          <button
+            onClick={() => setMode('draw')}
+            className={`px-3.5 py-1 text-xs font-bold rounded-full transition-all ${
+              mode === 'draw' ? 'bg-slate-800 text-teal-400' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Draw
+          </button>
+          <button
+            onClick={() => setMode('erase')}
+            className={`px-3.5 py-1 text-xs font-bold rounded-full transition-all ${
+              mode === 'erase' ? 'bg-slate-800 text-teal-400' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            Eraser
+          </button>
+        </div>
+      </div>
+      
+      <div className="px-6 py-2 border-b border-white/[0.03] flex items-center justify-between gap-4 bg-[#090d15]/50 text-xs shrink-0 select-none">
+        <div className="flex items-center gap-3">
+          <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Color:</span>
+          <div className="flex gap-2">
+            {[
+              { val: '#14b8a6', name: 'Teal' },
+              { val: '#6366f1', name: 'Indigo' },
+              { val: '#ffffff', name: 'White' }
+            ].map((col) => (
+              <button
+                key={col.val}
+                disabled={mode === 'erase'}
+                onClick={() => setColor(col.val)}
+                className={`w-6 h-6 rounded-full border transition-all ${
+                  color === col.val && mode === 'draw'
+                    ? 'border-white scale-110 shadow-sm'
+                    : 'border-white/10 hover:scale-105'
+                }`}
+                style={{ backgroundColor: col.val }}
+                title={col.name}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Pen Size:</span>
+          <div className="flex bg-slate-900 border border-white/5 p-0.5 rounded-full">
+            {[
+              { val: 2, label: 'Fine' },
+              { val: 5, label: 'Medium' },
+              { val: 10, label: 'Thick' }
+            ].map((size) => (
+              <button
+                key={size.val}
+                onClick={() => setBrushSize(size.val)}
+                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  brushSize === size.val
+                    ? 'bg-slate-800 text-teal-400'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {size.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        
+        <button
+          onClick={clearCanvas}
+          className="px-3 py-1 border border-white/5 rounded-full text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors font-bold uppercase tracking-wider text-[9px]"
+        >
+          Clear Board
+        </button>
+      </div>
+      
+      <div ref={containerRef} className="flex-1 min-h-0 relative cursor-crosshair overflow-hidden">
+        <canvas
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseLeave={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+          className="absolute inset-0 bg-[#06090e]"
+        />
+      </div>
+      
+      <div className="p-4 border-t border-white/[0.05] flex items-center justify-between gap-4 bg-[#0d111b]/80 shrink-0">
+        <button
+          onClick={onClose}
+          className="px-5 py-2 rounded-full border border-white/5 text-slate-400 text-xs font-bold hover:bg-white/5 hover:text-slate-200 transition-colors"
+        >
+          Close Whiteboard
+        </button>
+        <button
+          onClick={submitDesign}
+          className="px-5 py-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs font-bold hover:from-indigo-400 hover:to-purple-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+        >
+          Submit Design
+        </button>
+      </div>
+    </div>
+  );
+};
+
 interface ActiveLiveKitInterviewProps {
   elapsed: number;
   isEnding: boolean;
@@ -373,18 +629,38 @@ export const ActiveLiveKitInterview = ({
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
 
+  // Advanced Technical Round state
+  const [rightPanelMode, setRightPanelMode] = useState<'sandbox' | 'whiteboard'>('sandbox');
+  const [testCases, setTestCases] = useState<any[]>([]);
+  const [consoleTab, setConsoleTab] = useState<'console' | 'tests'>('console');
+
   // Listen for Room Data Channel packets (editor show/hide controls)
   useEffect(() => {
     const handleDataReceived = (payload: Uint8Array, participant: any, kind: any, topic?: string) => {
+      if (topic && topic !== 'room_control') return;
       const decoder = new TextDecoder();
       const text = decoder.decode(payload);
       try {
         const data = JSON.parse(text);
         if (data.action === 'show_code_editor') {
           setShowCodeEditor(true);
+          setRightPanelMode('sandbox');
           if (data.language) {
             setEditorLanguage(data.language.toLowerCase());
           }
+          if (data.test_cases && Array.isArray(data.test_cases)) {
+            setTestCases(data.test_cases.map((tc: any) => ({
+              ...tc,
+              actual_output: '',
+              status: 'not_run'
+            })));
+          } else {
+            setTestCases([]);
+          }
+          setConsoleTab('console');
+        } else if (data.action === 'show_whiteboard') {
+          setShowCodeEditor(true);
+          setRightPanelMode('whiteboard');
         } else if (data.action === 'hide_code_editor') {
           setShowCodeEditor(false);
         }
@@ -435,22 +711,70 @@ export const ActiveLiveKitInterview = ({
     }
   }, [showCodeEditor, conversation, editorLanguage]);
 
+  // Debounced background code state sync to the voice agent
+  useEffect(() => {
+    if (!showCodeEditor || rightPanelMode !== 'sandbox' || !code || !localParticipant) return;
+    const timer = setTimeout(() => {
+      try {
+        const payload = JSON.stringify({ code, language: editorLanguage });
+        const encoder = new TextEncoder();
+        const data = encoder.encode(payload);
+        localParticipant.publishData(data, { topic: 'code_state' });
+        console.log("Synced code to agent over data channel");
+      } catch (e) {
+        console.error("Failed to sync code state:", e);
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [code, editorLanguage, showCodeEditor, rightPanelMode, localParticipant]);
+
   const handleRun = async () => {
     if (!code.trim() || running) return;
     setRunning(true);
     setOutput('Running code in sandbox...\n');
+    setTestCases(prev => prev.map(tc => ({ ...tc, actual_output: '', status: 'not_run' })));
+    
     try {
       const res = await api.post('/challenges/run', {
         challenge_id: 'sandbox',
         code: code,
         language: editorLanguage,
-        test_cases: []
+        test_cases: testCases.map(tc => ({ input_data: tc.input_data, expected_output: tc.expected_output }))
       });
-      const runData = res;
+      const runData = res as any;
       if (runData.error) {
         setOutput(`Error:\n${runData.error}\n`);
       } else {
-        setOutput(runData.output || 'Code executed successfully with no output.\n');
+        const consoleOutput = runData.output || '';
+        setOutput(consoleOutput);
+        
+        if (testCases.length > 0 && consoleOutput.includes('___ACADMIX_START_TESTS___')) {
+          const startIdx = consoleOutput.indexOf('___ACADMIX_START_TESTS___');
+          const endIdx = consoleOutput.indexOf('___ACADMIX_END___');
+          const testsPart = consoleOutput.substring(
+            startIdx + '___ACADMIX_START_TESTS___'.length,
+            endIdx !== -1 ? endIdx : undefined
+          );
+          const segments = testsPart.split('___ACADMIX_SEP___');
+          
+          setTestCases(prev => prev.map((tc, idx) => {
+            const segment = segments[idx] || '';
+            const passed = segment.includes('___ACADMIX_STATUS_PASS___');
+            const failed = segment.includes('___ACADMIX_STATUS_FAIL___');
+            
+            const actual = segment
+              .replace('___ACADMIX_STATUS_PASS___', '')
+              .replace('___ACADMIX_STATUS_FAIL___', '')
+              .trim();
+              
+            return {
+              ...tc,
+              actual_output: actual,
+              status: passed ? 'passed' : failed ? 'failed' : 'failed'
+            };
+          }));
+          setConsoleTab('tests');
+        }
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || err.message || 'Unknown error occurred.';
@@ -484,7 +808,7 @@ export const ActiveLiveKitInterview = ({
     return micTrack && localParticipant ? { participant: localParticipant, publication: micTrack, source: Track.Source.Microphone } : undefined;
   }, [micTrack, localParticipant]);
 
-  const { segments: userTranscriptions } = useTrackTranscription(userTrackRef);
+  const { segments: userTranscriptions } = useTrackTranscription(userTrackRef as any);
 
   const seenIds = useRef<Set<string>>(new Set());
   const endedForQuestionLimitRef = useRef(false);
@@ -770,31 +1094,31 @@ export const ActiveLiveKitInterview = ({
     };
   }, [clearPendingUserTimer]);
 
-  const ttsAnalyserRef = useRef(null);
-  const analyserRef = useRef(null);
-  const audioCtxRef = useRef(null);
+  const ttsAnalyserRef = useRef<AnalyserNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
-    if (audioTrack?.mediaStreamTrack && !ttsAnalyserRef.current) {
+    if ((audioTrack as any)?.mediaStreamTrack && !ttsAnalyserRef.current) {
       try {
-        const stream = new MediaStream([audioTrack.mediaStreamTrack]);
-        const source = audioCtxRef.current.createMediaStreamSource(stream);
-        const analyser = audioCtxRef.current.createAnalyser();
+        const stream = new MediaStream([(audioTrack as any).mediaStreamTrack]);
+        const source = audioCtxRef.current!.createMediaStreamSource(stream);
+        const analyser = audioCtxRef.current!.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
         ttsAnalyserRef.current = analyser;
       } catch (e) { console.error("Failed to wire ttsAnalyser", e); }
     }
     
-    if (micTrack?.mediaStreamTrack && !analyserRef.current) {
+    if ((micTrack as any)?.mediaStreamTrack && !analyserRef.current) {
       try {
-        const stream = new MediaStream([micTrack.mediaStreamTrack]);
-        const source = audioCtxRef.current.createMediaStreamSource(stream);
-        const analyser = audioCtxRef.current.createAnalyser();
+        const stream = new MediaStream([(micTrack as any).mediaStreamTrack]);
+        const source = audioCtxRef.current!.createMediaStreamSource(stream);
+        const analyser = audioCtxRef.current!.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
         analyserRef.current = analyser;
@@ -891,92 +1215,195 @@ export const ActiveLiveKitInterview = ({
           </div>
         </div>
 
-        {/* Right Panel: Code Sandbox */}
+        {/* Right Panel: Code Sandbox or Whiteboard */}
         {showCodeEditor && (
           <div className="w-[50%] border-l border-white/[0.05] bg-[#0b0e14] flex flex-col h-full overflow-hidden">
-            {/* Editor Header */}
-            <div className="px-6 py-4 border-b border-white/[0.03] flex items-center justify-between shrink-0 bg-[#0d111b]/80">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-slate-200 uppercase tracking-widest">
-                  {editorLanguage === 'text' ? 'Design / Sketchpad' : 'Coding Sandbox'}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {/* Language Select Dropdown (Pill-shaped tab selector container) */}
-                <select
-                  value={editorLanguage}
-                  onChange={(e) => setEditorLanguage(e.target.value)}
-                  className="bg-slate-800 text-slate-200 border border-slate-700/60 rounded-full px-3.5 py-1 text-xs font-bold focus:outline-none focus:border-indigo-500 hover:bg-slate-700 transition-colors shadow-sm"
-                >
-                  <option value="python">Python</option>
-                  <option value="cpp">C++</option>
-                  <option value="java">Java</option>
-                  <option value="javascript">JavaScript</option>
-                  <option value="c">C</option>
-                  <option value="sql">SQL</option>
-                  <option value="text">Plain Text</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Monaco Editor */}
-            <div className="flex-1 min-h-0 relative">
-              <Editor
-                height="100%"
-                theme="vs-dark"
-                language={editorLanguage === 'text' ? 'plaintext' : editorLanguage.toLowerCase()}
-                value={code}
-                onChange={(val) => setCode(val || '')}
-                options={{
-                  fontSize: 14,
-                  fontFamily: 'JetBrains Mono, Fira Code, monospace',
-                  minimap: { enabled: false },
-                  lineNumbers: 'on',
-                  scrollBeyondLastLine: false,
-                  automaticLayout: true,
-                  padding: { top: 12, bottom: 12 },
-                  background: '#0b0e14',
-                }}
-              />
-            </div>
-
-            {/* Console Output Panel */}
-            <div className="h-44 border-t border-white/[0.05] bg-[#070a0f] flex flex-col shrink-0 overflow-hidden">
-              <div className="px-5 py-2 border-b border-white/[0.03] flex items-center justify-between bg-[#090d15]/50">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Console Output</span>
-                {running && <span className="text-[10px] text-teal-400 font-bold animate-pulse">Executing...</span>}
-              </div>
-              <div className="flex-1 p-4 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap select-text bg-[#070a0f]">
-                {output || 'Click "Run Code" to execute compilation. Output will be displayed here.'}
-              </div>
-            </div>
-
-            {/* Action Bar (Pill shaped container for buttons) */}
-            <div className="p-4 border-t border-white/[0.05] flex items-center justify-between gap-4 bg-[#0d111b]/80 shrink-0">
-              <button
-                onClick={() => setShowCodeEditor(false)}
-                className="px-5 py-2 rounded-full border border-white/5 text-slate-400 text-xs font-bold hover:bg-white/5 hover:text-slate-200 transition-colors"
-              >
-                Close Editor
-              </button>
-              <div className="flex items-center gap-3">
-                {editorLanguage !== 'text' && (
-                  <button
-                    onClick={handleRun}
-                    disabled={running}
-                    className="px-5 py-2 rounded-full bg-slate-800 border border-slate-700/60 text-slate-200 text-xs font-bold hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center gap-2"
-                  >
-                    Run Code
-                  </button>
-                )}
+            {/* Header tab selector (pill shaped tab container) */}
+            <div className="px-6 py-3 border-b border-white/[0.03] flex items-center justify-between shrink-0 bg-[#0d111b]/80">
+              <div className="flex bg-slate-900 border border-white/5 p-0.5 rounded-full shadow-inner select-none">
                 <button
-                  onClick={handleSubmit}
-                  className="px-5 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold hover:from-teal-400 hover:to-cyan-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                  onClick={() => setRightPanelMode('sandbox')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                    rightPanelMode === 'sandbox'
+                      ? 'bg-slate-800 text-teal-400 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
                 >
-                  Submit Solution
+                  Coding Sandbox
+                </button>
+                <button
+                  onClick={() => setRightPanelMode('whiteboard')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 ${
+                    rightPanelMode === 'whiteboard'
+                      ? 'bg-slate-800 text-teal-400 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Whiteboard
                 </button>
               </div>
+              <button
+                onClick={() => setShowCodeEditor(false)}
+                className="text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-300 font-bold transition-colors"
+              >
+                Hide Panel
+              </button>
             </div>
+
+            {/* Content Switcher */}
+            {rightPanelMode === 'whiteboard' ? (
+              <WhiteboardPanel
+                room={room}
+                localParticipant={localParticipant}
+                onClose={() => setShowCodeEditor(false)}
+              />
+            ) : (
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+                {/* Editor Header: Sub-Header */}
+                <div className="px-6 py-2 border-b border-white/[0.03] flex items-center justify-between shrink-0 bg-[#0d111b]/50">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Language Configuration
+                  </span>
+                  <select
+                    value={editorLanguage}
+                    onChange={(e) => setEditorLanguage(e.target.value)}
+                    className="bg-slate-800 text-slate-200 border border-slate-700/60 rounded-full px-3.5 py-1 text-xs font-bold focus:outline-none focus:border-indigo-500 hover:bg-slate-700 transition-colors shadow-sm"
+                  >
+                    <option value="python">Python</option>
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="c">C</option>
+                    <option value="sql">SQL</option>
+                    <option value="text">Plain Text</option>
+                  </select>
+                </div>
+
+                {/* Monaco Editor */}
+                <div className="flex-1 min-h-0 relative">
+                  <Editor
+                    height="100%"
+                    theme="vs-dark"
+                    language={editorLanguage === 'text' ? 'plaintext' : editorLanguage.toLowerCase()}
+                    value={code}
+                    onChange={(val) => setCode(val || '')}
+                    options={{
+                      fontSize: 14,
+                      fontFamily: 'JetBrains Mono, Fira Code, monospace',
+                      minimap: { enabled: false },
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      padding: { top: 12, bottom: 12 },
+                      background: '#0b0e14',
+                    }}
+                  />
+                </div>
+
+                {/* Console Output Panel */}
+                <div className="h-56 border-t border-white/[0.05] bg-[#070a0f] flex flex-col shrink-0 overflow-hidden">
+                  <div className="px-5 py-2 border-b border-white/[0.03] flex items-center justify-between bg-[#090d15]/50 shrink-0">
+                    <div className="flex bg-slate-900 border border-white/5 p-0.5 rounded-full">
+                      <button
+                        onClick={() => setConsoleTab('console')}
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                          consoleTab === 'console'
+                            ? 'bg-slate-800 text-teal-400 shadow-sm'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Console Output
+                      </button>
+                      {testCases.length > 0 && (
+                        <button
+                          onClick={() => setConsoleTab('tests')}
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                            consoleTab === 'tests'
+                              ? 'bg-slate-800 text-teal-400 shadow-sm'
+                              : 'text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          Test Cases ({testCases.filter(t => t.status === 'passed').length}/{testCases.length})
+                        </button>
+                      )}
+                    </div>
+                    {running && <span className="text-[10px] text-teal-400 font-bold animate-pulse">Executing...</span>}
+                  </div>
+
+                  <div className="flex-1 min-h-0 overflow-hidden bg-[#070a0f]">
+                    {consoleTab === 'console' ? (
+                      <div className="h-full p-4 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap select-text">
+                        {output || 'Click "Run Code" to execute compilation. Output will be displayed here.'}
+                      </div>
+                    ) : (
+                      <div className="h-full p-4 overflow-y-auto flex flex-col gap-3 bg-[#070a0f] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                        {testCases.map((tc, index) => (
+                          <div key={index} className="p-3 bg-white/[0.01] border border-white/[0.03] rounded-xl flex flex-col gap-2 animate-fadeIn">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Test Case #{index + 1}</span>
+                              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                tc.status === 'passed'
+                                  ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                                  : tc.status === 'failed'
+                                  ? 'bg-red-500/10 border border-red-500/20 text-red-400'
+                                  : 'bg-slate-800 border border-slate-700/60 text-slate-400'
+                              }`}>
+                                {tc.status === 'passed' ? 'Passed' : tc.status === 'failed' ? 'Failed' : 'Not Run'}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-xs font-mono">
+                              <div>
+                                <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Input:</span>
+                                <div className="p-2 bg-black/45 rounded-lg border border-white/5 text-slate-300 max-h-16 overflow-y-auto select-text">{tc.input_data}</div>
+                              </div>
+                              <div>
+                                <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Expected:</span>
+                                <div className="p-2 bg-black/45 rounded-lg border border-white/5 text-slate-300 max-h-16 overflow-y-auto select-text">{tc.expected_output}</div>
+                              </div>
+                            </div>
+                            {tc.actual_output && (
+                              <div className="text-xs font-mono mt-1">
+                                <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block mb-1">Actual Output:</span>
+                                <div className={`p-2 bg-black/45 rounded-lg border text-slate-300 max-h-20 overflow-y-auto select-text ${
+                                  tc.status === 'passed' ? 'border-emerald-500/20' : 'border-red-500/20'
+                                }`}>{tc.actual_output}</div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Bar (Pill shaped container for buttons) */}
+                <div className="p-4 border-t border-white/[0.05] flex items-center justify-between gap-4 bg-[#0d111b]/80 shrink-0">
+                  <button
+                    onClick={() => setShowCodeEditor(false)}
+                    className="px-5 py-2 rounded-full border border-white/5 text-slate-400 text-xs font-bold hover:bg-white/5 hover:text-slate-200 transition-colors"
+                  >
+                    Close Editor
+                  </button>
+                  <div className="flex items-center gap-3">
+                    {editorLanguage !== 'text' && (
+                      <button
+                        onClick={handleRun}
+                        disabled={running}
+                        className="px-5 py-2 rounded-full bg-slate-800 border border-slate-700/60 text-slate-200 text-xs font-bold hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center gap-2"
+                      >
+                        Run Code
+                      </button>
+                    )}
+                    <button
+                      onClick={handleSubmit}
+                      className="px-5 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold hover:from-teal-400 hover:to-cyan-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                    >
+                      Submit Solution
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -992,7 +1419,7 @@ export const ActiveLiveKitInterview = ({
          style={{ touchAction: 'none' }}
       >
         {cameraTrack ? (
-          <VideoTrack trackRef={{ participant: localParticipant, publication: cameraTrack, source: Track.Source.Camera }} className="w-full h-full object-cover scale-x-[-1] pointer-events-none" />
+          <VideoTrack trackRef={{ participant: localParticipant as any, publication: cameraTrack as any, source: Track.Source.Camera }} className="w-full h-full object-cover scale-x-[-1] pointer-events-none" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-slate-950 text-[10px] font-bold text-slate-500 uppercase tracking-widest pointer-events-none">
             Camera starting

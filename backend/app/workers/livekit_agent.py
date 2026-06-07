@@ -4,10 +4,13 @@ import json
 import os
 import re
 import tempfile
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
 
+from livekit import rtc
+from app.services.llm_gateway import gateway
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.llm import StopResponse
 from livekit.agents.voice import Agent, text_transforms
@@ -111,13 +114,32 @@ def is_meaningful_candidate_answer(text: str) -> bool:
 
 from typing import AsyncIterable
 
-async def _publish_control(room, action, lang):
+async def _publish_control(room, action, option_arg):
     try:
-        if action == "SHOW_CODE_EDITOR":
-            payload = json.dumps({"action": "show_code_editor", "language": lang.lower()})
+        action_upper = action.upper()
+        if action_upper == "SHOW_CODE_EDITOR":
+            lang = option_arg.strip() if option_arg else "python"
+            test_cases = []
+            if ":" in lang:
+                parts = lang.split(":", 1)
+                lang = parts[0].strip()
+                try:
+                    params = json.loads(parts[1].strip())
+                    test_cases = params.get("test_cases", [])
+                except Exception as pe:
+                    logger.error(f"Error parsing test cases in SHOW_CODE_EDITOR: {pe}")
+            payload = json.dumps({
+                "action": "show_code_editor",
+                "language": lang.lower(),
+                "test_cases": test_cases
+            })
             room.local_participant.publish_data(payload, topic="room_control")
-            logger.info(f"Published control data: show_code_editor lang={lang}")
-        elif action == "HIDE_CODE_EDITOR":
+            logger.info(f"Published control data: show_code_editor lang={lang} tc={len(test_cases)}")
+        elif action_upper == "SHOW_WHITEBOARD":
+            payload = json.dumps({"action": "show_whiteboard"})
+            room.local_participant.publish_data(payload, topic="room_control")
+            logger.info("Published control data: show_whiteboard")
+        elif action_upper == "HIDE_CODE_EDITOR":
             payload = json.dumps({"action": "hide_code_editor"})
             room.local_participant.publish_data(payload, topic="room_control")
             logger.info("Published control data: hide_code_editor")
@@ -128,7 +150,7 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
     buffer = ""
     in_code_block = False
     
-    tag_pattern = re.compile(r'\[(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR)(?::\s*(\w+))?\]', re.IGNORECASE)
+    tag_pattern = re.compile(r'\[(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR|SHOW_WHITEBOARD)(?::\s*([^\]]+))?\]', re.IGNORECASE)
     
     async for chunk in text:
         buffer += chunk
@@ -344,12 +366,11 @@ def build_deepgram_keyterms(
 
     return keyterms
 
-
 class NoResponseController:
     """Manages the 2-stage no-response flow.
 
     Stage 0 (default): After assistant speech finishes playing, wait 15 s.
-        → If silence, speak ``NO_RESPONSE_PROMPT_1`` ("I am still listening…"),
+        → If silence, speak ``NO_RESPONSE_PROMPT_1`` or a context-aware hint,
           then move to Stage 1.
     Stage 1: Wait another 15 s.
         → If silence, speak ``NO_RESPONSE_END_MESSAGE`` and shut down.
@@ -359,9 +380,10 @@ class NoResponseController:
     for the *current* stage via ``note_non_answer_fragment()``.
     """
 
-    def __init__(self, *, session: AgentSession, ctx: JobContext):
+    def __init__(self, *, session: AgentSession, ctx: JobContext, agent: "InterviewAgent"):
         self._session = session
         self._ctx = ctx
+        self._agent = agent
         self._task: asyncio.Task | None = None
         self._generation = 0
         self._stage = 0  # 0 = first wait, 1 = after first nudge
@@ -484,6 +506,56 @@ class NoResponseController:
         except Exception:
             logger.exception("No-response timer failed after unfinalized user speech")
 
+    async def _generate_code_hint(self) -> str:
+        try:
+            last_q = next((msg.content for msg in reversed(self._session.chat_ctx.messages) if msg.role == "assistant"), "")
+            code_draft = self._agent.current_student_code
+            lang = self._agent.current_student_language
+            
+            prompt = (
+                f"The candidate is silent while working on this coding question: '{last_q}'.\n"
+                f"Here is their current code draft in {lang}:\n"
+                f"```\n{code_draft}\n```\n"
+                f"Write a friendly, supportive nudge or hint to help them progress. "
+                f"Do not solve the problem or write code blocks. Just give a single-sentence guidance tip (max 20 words)."
+            )
+            
+            hint = await gateway.complete(
+                purpose="interview",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=64
+            )
+            clean_hint = hint.strip().replace("\"", "").replace("'", "")
+            logger.info(f"Generated code hint for stuck candidate: {clean_hint}")
+            return clean_hint
+        except Exception as e:
+            logger.error(f"Failed to generate code hint: {e}")
+            return NO_RESPONSE_PROMPT_1
+
+    async def _generate_whiteboard_hint(self) -> str:
+        try:
+            last_q = next((msg.content for msg in reversed(self._session.chat_ctx.messages) if msg.role == "assistant"), "")
+            drawing_desc = self._agent.whiteboard_description
+            
+            prompt = (
+                f"The candidate is silent while designing a system on the whiteboard for this task: '{last_q}'.\n"
+                f"They have drawn: {drawing_desc}\n"
+                f"Write a friendly, supportive nudge or hint to help them complete their design. "
+                f"Keep it to a single sentence (max 20 words)."
+            )
+            
+            hint = await gateway.complete(
+                purpose="interview",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=64
+            )
+            clean_hint = hint.strip().replace("\"", "").replace("'", "")
+            logger.info(f"Generated whiteboard hint for stuck candidate: {clean_hint}")
+            return clean_hint
+        except Exception as e:
+            logger.error(f"Failed to generate whiteboard hint: {e}")
+            return NO_RESPONSE_PROMPT_1
+
     async def _run_reminder_flow(self, generation: int):
         """Execute the 2-stage no-response reminder logic."""
         try:
@@ -493,7 +565,14 @@ class NoResponseController:
                 if not self._is_current(generation):
                     return
 
-                nudge = self._say_nudge(NO_RESPONSE_PROMPT_1)
+                # Choose nudge message based on editor or whiteboard activity
+                nudge_message = NO_RESPONSE_PROMPT_1
+                if self._agent.editor_active and self._agent.current_student_code:
+                    nudge_message = await self._generate_code_hint()
+                elif self._agent.whiteboard_active and self._agent.whiteboard_description:
+                    nudge_message = await self._generate_whiteboard_hint()
+
+                nudge = self._say_nudge(nudge_message)
                 await nudge.wait_for_playout()
                 if nudge.interrupted or not self._is_current(generation):
                     return
@@ -542,6 +621,11 @@ class InterviewAgent(Agent):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.no_response_controller: NoResponseController | None = None
+        self.current_student_code: str = ""
+        self.current_student_language: str = "python"
+        self.editor_active: bool = False
+        self.whiteboard_active: bool = False
+        self.whiteboard_description: str = ""
 
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
@@ -576,6 +660,38 @@ async def get_interview_context(interview_id: str):
         stmt = select(models.MockInterview).where(models.MockInterview.id == interview_id)
         result = await session.execute(stmt)
         return result.scalars().first()
+
+
+async def _process_whiteboard_drawing(base64_str: str, agent: InterviewAgent):
+    try:
+        image_bytes = base64.b64decode(base64_str)
+        prompt = (
+            "The candidate is sketching their system design or visual answer on a whiteboard. "
+            "Write a concise, 2-sentence description of what they have drawn. "
+            "Describe the shapes, boxes, databases, servers, labels, or flow lines present in the drawing. "
+            "Keep it factual and direct so the interviewer knows what is on the whiteboard."
+        )
+        
+        # Call Gemini via LLMGateway
+        description = await gateway.complete(
+            purpose="interview",
+            messages=[{"role": "user", "content": prompt}],
+            media_bytes=image_bytes,
+            mime_type="image/png"
+        )
+        description_clean = description.strip()
+        logger.info(f"Whiteboard drawing described by Gemini: {description_clean}")
+        
+        agent.whiteboard_description = description_clean
+        
+        # Append this description directly to chat_ctx so the voice agent becomes aware of it!
+        agent.chat_ctx.add_message(
+            role="user",
+            content=f"[Candidate submitted whiteboard design: {description_clean}]"
+        )
+        logger.info("Inserted whiteboard description into agent chat context")
+    except Exception as e:
+        logger.error(f"Failed to describe whiteboard drawing: {e}")
 
 
 # ── Entrypoint ────────────────────────────────────────────────────────────────
@@ -706,8 +822,41 @@ async def entrypoint(ctx: JobContext):
             "preemptive_generation": {"enabled": False},
         },
     )
-    no_response_controller = NoResponseController(session=session, ctx=ctx)
+    no_response_controller = NoResponseController(session=session, ctx=ctx, agent=agent)
     agent.no_response_controller = no_response_controller
+
+    @ctx.room.on("data_received")
+    def on_data_received(packet: rtc.DataPacket):
+        try:
+            topic = packet.topic
+            data_str = packet.data.decode("utf-8")
+            logger.info(f"Received data channel packet on topic: {topic}")
+            
+            if topic == "code_state":
+                try:
+                    payload = json.loads(data_str)
+                    agent.current_student_code = payload.get("code", "")
+                    agent.current_student_language = payload.get("language", "python")
+                    agent.editor_active = True
+                except Exception as pe:
+                    logger.error(f"Failed to parse code_state packet: {pe}")
+                    
+            elif topic == "whiteboard_state":
+                try:
+                    payload = json.loads(data_str)
+                    img_data = payload.get("image", "")
+                    if img_data.startswith("data:image/png;base64,"):
+                        base64_str = img_data.split(",", 1)[1]
+                    else:
+                        base64_str = img_data
+                    
+                    if base64_str:
+                        agent.whiteboard_active = True
+                        asyncio.create_task(_process_whiteboard_drawing(base64_str, agent))
+                except Exception as pe:
+                    logger.error(f"Failed to parse whiteboard_state packet: {pe}")
+        except Exception as e:
+            logger.error(f"Error in on_data_received handler: {e}")
 
     async def _close_no_response_controller(reason: str):
         no_response_controller.close()
