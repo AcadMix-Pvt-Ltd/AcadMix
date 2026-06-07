@@ -245,7 +245,7 @@ const LoginPage = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden font-premium">
       {/* EdTech Knowledge Network Background */}
       <KnowledgeNetworkBackground />
 
