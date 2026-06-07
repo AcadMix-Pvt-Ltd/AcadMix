@@ -580,7 +580,7 @@ async def entrypoint(ctx: JobContext):
                 "resume_false_interruption": True,
                 "false_interruption_timeout": 3.0,
             },
-            "preemptive_generation": False,
+            "preemptive_generation": {"enabled": False},
         },
     )
     no_response_controller = NoResponseController(session=session, ctx=ctx)
