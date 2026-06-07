@@ -22,34 +22,34 @@ const KnowledgeNetworkBackground = () => {
   const mesh = useMemo(() => {
     const idAt = (row: number, column: number) => row * meshColumns + column + 1;
     const nodes = Array.from({ length: meshRows * meshColumns }, (_, index) => {
-    const row = Math.floor(index / meshColumns);
-    const column = index % meshColumns;
+      const row = Math.floor(index / meshColumns);
+      const column = index % meshColumns;
       const xOffset = row % 2 === 0 ? 0 : 1.85;
 
-    return {
-      id: index + 1,
+      return {
+        id: index + 1,
         x: -10 + column * 3.7 + xOffset,
         y: -6 + row * 5.35,
-    };
-  });
+      };
+    });
     const horizontalConnections = Array.from({ length: meshRows }, (_, row) =>
-    Array.from({ length: meshColumns - 1 }, (_, column) => [idAt(row, column), idAt(row, column + 1)])
-  ).flat();
+      Array.from({ length: meshColumns - 1 }, (_, column) => [idAt(row, column), idAt(row, column + 1)])
+    ).flat();
     const diagonalConnections = Array.from({ length: meshRows - 1 }, (_, row) =>
-    Array.from({ length: meshColumns - 1 }, (_, column) => {
-      if (row % 2 === 0) {
+      Array.from({ length: meshColumns - 1 }, (_, column) => {
+        if (row % 2 === 0) {
+          return [
+            [idAt(row, column), idAt(row + 1, column)],
+            [idAt(row, column + 1), idAt(row + 1, column)],
+          ];
+        }
+
         return [
           [idAt(row, column), idAt(row + 1, column)],
-          [idAt(row, column + 1), idAt(row + 1, column)],
+          [idAt(row, column), idAt(row + 1, column + 1)],
         ];
-      }
-
-      return [
-        [idAt(row, column), idAt(row + 1, column)],
-        [idAt(row, column), idAt(row + 1, column + 1)],
-      ];
-    })
-  ).flat(2);
+      })
+    ).flat(2);
     const connections = [...horizontalConnections, ...diagonalConnections];
     const nodeById = new Map(nodes.map(node => [node.id, node]));
     const segments = connections.flatMap(([n1, n2], index) => {
@@ -59,19 +59,13 @@ const KnowledgeNetworkBackground = () => {
 
       const midX = (node1.x + node2.x) / 2;
       const midY = (node1.y + node2.y) / 2;
-      const distanceFromCenter = Math.hypot(midX - 50, midY - 54);
-      const angle = Math.atan2(midY - 54, midX - 50);
       const noise = Math.abs(Math.sin(index * 12.9898 + midX * 0.43 + midY * 0.71));
-      const branchBias = (Math.sin(angle * 3.2 + noise * 5.1) + 1) * 0.75;
 
       return [{
         id: index,
         node1,
         node2,
-        delay: (distanceFromCenter * 0.07 + branchBias + noise * 2.4) % 8.5,
-        duration: 3.8 + noise * 1.6,
         energy: noise,
-        strength: 0.13 + noise * 0.17,
       }];
     });
 
@@ -79,27 +73,13 @@ const KnowledgeNetworkBackground = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#f4faf8]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(20,184,166,0.08)_0%,rgba(20,184,166,0.038)_14%,transparent_34%)]" />
-      {/* Single knowledge network layer */}
-      <motion.div 
-        animate={{
-          x: ["-0.18%", "0.18%", "-0.18%"],
-          y: ["-0.12%", "0.16%", "-0.12%"],
-        }}
-        transition={{ duration: 36, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute inset-0"
-      >
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#f8fafc]">
+      {/* Soft radial background gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(148,163,184,0.04)_0%,rgba(148,163,184,0.01)_30%,transparent_50%)]" />
+      
+      {/* Static, subtle grid/network structure */}
+      <div className="absolute inset-0">
         <svg className="absolute -inset-[8%] h-[116%] w-[116%]" preserveAspectRatio="none">
-          <defs>
-            <filter id="mesh-energy-glow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="1.25" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
           {mesh.segments.map(segment => (
             <line
               key={`line1-${segment.id}`}
@@ -107,49 +87,26 @@ const KnowledgeNetworkBackground = () => {
               y1={`${segment.node1.y}%`}
               x2={`${segment.node2.x}%`}
               y2={`${segment.node2.y}%`}
-              stroke="#0f766e"
-              strokeWidth="0.28"
-              strokeOpacity="0.145"
+              stroke="#e2e8f0"
+              strokeWidth="0.25"
+              strokeOpacity="0.15"
             />
           ))}
-          <g filter="url(#mesh-energy-glow)">
-            {mesh.segments.filter(segment => segment.energy > 0.55).map(segment => (
-              <motion.line
-                key={`energy-line-${segment.id}`}
-                x1={`${segment.node1.x}%`}
-                y1={`${segment.node1.y}%`}
-                x2={`${segment.node2.x}%`}
-                y2={`${segment.node2.y}%`}
-                stroke={segment.id % 3 === 0 ? '#2dd4bf' : '#0f766e'}
-                strokeWidth="0.52"
-                strokeLinecap="round"
-                initial={{ strokeOpacity: 0 }}
-                animate={{ strokeOpacity: [0, segment.strength, 0.05, 0] }}
-                transition={{
-                  duration: segment.duration,
-                  repeat: Infinity,
-                  repeatDelay: 2.4,
-                  ease: "easeInOut",
-                  delay: segment.delay,
-                }}
-              />
-            ))}
-          </g>
           {mesh.nodes.map((n, index) => (
-              <circle
-                key={`node1-${n.id}`}
-                cx={`${n.x}%`}
-                cy={`${n.y}%`}
-                r={index % 5 === 0 ? 0.72 : 0.5}
-                fill="#0f766e"
-                fillOpacity={index % 7 === 0 ? 0.22 : 0.145}
-              />
+            <circle
+              key={`node1-${n.id}`}
+              cx={`${n.x}%`}
+              cy={`${n.y}%`}
+              r={index % 5 === 0 ? 0.6 : 0.4}
+              fill="#cbd5e1"
+              fillOpacity={index % 7 === 0 ? 0.15 : 0.08}
+            />
           ))}
         </svg>
-      </motion.div>
+      </div>
 
       {/* Soft overlay gradient to ensure text readability */}
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.56),rgba(255,255,255,0.32)_48%,rgba(248,250,252,0.62))]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.7),rgba(255,255,255,0.4)_48%,rgba(248,250,252,0.75))]"></div>
     </div>
   );
 };
@@ -174,12 +131,12 @@ const LoginPage = ({ onLogin }) => {
   const showQuickLogin = tenant.isDemo || ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   const quickLoginRoles = [
-    { role: 'Student', collegeId: '22WJ8A6745', password: '22WJ8A6745', color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700', icon: '🎓' },
-    { role: 'Teacher', collegeId: 'T001', password: 'teacher123', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', icon: '👨‍🏫' },
-    { role: 'HOD', collegeId: 'HOD001', password: 'hod123', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700', icon: '👔' },
-    { role: 'Principal', collegeId: 'PRIN001', password: 'teacher123', color: 'bg-violet-50 hover:bg-violet-100 text-violet-700', icon: '🏫' },
-    { role: 'Cashier', collegeId: 'CASHIER001', password: 'cashier123', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700', icon: 'Rs' },
-    { role: 'Finance', collegeId: 'FINANCE001', password: 'finance123', color: 'bg-sky-50 hover:bg-sky-100 text-sky-700', icon: 'FN' },
+    { role: 'Student', collegeId: '22WJ8A6745', password: '22WJ8A6745', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '🎓' },
+    { role: 'Teacher', collegeId: 'T001', password: 'teacher123', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '👨‍🏫' },
+    { role: 'HOD', collegeId: 'HOD001', password: 'hod123', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '👔' },
+    { role: 'Principal', collegeId: 'PRIN001', password: 'teacher123', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '🏫' },
+    { role: 'Cashier', collegeId: 'CASHIER001', password: 'cashier123', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '💸' },
+    { role: 'Finance', collegeId: 'FINANCE001', password: 'finance123', color: 'bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-slate-800', icon: '📈' },
   ];
 
   const handleSubmit = async (e) => {
@@ -297,7 +254,7 @@ const LoginPage = ({ onLogin }) => {
                   }}
                 />
                 <div
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full items-center justify-center bg-gradient-to-br from-indigo-600 to-teal-500"
+                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 shadow-md"
                   style={{ display: 'none' }}
                 >
                   <span className="text-white font-bold text-sm tracking-tight">
@@ -316,7 +273,7 @@ const LoginPage = ({ onLogin }) => {
               {tenant.logo ? (
                 <img src={tenant.logo} alt="Logo" className="w-full h-full object-contain rounded-xl" />
               ) : (
-                <GraduationCap size={40} weight="duotone" className="text-indigo-600" />
+                <GraduationCap size={40} weight="duotone" className="text-slate-800" />
               )}
             </motion.div>
           )}
@@ -332,9 +289,38 @@ const LoginPage = ({ onLogin }) => {
         {/* The Card */}
         <div className="bg-white rounded-3xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] ring-1 ring-slate-900/5 p-8 relative overflow-hidden">
           
-          {/* Subtle Top Gradient Bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 via-teal-500 to-cyan-500 opacity-80"></div>
-
+          {isPreEnrollActive && (
+            <div className="flex p-1 bg-slate-100 rounded-full mb-6 relative z-10 border border-slate-200/40">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPreEnrollMode(false);
+                  setError('');
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-full transition-all relative ${
+                  !isPreEnrollMode
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPreEnrollMode(true);
+                  setError('');
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-full transition-all relative ${
+                  isPreEnrollMode
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Hostel Booking
+              </button>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {error && (
@@ -365,12 +351,12 @@ const LoginPage = ({ onLogin }) => {
                   <div className="space-y-1.5">
                     <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Enter OTP</label>
                     <div className="relative group">
-                      <Lock size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Lock size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)}
-                        placeholder="6-digit code" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={6} />
+                        placeholder="6-digit code" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={6} />
                     </div>
                   </div>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-indigo-700 hover:bg-indigo-600 text-white rounded-2xl py-3.5 text-sm font-bold shadow-lg shadow-indigo-950/20 transition-all flex items-center justify-center gap-2">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2">
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Verify Access <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
                 </form>
@@ -379,28 +365,28 @@ const LoginPage = ({ onLogin }) => {
                   <div className="space-y-1.5">
                     <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">College ID</label>
                     <div className="relative group">
-                      <UserCircle size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <UserCircle size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type="text" value={collegeId} onChange={(e) => setCollegeId(e.target.value.toUpperCase())}
-                        placeholder="e.g. 22WJ8A6745" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" />
+                        placeholder="e.g. 22WJ8A6745" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Admission No.</label>
                     <div className="relative group">
-                      <Receipt size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Receipt size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type="text" value={admissionNumber} onChange={(e) => setAdmissionNumber(e.target.value)}
-                        placeholder="e.g. ADM2026102" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" />
+                        placeholder="e.g. ADM2026102" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">Mobile Number</label>
                     <div className="relative group">
-                      <Phone size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Phone size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type="text" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value)}
-                        placeholder="Linked mobile number" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={10} />
+                        placeholder="Linked mobile number" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={10} />
                     </div>
                   </div>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-indigo-700 hover:bg-indigo-600 text-white rounded-2xl py-3.5 text-sm font-bold shadow-lg shadow-indigo-950/20 transition-all flex items-center justify-center gap-2 mt-2">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2 mt-2">
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Send OTP <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
                 </form>
@@ -409,20 +395,20 @@ const LoginPage = ({ onLogin }) => {
                   <div className="space-y-1.5">
                     <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400 ml-1">College ID</label>
                     <div className="relative group">
-                      <UserCircle size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <UserCircle size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type="text" value={collegeId} onChange={(e) => setCollegeId(e.target.value.toUpperCase())}
-                        placeholder="Enter Roll Number or ID" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3.5 pl-11 pr-4 text-slate-900 text-sm font-semibold transition-all !outline-none placeholder:text-slate-400 placeholder:font-medium" />
+                        placeholder="Enter Roll Number or ID" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3.5 pl-11 pr-4 text-slate-900 text-sm font-semibold transition-all !outline-none placeholder:text-slate-400 placeholder:font-medium" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex justify-between items-center ml-1">
                       <label className="block text-[11px] font-bold uppercase tracking-widest text-slate-400">Password</label>
-                      <a href="#" className="text-[11px] font-bold text-indigo-600 hover:text-teal-700">Forgot?</a>
+                      <a href="#" className="text-[11px] font-bold text-slate-500 hover:text-slate-900 transition-colors">Forgot?</a>
                     </div>
                     <div className="relative group">
-                      <Lock size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+                      <Lock size={18} weight="duotone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
                       <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter Password" className="w-full bg-slate-50 border-0 ring-1 ring-slate-900/5 focus:ring-2 focus:ring-indigo-600 rounded-2xl py-3.5 pl-11 pr-12 text-slate-900 text-sm font-semibold transition-all !outline-none placeholder:text-slate-400 placeholder:font-medium" />
+                        placeholder="Enter Password" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3.5 pl-11 pr-12 text-slate-900 text-sm font-semibold transition-all !outline-none placeholder:text-slate-400 placeholder:font-medium" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-slate-600 transition-colors rounded-xl hover:bg-slate-200/50">
                         {showPassword ? <EyeSlash size={18} weight="bold" /> : <Eye size={18} weight="bold" />}
@@ -434,7 +420,7 @@ const LoginPage = ({ onLogin }) => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit" disabled={loading}
-                    className="w-full bg-gradient-to-r from-indigo-600 via-indigo-600 to-teal-600 hover:from-indigo-500 hover:via-indigo-500 hover:to-cyan-500 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-indigo-900/10 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Sign In <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
@@ -442,28 +428,6 @@ const LoginPage = ({ onLogin }) => {
               )}
             </motion.div>
           </AnimatePresence>
-
-          {isPreEnrollActive && (
-            <div className="mt-6 text-center">
-              {!isPreEnrollMode ? (
-                <button 
-                  type="button" 
-                  onClick={() => setIsPreEnrollMode(true)}
-                  className="text-xs font-bold text-indigo-600 hover:text-teal-700 transition-colors flex items-center justify-center gap-1 mx-auto"
-                >
-                  Looking for Hostel Booking? Proceed here <span className="text-lg leading-none">&rarr;</span>
-                </button>
-              ) : (
-                <button 
-                  type="button" 
-                  onClick={() => setIsPreEnrollMode(false)}
-                  className="text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center gap-1 mx-auto"
-                >
-                  <span className="text-lg leading-none">&larr;</span> Back to Standard Login
-                </button>
-              )}
-            </div>
-          )}
 
           {showQuickLogin && (
             <div className="mt-8 pt-6 border-t border-slate-100">
