@@ -123,10 +123,10 @@ const KnowledgeNetworkBackground = () => {
                 x2={`${segment.node2.x}%`}
                 y2={`${segment.node2.y}%`}
                 stroke={segment.id % 3 === 0 ? '#818cf8' : '#6366f1'}
-                strokeWidth="0.48"
+                strokeWidth="0.8"
                 strokeLinecap="round"
                 initial={{ strokeOpacity: 0 }}
-                animate={{ strokeOpacity: [0, segment.strength * 0.55, 0.05, 0] }}
+                animate={{ strokeOpacity: [0, segment.strength * 1.6, 0.1, 0] }}
                 transition={{
                   duration: segment.duration,
                   repeat: Infinity,
