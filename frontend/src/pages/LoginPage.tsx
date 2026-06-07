@@ -323,7 +323,7 @@ const LoginPage = ({ onLogin }) => {
             </motion.div>
           )}
 
-          <h1 className={`text-2xl font-extrabold tracking-tight text-slate-900 text-center mb-2 ${tenant.tenantSlug ? 'mt-6' : ''}`}>
+          <h1 className={`text-3xl font-black tracking-tighter text-center bg-gradient-to-r from-indigo-950 via-indigo-900 to-indigo-700 bg-clip-text text-transparent pb-1 mb-2 ${tenant.tenantSlug ? 'mt-6' : ''}`}>
             Welcome to {tenant.tenantName || 'AcadMix'}
           </h1>
           <p className="text-sm font-medium text-slate-500 text-center">
