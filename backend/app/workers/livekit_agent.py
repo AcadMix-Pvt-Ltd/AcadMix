@@ -128,7 +128,7 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
     buffer = ""
     in_code_block = False
     
-    tag_pattern = re.compile(r'\[(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR)(?::\s*(\w+))?\\]', re.IGNORECASE)
+    tag_pattern = re.compile(r'\[(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR)(?::\s*(\w+))?\]', re.IGNORECASE)
     
     async for chunk in text:
         buffer += chunk
@@ -164,34 +164,28 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
                     break
                 
                 if code_start_idx != -1 and tag_match:
-                    tag_start = tag_match.start()
+                    tag_start, tag_end = tag_match.span()
                     if code_start_idx < tag_start:
                         yield buffer[:code_start_idx]
                         buffer = buffer[code_start_idx:]
                         in_code_block = True
                     else:
                         yield buffer[:tag_start]
-                        buffer = buffer[tag_start:]
-                        tag_match = tag_pattern.match(buffer)
-                        if tag_match:
-                            action = tag_match.group(1).upper()
-                            lang = tag_match.group(2) if tag_match.group(2) else ""
-                            await _publish_control(room, action, lang)
-                            buffer = buffer[tag_match.end():]
+                        action = tag_match.group(1).upper()
+                        lang = tag_match.group(2) if tag_match.group(2) else ""
+                        await _publish_control(room, action, lang)
+                        buffer = buffer[tag_end:]
                 elif code_start_idx != -1:
                     yield buffer[:code_start_idx]
                     buffer = buffer[code_start_idx:]
                     in_code_block = True
                 else:
-                    tag_start = tag_match.start()
+                    tag_start, tag_end = tag_match.span()
                     yield buffer[:tag_start]
-                    buffer = buffer[tag_start:]
-                    tag_match = tag_pattern.match(buffer)
-                    if tag_match:
-                        action = tag_match.group(1).upper()
-                        lang = tag_match.group(2) if tag_match.group(2) else ""
-                        await _publish_control(room, action, lang)
-                        buffer = buffer[tag_match.end():]
+                    action = tag_match.group(1).upper()
+                    lang = tag_match.group(2) if tag_match.group(2) else ""
+                    await _publish_control(room, action, lang)
+                    buffer = buffer[tag_end:]
             else:
                 code_end_idx = buffer.find("```", 3)
                 if code_end_idx == -1:
