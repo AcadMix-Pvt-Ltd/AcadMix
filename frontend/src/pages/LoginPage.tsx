@@ -59,13 +59,19 @@ const KnowledgeNetworkBackground = () => {
 
       const midX = (node1.x + node2.x) / 2;
       const midY = (node1.y + node2.y) / 2;
+      const distanceFromCenter = Math.hypot(midX - 50, midY - 54);
+      const angle = Math.atan2(midY - 54, midX - 50);
       const noise = Math.abs(Math.sin(index * 12.9898 + midX * 0.43 + midY * 0.71));
+      const branchBias = (Math.sin(angle * 3.2 + noise * 5.1) + 1) * 0.75;
 
       return [{
         id: index,
         node1,
         node2,
+        delay: (distanceFromCenter * 0.07 + branchBias + noise * 2.4) % 8.5,
+        duration: 3.8 + noise * 1.6,
         energy: noise,
+        strength: 0.13 + noise * 0.17,
       }];
     });
 
@@ -75,11 +81,27 @@ const KnowledgeNetworkBackground = () => {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#f8fafc]">
       {/* Soft radial background gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(148,163,184,0.04)_0%,rgba(148,163,184,0.01)_30%,transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(99,102,241,0.025)_0%,rgba(99,102,241,0.005)_30%,transparent_50%)]" />
       
-      {/* Static, subtle grid/network structure */}
-      <div className="absolute inset-0">
+      {/* Animating knowledge network layer */}
+      <motion.div 
+        animate={{
+          x: ["-0.18%", "0.18%", "-0.18%"],
+          y: ["-0.12%", "0.16%", "-0.12%"],
+        }}
+        transition={{ duration: 36, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute inset-0"
+      >
         <svg className="absolute -inset-[8%] h-[116%] w-[116%]" preserveAspectRatio="none">
+          <defs>
+            <filter id="mesh-energy-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.0" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {mesh.segments.map(segment => (
             <line
               key={`line1-${segment.id}`}
@@ -87,11 +109,34 @@ const KnowledgeNetworkBackground = () => {
               y1={`${segment.node1.y}%`}
               x2={`${segment.node2.x}%`}
               y2={`${segment.node2.y}%`}
-              stroke="#e2e8f0"
+              stroke="#cbd5e1"
               strokeWidth="0.25"
-              strokeOpacity="0.15"
+              strokeOpacity="0.18"
             />
           ))}
+          <g filter="url(#mesh-energy-glow)">
+            {mesh.segments.filter(segment => segment.energy > 0.55).map(segment => (
+              <motion.line
+                key={`energy-line-${segment.id}`}
+                x1={`${segment.node1.x}%`}
+                y1={`${segment.node1.y}%`}
+                x2={`${segment.node2.x}%`}
+                y2={`${segment.node2.y}%`}
+                stroke={segment.id % 3 === 0 ? '#cbd5e1' : '#a5b4fc'}
+                strokeWidth="0.4"
+                strokeLinecap="round"
+                initial={{ strokeOpacity: 0 }}
+                animate={{ strokeOpacity: [0, segment.strength * 0.4, 0.02, 0] }}
+                transition={{
+                  duration: segment.duration,
+                  repeat: Infinity,
+                  repeatDelay: 2.4,
+                  ease: "easeInOut",
+                  delay: segment.delay,
+                }}
+              />
+            ))}
+          </g>
           {mesh.nodes.map((n, index) => (
             <circle
               key={`node1-${n.id}`}
@@ -103,7 +148,7 @@ const KnowledgeNetworkBackground = () => {
             />
           ))}
         </svg>
-      </div>
+      </motion.div>
 
       {/* Soft overlay gradient to ensure text readability */}
       <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.7),rgba(255,255,255,0.4)_48%,rgba(248,250,252,0.75))]"></div>
