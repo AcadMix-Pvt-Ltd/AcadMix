@@ -291,6 +291,8 @@ class NoResponseController:
         if self._closed:
             return
         self._user_speech_active = True
+        if self._session.agent_state == "speaking":
+            return
         self._generation += 1
         self._cancel_task()
 
@@ -302,6 +304,8 @@ class NoResponseController:
         if self._closed or not self._user_speech_active:
             return
         self._user_speech_active = False
+        if self._session.agent_state == "speaking":
+            return
         generation = self._generation
         self._cancel_task()
         self._task = asyncio.create_task(
@@ -628,9 +632,9 @@ async def entrypoint(ctx: JobContext):
     # Wait for the user participant to join the room
     await ctx.wait_for_participant()
     # Wait a moment for audio track subscription to stabilize
-    await asyncio.sleep(2.0)
+    await asyncio.sleep(4.0)
     logger.info("speaking initial interview question")
-    first_speech = session.say(first_q, allow_interruptions=True)
+    first_speech = session.say(first_q, allow_interruptions=False)
     await first_speech.wait_for_playout()
 
 
