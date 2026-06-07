@@ -331,16 +331,16 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
     # Get opening question from AI
     user_name = user.get("full_name", "Candidate").split()[0] if user.get("full_name") else "Candidate"
     
-    interviewer_name = "Dev"
-    interviewer_role = "Senior Technical Recruiter"
+    interviewer_name = "Arjun Mehta"
+    interviewer_role = "Tech Lead"
     if interview_type == "hr":
-        interviewer_name = "Priya"
+        interviewer_name = "Ananya Iyer"
         interviewer_role = "HR Manager"
     elif interview_type == "behavioral":
-        interviewer_name = "Neha"
-        interviewer_role = "Senior Behavioral Analyst"
+        interviewer_name = "Dr. Rhea Menon"
+        interviewer_role = "Behavioural Analyst"
     elif interview_type in ("mixed", "full_mock_loop", "mixed_mock"):
-        interviewer_name = "Arvind"
+        interviewer_name = "Vikram Sethi"
         interviewer_role = "Executive VP"
 
     opening_prompt = f"""Begin the interview. 

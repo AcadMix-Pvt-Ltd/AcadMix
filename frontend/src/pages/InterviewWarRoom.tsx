@@ -7,6 +7,10 @@ import DashboardSkeleton from '../components/DashboardSkeleton';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import { toast } from 'sonner';
 import PageHeader from '../components/PageHeader';
+import avatarTechnical from '../assets/avatars/avatar_technical.png';
+import avatarHr from '../assets/avatars/avatar_hr.png';
+import avatarBehavioral from '../assets/avatars/avatar_behavioral.png';
+import avatarFullmock from '../assets/avatars/avatar_fullmock.png';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const itemVariants = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } } };
@@ -14,10 +18,10 @@ const cardHover = { scale: 1.02, transition: { type: 'spring', stiffness: 400, d
 
 // ─── Persona Pool ────────────────────────────────────────────────────────────
 const PERSONA_POOL = [
-  { name: 'Dev', persona: 'Tech Lead', seed: 'Clyde', voice_id: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
-  { name: 'Priya', persona: 'HR Manager', seed: 'Rachel', voice_id: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' },
-  { name: 'Neha', persona: 'Behavioral Analyst', seed: 'Bella', voice_id: 'e07c00bc-4134-4eae-9ea4-1a55fb45746b' },
-  { name: 'Arvind', persona: 'Executive VP', seed: 'Arnold', voice_id: 'a0e99841-438c-4a64-b679-ae501e7d6091' },
+  { name: 'Arjun Mehta', persona: 'Tech Lead', seed: 'Clyde', voice_id: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
+  { name: 'Ananya Iyer', persona: 'HR Manager', seed: 'Rachel', voice_id: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' },
+  { name: 'Dr. Rhea Menon', persona: 'Behavioural Analyst', seed: 'Bella', voice_id: 'e07c00bc-4134-4eae-9ea4-1a55fb45746b' },
+  { name: 'Vikram Sethi', persona: 'Executive VP', seed: 'Arnold', voice_id: 'a0e99841-438c-4a64-b679-ae501e7d6091' },
   { name: 'Rachel', persona: 'Senior Recruiter', seed: 'Rachel', voice_id: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' },
   { name: 'Clyde', persona: 'Engineering Manager', seed: 'Clyde', voice_id: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
 ];
@@ -284,16 +288,16 @@ const AIInterviewTab = ({ navigate, quota, readiness }) => {
   useEffect(() => {
     // For now, statically assign the corresponding persona to its interview type.
     // Later, when the pool expands, we will shuffle from type-specific pools.
-    const tech = PERSONA_POOL[0]; // Dev - Tech Lead
-    const hr = PERSONA_POOL[1];   // Priya - HR Manager
-    const behavioral = PERSONA_POOL[2]; // Neha - Behavioral Analyst
-    const vp = PERSONA_POOL[3];   // Arvind - Executive VP
+    const tech = PERSONA_POOL[0]; // Arjun Mehta - Tech Lead
+    const hr = PERSONA_POOL[1];   // Ananya Iyer - HR Manager
+    const behavioral = PERSONA_POOL[2]; // Dr. Rhea Menon - Behavioural Analyst
+    const vp = PERSONA_POOL[3];   // Vikram Sethi - Executive VP
 
     setTypes([
-      { id: 'technical', typeLabel: 'Technical Round', label: tech.name, persona: tech.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${tech.seed}&backgroundColor=e0e7ff`, desc: 'Data structures, algorithms & system design.', voice_id: tech.voice_id },
-      { id: 'hr', typeLabel: 'HR Round', label: hr.name, persona: hr.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${hr.seed}&backgroundColor=e0e7ff`, desc: 'Culture fit & soft skills evaluation.', voice_id: hr.voice_id },
-      { id: 'behavioral', typeLabel: 'Behavioral Round', label: behavioral.name, persona: behavioral.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${behavioral.seed}&backgroundColor=e0e7ff`, desc: 'STAR method & leadership assessment.', voice_id: behavioral.voice_id },
-      { id: 'mixed', typeLabel: 'Full Mock Loop', label: vp.name, persona: vp.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${vp.seed}&backgroundColor=e0e7ff`, desc: 'Full technical & behavioral simulation.', voice_id: vp.voice_id },
+      { id: 'technical', typeLabel: 'Technical Round', label: tech.name, persona: tech.persona, avatar: avatarTechnical, desc: 'Data structures, algorithms & system design.', voice_id: tech.voice_id },
+      { id: 'hr', typeLabel: 'HR Round', label: hr.name, persona: hr.persona, avatar: avatarHr, desc: 'Culture fit & soft skills evaluation.', voice_id: hr.voice_id },
+      { id: 'behavioral', typeLabel: 'Behavioral Round', label: behavioral.name, persona: behavioral.persona, avatar: avatarBehavioral, desc: 'STAR method & leadership assessment.', voice_id: behavioral.voice_id },
+      { id: 'mixed', typeLabel: 'Full Mock Loop', label: vp.name, persona: vp.persona, avatar: avatarFullmock, desc: 'Full technical & behavioral simulation.', voice_id: vp.voice_id },
     ]);
   }, []);
 

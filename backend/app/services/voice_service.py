@@ -12,10 +12,10 @@ logger = logging.getLogger("acadmix.voice_service")
 
 # ── Professional Interview Voice Pool (Cartesia) ──
 INTERVIEW_VOICES = [
-    {"id": "a5136bf9-224c-4d76-b823-52bd5efcffcc", "name": "Dev (Jameson)", "gender": "male", "type": "technical"},
-    {"id": "f786b574-daa5-4673-aa0c-cbe3e8534c02", "name": "Priya (Katie)", "gender": "female", "type": "hr"},
-    {"id": "e07c00bc-4134-4eae-9ea4-1a55fb45746b", "name": "Neha (Brooke)", "gender": "female", "type": "behavioral"},
-    {"id": "a0e99841-438c-4a64-b679-ae501e7d6091", "name": "Arvind (Ronald UK)", "gender": "male", "type": "mixed"}
+    {"id": "a5136bf9-224c-4d76-b823-52bd5efcffcc", "name": "Arjun Mehta (Jameson)", "gender": "male", "type": "technical"},
+    {"id": "f786b574-daa5-4673-aa0c-cbe3e8534c02", "name": "Ananya Iyer (Katie)", "gender": "female", "type": "hr"},
+    {"id": "e07c00bc-4134-4eae-9ea4-1a55fb45746b", "name": "Dr. Rhea Menon (Brooke)", "gender": "female", "type": "behavioral"},
+    {"id": "a0e99841-438c-4a64-b679-ae501e7d6091", "name": "Vikram Sethi (Ronald UK)", "gender": "male", "type": "mixed"}
 ]
 
 DEFAULT_VOICE_ID = "a5136bf9-224c-4d76-b823-52bd5efcffcc" # Jameson
