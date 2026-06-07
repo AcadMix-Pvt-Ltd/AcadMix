@@ -14,12 +14,12 @@ const cardHover = { scale: 1.02, transition: { type: 'spring', stiffness: 400, d
 
 // ─── Persona Pool ────────────────────────────────────────────────────────────
 const PERSONA_POOL = [
-  { name: 'Adam', persona: 'Tech Lead', seed: 'Adam', voice_id: 'pNInz6obpgDQGcFmaJgB' },
-  { name: 'Bella', persona: 'HR Manager', seed: 'Bella', voice_id: 'EXAVITQu4vr4xnSDxMaL' },
-  { name: 'Antoni', persona: 'Behavioral Analyst', seed: 'Antoni', voice_id: 'ErXwobaYiN019PkySvjV' },
-  { name: 'Arnold', persona: 'Executive VP', seed: 'Arnold', voice_id: 'VR6AewLTigWG4xSOukaG' },
-  { name: 'Rachel', persona: 'Senior Recruiter', seed: 'Rachel', voice_id: '21m00Tcm4TlvDq8ikWAM' },
-  { name: 'Clyde', persona: 'Engineering Manager', seed: 'Clyde', voice_id: '2EiwWnXFnvU5JabPnv8n' },
+  { name: 'Dev', persona: 'Tech Lead', seed: 'Clyde', voice_id: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
+  { name: 'Priya', persona: 'HR Manager', seed: 'Rachel', voice_id: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' },
+  { name: 'Neha', persona: 'Behavioral Analyst', seed: 'Bella', voice_id: 'e07c00bc-4134-4eae-9ea4-1a55fb45746b' },
+  { name: 'Arvind', persona: 'Executive VP', seed: 'Arnold', voice_id: 'a0e99841-438c-4a64-b679-ae501e7d6091' },
+  { name: 'Rachel', persona: 'Senior Recruiter', seed: 'Rachel', voice_id: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' },
+  { name: 'Clyde', persona: 'Engineering Manager', seed: 'Clyde', voice_id: 'a5136bf9-224c-4d76-b823-52bd5efcffcc' },
 ];
 
 const COMPANY_DOMAINS: Record<string, string> = {
@@ -284,16 +284,16 @@ const AIInterviewTab = ({ navigate, quota, readiness }) => {
   useEffect(() => {
     // For now, statically assign the corresponding persona to its interview type.
     // Later, when the pool expands, we will shuffle from type-specific pools.
-    const tech = PERSONA_POOL[0]; // Adam - Tech Lead
-    const hr = PERSONA_POOL[1];   // Bella - HR Manager
-    const behavioral = PERSONA_POOL[2]; // Antoni - Behavioral Analyst
-    const vp = PERSONA_POOL[3];   // Arnold - Executive VP
+    const tech = PERSONA_POOL[0]; // Dev - Tech Lead
+    const hr = PERSONA_POOL[1];   // Priya - HR Manager
+    const behavioral = PERSONA_POOL[2]; // Neha - Behavioral Analyst
+    const vp = PERSONA_POOL[3];   // Arvind - Executive VP
 
     setTypes([
-      { id: 'technical', typeLabel: 'Technical Round', label: `Ami ${tech.name}`, persona: tech.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${tech.seed}&backgroundColor=e0e7ff`, desc: 'Data structures, algorithms & system design.', voice_id: tech.voice_id },
-      { id: 'hr', typeLabel: 'HR Round', label: `Ami ${hr.name}`, persona: hr.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${hr.seed}&backgroundColor=e0e7ff`, desc: 'Culture fit & soft skills evaluation.', voice_id: hr.voice_id },
-      { id: 'behavioral', typeLabel: 'Behavioral Round', label: `Ami ${behavioral.name}`, persona: behavioral.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${behavioral.seed}&backgroundColor=e0e7ff`, desc: 'STAR method & leadership assessment.', voice_id: behavioral.voice_id },
-      { id: 'mixed', typeLabel: 'Full Mock Loop', label: `Ami ${vp.name}`, persona: vp.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${vp.seed}&backgroundColor=e0e7ff`, desc: 'Full technical & behavioral simulation.', voice_id: vp.voice_id },
+      { id: 'technical', typeLabel: 'Technical Round', label: tech.name, persona: tech.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${tech.seed}&backgroundColor=e0e7ff`, desc: 'Data structures, algorithms & system design.', voice_id: tech.voice_id },
+      { id: 'hr', typeLabel: 'HR Round', label: hr.name, persona: hr.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${hr.seed}&backgroundColor=e0e7ff`, desc: 'Culture fit & soft skills evaluation.', voice_id: hr.voice_id },
+      { id: 'behavioral', typeLabel: 'Behavioral Round', label: behavioral.name, persona: behavioral.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${behavioral.seed}&backgroundColor=e0e7ff`, desc: 'STAR method & leadership assessment.', voice_id: behavioral.voice_id },
+      { id: 'mixed', typeLabel: 'Full Mock Loop', label: vp.name, persona: vp.persona, avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${vp.seed}&backgroundColor=e0e7ff`, desc: 'Full technical & behavioral simulation.', voice_id: vp.voice_id },
     ]);
   }, []);
 

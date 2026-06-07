@@ -12,15 +12,26 @@ logger = logging.getLogger("acadmix.voice_service")
 
 # ── Professional Interview Voice Pool (Cartesia) ──
 INTERVIEW_VOICES = [
-    {"id": "f9fc912e-52f0-448a-8bfa-47e9ca75f25a", "name": "Marilyn",  "gender": "female"}
+    {"id": "a5136bf9-224c-4d76-b823-52bd5efcffcc", "name": "Dev (Jameson)", "gender": "male", "type": "technical"},
+    {"id": "f786b574-daa5-4673-aa0c-cbe3e8534c02", "name": "Priya (Katie)", "gender": "female", "type": "hr"},
+    {"id": "e07c00bc-4134-4eae-9ea4-1a55fb45746b", "name": "Neha (Brooke)", "gender": "female", "type": "behavioral"},
+    {"id": "a0e99841-438c-4a64-b679-ae501e7d6091", "name": "Arvind (Ronald UK)", "gender": "male", "type": "mixed"}
 ]
 
-DEFAULT_VOICE_ID = "f9fc912e-52f0-448a-8bfa-47e9ca75f25a"
+DEFAULT_VOICE_ID = "a5136bf9-224c-4d76-b823-52bd5efcffcc" # Jameson
 
 def get_random_interview_voice() -> str:
-    return DEFAULT_VOICE_ID
+    return random.choice([v["id"] for v in INTERVIEW_VOICES])
 
 def get_persona_voice(interview_type: str) -> str:
+    if interview_type == "technical":
+        return "a5136bf9-224c-4d76-b823-52bd5efcffcc"
+    elif interview_type == "hr":
+        return "f786b574-daa5-4673-aa0c-cbe3e8534c02"
+    elif interview_type == "behavioral":
+        return "e07c00bc-4134-4eae-9ea4-1a55fb45746b"
+    elif interview_type in ("mixed", "full_mock_loop", "mixed_mock"):
+        return "a0e99841-438c-4a64-b679-ae501e7d6091"
     return DEFAULT_VOICE_ID
 
 

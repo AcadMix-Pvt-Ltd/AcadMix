@@ -537,11 +537,27 @@ async def entrypoint(ctx: JobContext):
     if deepgram_keyterms:
         _stt_options["keyterm"] = deepgram_keyterms
 
+    # Fetch locked voice ID from Redis
+    voice_id = None
+    try:
+        from app.core.cache import _get_redis
+        redis = await _get_redis()
+        if redis:
+            raw_voice = await redis.get(f"interview_voice:{interview_id}")
+            if raw_voice:
+                voice_id = raw_voice.decode("utf-8") if isinstance(raw_voice, bytes) else raw_voice
+    except Exception as e:
+        logger.warning(f"Could not fetch voice_id from Redis: {e}")
+
+    tts_kwargs = {}
+    if voice_id:
+        tts_kwargs["voice"] = voice_id
+
     agent = InterviewAgent(
         instructions=system_prompt,
         stt=deepgram.STT(**_stt_options),
         llm=google.LLM(**_llm_kwargs),
-        tts=cartesia.TTS(),
+        tts=cartesia.TTS(**tts_kwargs),
         vad=silero.VAD.load(),
         chat_ctx=initial_ctx,
         use_tts_aligned_transcript=True,
