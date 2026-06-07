@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Stop } from '@phosphor-icons/react';
-import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack } from '@livekit/components-react';
+import { useVoiceAssistant, RoomAudioRenderer, useLocalParticipant, useTrackTranscription, VideoTrack, useRoomContext, useChat } from '@livekit/components-react';
+import { api } from '../services/api';
+import Editor from '@monaco-editor/react';
 import { Track } from 'livekit-client';
 import Avatar from 'boring-avatars';
 
@@ -361,6 +363,122 @@ export const ActiveLiveKitInterview = ({
   const { state, audioTrack, agentTranscriptions } = useVoiceAssistant();
   const { cameraTrack, localParticipant } = useLocalParticipant();
   const micTrack = localParticipant?.getTrackPublication(Track.Source.Microphone)?.track;
+
+  const room = useRoomContext();
+  const { send: sendChatMessage } = useChat();
+
+  const [showCodeEditor, setShowCodeEditor] = useState(false);
+  const [editorLanguage, setEditorLanguage] = useState('python');
+  const [code, setCode] = useState('');
+  const [output, setOutput] = useState('');
+  const [running, setRunning] = useState(false);
+
+  // Listen for Room Data Channel packets (editor show/hide controls)
+  useEffect(() => {
+    const handleDataReceived = (payload: Uint8Array, participant: any, kind: any, topic?: string) => {
+      const decoder = new TextDecoder();
+      const text = decoder.decode(payload);
+      try {
+        const data = JSON.parse(text);
+        if (data.action === 'show_code_editor') {
+          setShowCodeEditor(true);
+          if (data.language) {
+            setEditorLanguage(data.language.toLowerCase());
+          }
+        } else if (data.action === 'hide_code_editor') {
+          setShowCodeEditor(false);
+        }
+      } catch (e) {
+        // Not room control JSON, ignore
+      }
+    };
+    room.on('dataReceived', handleDataReceived);
+    return () => {
+      room.off('dataReceived', handleDataReceived);
+    };
+  }, [room]);
+
+  // Helper to extract code blocks from assistant message
+  const extractCodeBlock = (text: string): { code: string; language: string } | null => {
+    const match = text.match(/```(\w*)\n([\s\S]*?)```/);
+    if (match) {
+      return {
+        language: match[1] || 'python',
+        code: match[2].trim()
+      };
+    }
+    return null;
+  };
+
+  // Pre-populate editor when opening
+  useEffect(() => {
+    if (showCodeEditor && conversation.length > 0) {
+      const lastAssistant = [...conversation].reverse().find(msg => msg.role === 'assistant');
+      if (lastAssistant) {
+        const block = extractCodeBlock(lastAssistant.content);
+        if (block) {
+          setEditorLanguage(block.language);
+          setCode(block.code);
+        } else {
+          // Default empty template
+          if (!code) {
+            if (editorLanguage === 'sql') {
+              setCode('-- Write your SQL query here\n');
+            } else if (editorLanguage === 'text') {
+              setCode('# Design / Sketchpad\n- Describe your approach here\n');
+            } else {
+              setCode(`# Write your ${editorLanguage} code here\n`);
+            }
+          }
+        }
+      }
+    }
+  }, [showCodeEditor, conversation, editorLanguage]);
+
+  const handleRun = async () => {
+    if (!code.trim() || running) return;
+    setRunning(true);
+    setOutput('Running code in sandbox...\n');
+    try {
+      const res = await api.post('/challenges/run', {
+        challenge_id: 'sandbox',
+        code: code,
+        language: editorLanguage,
+        test_cases: []
+      });
+      const runData = res;
+      if (runData.error) {
+        setOutput(`Error:\n${runData.error}\n`);
+      } else {
+        setOutput(runData.output || 'Code executed successfully with no output.\n');
+      }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.detail || err.message || 'Unknown error occurred.';
+      setOutput(`Failed to run code:\n${errMsg}\n`);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    const formattedCode = `\`\`\`${editorLanguage}\n${code}\n\`\`\``;
+    try {
+      await sendChatMessage(formattedCode);
+      setShowCodeEditor(false);
+      // Append to local state immediately
+      const localMsg = {
+        id: `user-code-${Date.now()}`,
+        role: 'user',
+        content: formattedCode,
+        timestamp: new Date().toISOString(),
+        source: 'editor',
+        kind: 'answer',
+      };
+      setConversation((prev: any[]) => [...prev, localMsg]);
+    } catch (err) {
+      console.error("Failed to submit code:", err);
+    }
+  };
   
   const userTrackRef = useMemo(() => {
     return micTrack && localParticipant ? { participant: localParticipant, publication: micTrack, source: Track.Source.Microphone } : undefined;
@@ -734,41 +852,133 @@ export const ActiveLiveKitInterview = ({
         </div>
       </div>
 
-      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-10 w-full max-w-5xl mx-auto overflow-hidden">
-          <div
-            ref={chatScrollRef}
-            onScroll={(event) => {
-              const el = event.currentTarget;
-              shouldStickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 180;
-            }}
-            className="flex-1 min-h-0 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          >
-             {visibleConversation.map((msg, i) => (
-               <TranscriptRow
-                 key={transcriptKey(msg, i)}
-                 role={msg.role}
-                 content={msg.content}
-               />
-             ))}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-row overflow-hidden w-full">
+        {/* Left Panel: Conversation Chat */}
+        <div className={`flex flex-col h-full overflow-hidden transition-all duration-300 ${showCodeEditor ? 'w-[50%]' : 'w-full'}`}>
+          <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-10 w-full overflow-hidden">
+            <div
+              ref={chatScrollRef}
+              onScroll={(event) => {
+                const el = event.currentTarget;
+                shouldStickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 180;
+              }}
+              className="flex-1 min-h-0 w-full overflow-y-auto flex flex-col gap-5 pt-10 pb-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+            >
+               {visibleConversation.map((msg, i) => (
+                 <TranscriptRow
+                   key={transcriptKey(msg, i)}
+                   role={msg.role}
+                   content={msg.content}
+                 />
+               ))}
 
-             {currentAgentText && (
-               <TranscriptRow role="assistant" content={currentAgentText} isLive />
-             )}
+               {currentAgentText && (
+                 <TranscriptRow role="assistant" content={currentAgentText} isLive />
+               )}
 
-             {currentUserText && !shouldMergeLiveUserIntoLastTurn && (
-               <TranscriptRow role="user" content={currentUserText} isLive />
-             )}
+               {currentUserText && !shouldMergeLiveUserIntoLastTurn && (
+                 <TranscriptRow role="user" content={currentUserText} isLive />
+               )}
 
-             <div ref={bottomSentinelRef} className="h-1 shrink-0" />
+               <div ref={bottomSentinelRef} className="h-1 shrink-0" />
+            </div>
+          </div>
+
+          <div className="relative z-0 h-36 sm:h-40 shrink-0 w-full overflow-hidden pointer-events-none opacity-55 mix-blend-screen">
+            <div className="absolute inset-x-0 bottom-0 h-full flex items-center justify-center">
+              <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
+            </div>
           </div>
         </div>
 
-        <div className="relative z-0 h-36 sm:h-40 shrink-0 w-full overflow-hidden pointer-events-none opacity-55 mix-blend-screen">
-          <div className="absolute inset-x-0 bottom-0 h-full flex items-center justify-center">
-            <HorizontalAuraWave state={orbState} analyserRef={analyserRef} ttsAnalyserRef={ttsAnalyserRef} />
+        {/* Right Panel: Code Sandbox */}
+        {showCodeEditor && (
+          <div className="w-[50%] border-l border-white/[0.05] bg-[#0b0e14] flex flex-col h-full overflow-hidden">
+            {/* Editor Header */}
+            <div className="px-6 py-4 border-b border-white/[0.03] flex items-center justify-between shrink-0 bg-[#0d111b]/80">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-slate-200 uppercase tracking-widest">
+                  {editorLanguage === 'text' ? 'Design / Sketchpad' : 'Coding Sandbox'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Language Select Dropdown (Pill-shaped tab selector container) */}
+                <select
+                  value={editorLanguage}
+                  onChange={(e) => setEditorLanguage(e.target.value)}
+                  className="bg-slate-800 text-slate-200 border border-slate-700/60 rounded-full px-3.5 py-1 text-xs font-bold focus:outline-none focus:border-indigo-500 hover:bg-slate-700 transition-colors shadow-sm"
+                >
+                  <option value="python">Python</option>
+                  <option value="cpp">C++</option>
+                  <option value="java">Java</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="c">C</option>
+                  <option value="sql">SQL</option>
+                  <option value="text">Plain Text</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Monaco Editor */}
+            <div className="flex-1 min-h-0 relative">
+              <Editor
+                height="100%"
+                theme="vs-dark"
+                language={editorLanguage === 'text' ? 'plaintext' : editorLanguage.toLowerCase()}
+                value={code}
+                onChange={(val) => setCode(val || '')}
+                options={{
+                  fontSize: 14,
+                  fontFamily: 'JetBrains Mono, Fira Code, monospace',
+                  minimap: { enabled: false },
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  padding: { top: 12, bottom: 12 },
+                  background: '#0b0e14',
+                }}
+              />
+            </div>
+
+            {/* Console Output Panel */}
+            <div className="h-44 border-t border-white/[0.05] bg-[#070a0f] flex flex-col shrink-0 overflow-hidden">
+              <div className="px-5 py-2 border-b border-white/[0.03] flex items-center justify-between bg-[#090d15]/50">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Console Output</span>
+                {running && <span className="text-[10px] text-teal-400 font-bold animate-pulse">Executing...</span>}
+              </div>
+              <div className="flex-1 p-4 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap select-text bg-[#070a0f]">
+                {output || 'Click "Run Code" to execute compilation. Output will be displayed here.'}
+              </div>
+            </div>
+
+            {/* Action Bar (Pill shaped container for buttons) */}
+            <div className="p-4 border-t border-white/[0.05] flex items-center justify-between gap-4 bg-[#0d111b]/80 shrink-0">
+              <button
+                onClick={() => setShowCodeEditor(false)}
+                className="px-5 py-2 rounded-full border border-white/5 text-slate-400 text-xs font-bold hover:bg-white/5 hover:text-slate-200 transition-colors"
+              >
+                Close Editor
+              </button>
+              <div className="flex items-center gap-3">
+                {editorLanguage !== 'text' && (
+                  <button
+                    onClick={handleRun}
+                    disabled={running}
+                    className="px-5 py-2 rounded-full bg-slate-800 border border-slate-700/60 text-slate-200 text-xs font-bold hover:bg-slate-700 active:scale-95 transition-all shadow-sm flex items-center gap-2"
+                  >
+                    Run Code
+                  </button>
+                )}
+                <button
+                  onClick={handleSubmit}
+                  className="px-5 py-2 rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs font-bold hover:from-teal-400 hover:to-cyan-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                >
+                  Submit Solution
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <motion.div

@@ -10,7 +10,7 @@ load_dotenv()
 
 from livekit.agents import AutoSubscribe, JobContext, AgentSession, WorkerOptions, cli, llm
 from livekit.agents.llm import StopResponse
-from livekit.agents.voice import Agent
+from livekit.agents.voice import Agent, text_transforms
 from livekit.plugins import cartesia, google, deepgram, silero
 
 from app.core.config import settings
@@ -107,6 +107,116 @@ def is_meaningful_candidate_answer(text: str) -> bool:
     logger.info("is_meaningful_candidate_answer: True (meaningful candidate answer: %r)", cleaned)
     return True
 
+
+
+from typing import AsyncIterable
+
+async def _publish_control(room, action, lang):
+    try:
+        if action == "SHOW_CODE_EDITOR":
+            payload = json.dumps({"action": "show_code_editor", "language": lang.lower()})
+            room.local_participant.publish_data(payload, topic="room_control")
+            logger.info(f"Published control data: show_code_editor lang={lang}")
+        elif action == "HIDE_CODE_EDITOR":
+            payload = json.dumps({"action": "hide_code_editor"})
+            room.local_participant.publish_data(payload, topic="room_control")
+            logger.info("Published control data: hide_code_editor")
+    except Exception as e:
+        logger.error(f"Error publishing room control packet: {e}")
+
+async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -> AsyncIterable[str]:
+    buffer = ""
+    in_code_block = False
+    
+    tag_pattern = re.compile(r'\[(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR)(?::\s*(\w+))?\\]', re.IGNORECASE)
+    
+    async for chunk in text:
+        buffer += chunk
+        
+        while True:
+            if not in_code_block:
+                code_start_idx = buffer.find("```")
+                tag_match = tag_pattern.search(buffer)
+                
+                if code_start_idx == -1 and not tag_match:
+                    first_idx = -1
+                    bracket_idx = buffer.find('[')
+                    backtick_idx = buffer.find('`')
+                    
+                    if bracket_idx != -1 and backtick_idx != -1:
+                        first_idx = min(bracket_idx, backtick_idx)
+                    elif bracket_idx != -1:
+                        first_idx = bracket_idx
+                    elif backtick_idx != -1:
+                        first_idx = backtick_idx
+                        
+                    if first_idx == -1:
+                        yield buffer
+                        buffer = ""
+                    else:
+                        if first_idx > 0:
+                            yield buffer[:first_idx]
+                            buffer = buffer[first_idx:]
+                        
+                        if len(buffer) > 120:
+                            yield buffer[:1]
+                            buffer = buffer[1:]
+                    break
+                
+                if code_start_idx != -1 and tag_match:
+                    tag_start = tag_match.start()
+                    if code_start_idx < tag_start:
+                        yield buffer[:code_start_idx]
+                        buffer = buffer[code_start_idx:]
+                        in_code_block = True
+                    else:
+                        yield buffer[:tag_start]
+                        buffer = buffer[tag_start:]
+                        tag_match = tag_pattern.match(buffer)
+                        if tag_match:
+                            action = tag_match.group(1).upper()
+                            lang = tag_match.group(2) if tag_match.group(2) else ""
+                            await _publish_control(room, action, lang)
+                            buffer = buffer[tag_match.end():]
+                elif code_start_idx != -1:
+                    yield buffer[:code_start_idx]
+                    buffer = buffer[code_start_idx:]
+                    in_code_block = True
+                else:
+                    tag_start = tag_match.start()
+                    yield buffer[:tag_start]
+                    buffer = buffer[tag_start:]
+                    tag_match = tag_pattern.match(buffer)
+                    if tag_match:
+                        action = tag_match.group(1).upper()
+                        lang = tag_match.group(2) if tag_match.group(2) else ""
+                        await _publish_control(room, action, lang)
+                        buffer = buffer[tag_match.end():]
+            else:
+                code_end_idx = buffer.find("```", 3)
+                if code_end_idx == -1:
+                    break
+                else:
+                    buffer = buffer[code_end_idx + 3:]
+                    in_code_block = False
+
+    if not in_code_block and buffer:
+        tag_match = tag_pattern.search(buffer)
+        if tag_match:
+            tag_start = tag_match.start()
+            yield buffer[:tag_start]
+            action = tag_match.group(1).upper()
+            lang = tag_match.group(2) if tag_match.group(2) else ""
+            await _publish_control(room, action, lang)
+            buffer = buffer[tag_match.end():]
+        if buffer:
+            yield buffer
+
+def make_strip_tags_and_code_blocks(room):
+    async def _transform(text: AsyncIterable[str]) -> AsyncIterable[str]:
+        async for chunk in strip_tags_and_code_blocks_transform(text, room):
+            yield chunk
+    return _transform
 
 MAX_DEEPGRAM_KEYTERMS = 80
 COMMON_DEEPGRAM_KEYTERMS = (
@@ -492,22 +602,19 @@ async def entrypoint(ctx: JobContext):
     company = interview.target_company or "the target company"
     resume_context = interview.resume_context or "No resume context was provided."
 
+    from app.services.interview_service import get_interview_system_prompt
+
     # Build system instructions
-    system_prompt = (
-        "You are AcadMix Intelligence, a professional AI mock interviewer. "
-        f"Conduct a {difficulty} {interview_type} interview for the "
-        f"{interview.target_role or 'Software Engineer'} role at {company}. "
-        "Start with a brief introduction, then ask one clear question at a time. "
-        "Use the candidate's answers to ask focused follow-up questions. "
-        "If the candidate's response is unclear, unrelated, too fragmented, or does not answer the current question, "
-        "ask one brief clarification that keeps them on the same topic. Do not treat random phrases as useful interview content, "
-        "and do not jump to a new topic until the current question has a meaningful answer. "
-        "For example, if the candidate says 'HDFC Sky' while answering why they chose software development, say: "
-        "'I did not quite understand how that connects to your answer. Could you continue with what drew you to software development?' "
-        "Keep the conversation natural and concise; do not monologue. "
-        "Soft-wrap the interview after 8 interviewer questions and never exceed 10 interviewer questions. "
-        "When the interview is complete, thank the candidate and tell them their feedback is being prepared. "
-        f"Candidate resume context:\n{resume_context[:4000]}"
+    resume_section = f"CANDIDATE RESUME:\n{resume_context[:4000]}"
+    company_context = f" at {company}" if company else ""
+    system_prompt = get_interview_system_prompt(
+        interview_type=interview_type,
+        target_role=interview.target_role or "Software Engineer",
+        company_context=company_context,
+        current_question=1,
+        max_questions=10,
+        resume_section=resume_section,
+        difficulty=difficulty,
     )
 
     # Build the initial chat context
@@ -585,6 +692,10 @@ async def entrypoint(ctx: JobContext):
         llm=agent.llm,
         tts=agent.tts,
         use_tts_aligned_transcript=True,
+        tts_text_transforms=[
+            make_strip_tags_and_code_blocks(ctx.room),
+            text_transforms.filter_markdown,
+        ],
         turn_handling={
             "endpointing": {
                 "mode": "fixed",
