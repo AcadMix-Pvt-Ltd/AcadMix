@@ -84,6 +84,9 @@ def is_meaningful_candidate_answer(text: str) -> bool:
     if not cleaned:
         logger.debug("is_meaningful_candidate_answer: False (empty/none)")
         return False
+    if cleaned in {"yes", "no", "yep", "nope", "sure", "ok", "okay", "correct", "fine", "no thanks", "no thank you"}:
+        logger.info("is_meaningful_candidate_answer: True (exact short answer: %r)", cleaned)
+        return True
     if any(intent in cleaned for intent in _USEFUL_SHORT_INTENTS):
         logger.info("is_meaningful_candidate_answer: True (useful short intent: %r)", cleaned)
         return True
@@ -114,10 +117,14 @@ def is_meaningful_candidate_answer(text: str) -> bool:
 
 from typing import AsyncIterable
 
-async def _publish_control(room, action, option_arg):
+async def _publish_control(room, action, option_arg, agent):
     try:
         action_upper = action.upper()
         if action_upper == "SHOW_CODE_EDITOR":
+            # Update active states mutually exclusively
+            agent.editor_active = True
+            agent.whiteboard_active = False
+            
             lang = option_arg.strip() if option_arg else "python"
             test_cases = []
             if ":" in lang:
@@ -136,17 +143,25 @@ async def _publish_control(room, action, option_arg):
             room.local_participant.publish_data(payload, topic="room_control")
             logger.info(f"Published control data: show_code_editor lang={lang} tc={len(test_cases)}")
         elif action_upper == "SHOW_WHITEBOARD":
+            # Update active states mutually exclusively
+            agent.editor_active = False
+            agent.whiteboard_active = True
+            
             payload = json.dumps({"action": "show_whiteboard"})
             room.local_participant.publish_data(payload, topic="room_control")
             logger.info("Published control data: show_whiteboard")
         elif action_upper == "HIDE_CODE_EDITOR":
+            # Update active states mutually exclusively
+            agent.editor_active = False
+            agent.whiteboard_active = False
+            
             payload = json.dumps({"action": "hide_code_editor"})
             room.local_participant.publish_data(payload, topic="room_control")
             logger.info("Published control data: hide_code_editor")
     except Exception as e:
         logger.error(f"Error publishing room control packet: {e}")
 
-async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -> AsyncIterable[str]:
+async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room, agent) -> AsyncIterable[str]:
     buffer = ""
     in_code_block = False
     
@@ -180,7 +195,8 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
                             yield buffer[:first_idx]
                             buffer = buffer[first_idx:]
                         
-                        if len(buffer) > 120:
+                        # Increased from 120 to 1000 to prevent long test case JSONs from premature yielding
+                        if len(buffer) > 1000:
                             yield buffer[:1]
                             buffer = buffer[1:]
                     break
@@ -195,7 +211,7 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
                         yield buffer[:tag_start]
                         action = tag_match.group(1).upper()
                         lang = tag_match.group(2) if tag_match.group(2) else ""
-                        await _publish_control(room, action, lang)
+                        await _publish_control(room, action, lang, agent)
                         buffer = buffer[tag_end:]
                 elif code_start_idx != -1:
                     yield buffer[:code_start_idx]
@@ -206,7 +222,7 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
                     yield buffer[:tag_start]
                     action = tag_match.group(1).upper()
                     lang = tag_match.group(2) if tag_match.group(2) else ""
-                    await _publish_control(room, action, lang)
+                    await _publish_control(room, action, lang, agent)
                     buffer = buffer[tag_end:]
             else:
                 code_end_idx = buffer.find("```", 3)
@@ -223,14 +239,14 @@ async def strip_tags_and_code_blocks_transform(text: AsyncIterable[str], room) -
             yield buffer[:tag_start]
             action = tag_match.group(1).upper()
             lang = tag_match.group(2) if tag_match.group(2) else ""
-            await _publish_control(room, action, lang)
+            await _publish_control(room, action, lang, agent)
             buffer = buffer[tag_match.end():]
         if buffer:
             yield buffer
 
-def make_strip_tags_and_code_blocks(room):
+def make_strip_tags_and_code_blocks(room, agent):
     async def _transform(text: AsyncIterable[str]) -> AsyncIterable[str]:
-        async for chunk in strip_tags_and_code_blocks_transform(text, room):
+        async for chunk in strip_tags_and_code_blocks_transform(text, room, agent):
             yield chunk
     return _transform
 
@@ -508,7 +524,7 @@ class NoResponseController:
 
     async def _generate_code_hint(self) -> str:
         try:
-            last_q = next((msg.content for msg in reversed(self._session.chat_ctx.messages) if msg.role == "assistant"), "")
+            last_q = next((msg.content for msg in reversed(self._agent.chat_ctx.messages) if msg.role == "assistant"), "")
             code_draft = self._agent.current_student_code
             lang = self._agent.current_student_language
             
@@ -534,7 +550,7 @@ class NoResponseController:
 
     async def _generate_whiteboard_hint(self) -> str:
         try:
-            last_q = next((msg.content for msg in reversed(self._session.chat_ctx.messages) if msg.role == "assistant"), "")
+            last_q = next((msg.content for msg in reversed(self._agent.chat_ctx.messages) if msg.role == "assistant"), "")
             drawing_desc = self._agent.whiteboard_description
             
             prompt = (
@@ -803,7 +819,7 @@ async def entrypoint(ctx: JobContext):
         tts=agent.tts,
         use_tts_aligned_transcript=True,
         tts_text_transforms=[
-            make_strip_tags_and_code_blocks(ctx.room),
+            make_strip_tags_and_code_blocks(ctx.room, agent),
             text_transforms.filter_markdown,
         ],
         turn_handling={
@@ -838,6 +854,7 @@ async def entrypoint(ctx: JobContext):
                     agent.current_student_code = payload.get("code", "")
                     agent.current_student_language = payload.get("language", "python")
                     agent.editor_active = True
+                    agent.whiteboard_active = False
                 except Exception as pe:
                     logger.error(f"Failed to parse code_state packet: {pe}")
                     
@@ -851,6 +868,7 @@ async def entrypoint(ctx: JobContext):
                         base64_str = img_data
                     
                     if base64_str:
+                        agent.editor_active = False
                         agent.whiteboard_active = True
                         asyncio.create_task(_process_whiteboard_drawing(base64_str, agent))
                 except Exception as pe:

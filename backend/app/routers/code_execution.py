@@ -54,7 +54,7 @@ _BLOCKED_PATTERNS = {
         r"\b__import__\s*\(", r"\bexec\s*\(", r"\beval\s*\(", r"\bcompile\s*\(", 
         # Introspection/reflection
         r"\bglobals\s*\(", r"\blocals\s*\(", r"\bgetattr\s*\(", r"\bhasattr\s*\(",
-        r"\btype\s*\(", r"\bvars\s*\(", r"\bdir\s*\(", r"\binspect\.",
+        r"\bvars\s*\(", r"\bdir\s*\(", r"\binspect\.",
         # Module introspection
         r"\b__dict__\b", r"\b__code__\b", r"\b__class__\b", r"\b__bases__\b",
     ],
@@ -102,7 +102,7 @@ def _validate_code_ast(code: str, language: str):
         raise HTTPException(status_code=400, detail=f"Syntax error: {e}")
         
     BLOCKED_IMPORTS = {"os", "subprocess", "shutil", "socket", "http", "urllib", "requests", "pathlib", "inspect", "__builtin__"}
-    BLOCKED_CALLS = {"__import__", "exec", "eval", "compile", "globals", "locals", "getattr", "hasattr", "type", "vars", "dir", "open"}
+    BLOCKED_CALLS = {"__import__", "exec", "eval", "compile", "globals", "locals", "getattr", "hasattr", "vars", "dir", "open"}
     
     class CodeValidator(_ast.NodeVisitor):
         def __init__(self):
