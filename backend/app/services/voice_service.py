@@ -45,8 +45,7 @@ async def text_to_speech(text: str, voice_id: str | None = None) -> bytes:
 
     # Use default Cartesia voice if none provided, or if an old ElevenLabs ID is stuck in the session
     if not voice_id or len(voice_id) == 20:
-        # A standard professional Cartesia voice ID
-        voice_id = "f9fc912e-52f0-448a-8bfa-47e9ca75f25a"
+        voice_id = DEFAULT_VOICE_ID
 
     url = "https://api.cartesia.ai/tts/bytes"
     headers = {
