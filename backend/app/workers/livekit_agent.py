@@ -39,7 +39,7 @@ _gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 logger = logging.getLogger("acadmix.livekit_agent")
 
 NO_RESPONSE_DELAY_SECONDS = 15.0
-USER_TURN_FINALIZATION_GRACE_SECONDS = 3.0
+USER_TURN_FINALIZATION_GRACE_SECONDS = 5.0
 NO_RESPONSE_PROMPT_1 = "I am still listening. Please answer when you are ready."
 NO_RESPONSE_END_MESSAGE = (
     "I still have not heard a response, so I will end the mock interview now. "
@@ -79,25 +79,32 @@ def is_meaningful_candidate_answer(text: str) -> bool:
     """
     cleaned = re.sub(r"\s+", " ", (text or "")).strip().lower()
     if not cleaned:
+        logger.debug("is_meaningful_candidate_answer: False (empty/none)")
         return False
     if any(intent in cleaned for intent in _USEFUL_SHORT_INTENTS):
+        logger.info("is_meaningful_candidate_answer: True (useful short intent: %r)", cleaned)
         return True
 
     words = re.findall(r"[a-z0-9']+", cleaned)
     if not words:
+        logger.debug("is_meaningful_candidate_answer: False (no words)")
         return False
     normalized_words = [w.strip("'") for w in words if w.strip("'")]
     if not normalized_words:
+        logger.debug("is_meaningful_candidate_answer: False (no normalized words)")
         return False
 
     if all(word in _FILLER_WORDS for word in normalized_words):
+        logger.info("is_meaningful_candidate_answer: False (only filler words: %r)", normalized_words)
         return False
 
     # Random one- or two-word fragments are usually room noise, ad snippets, or
     # incomplete starts. Preserve them in transcript, but do not invoke Gemini.
     if len(normalized_words) <= 2:
+        logger.info("is_meaningful_candidate_answer: False (short fragment <= 2 words: %r)", normalized_words)
         return False
 
+    logger.info("is_meaningful_candidate_answer: True (meaningful candidate answer: %r)", cleaned)
     return True
 
 
@@ -432,6 +439,7 @@ class InterviewAgent(Agent):
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
     ) -> None:
         user_text = new_message.text_content if new_message else ""
+        logger.info("on_user_turn_completed checking user text: %r", user_text)
         if not is_meaningful_candidate_answer(user_text):
             logger.info(
                 "Non-meaningful user turn suppressed: %r", user_text
@@ -440,6 +448,7 @@ class InterviewAgent(Agent):
                 self.no_response_controller.note_non_answer_fragment()
             raise StopResponse()
 
+        logger.info("on_user_turn_completed: meaningful user turn finalized: %r", user_text)
         # Meaningful answer – reset the no-response flow
         if self.no_response_controller:
             self.no_response_controller.note_user_turn_completed()
@@ -567,6 +576,11 @@ async def entrypoint(ctx: JobContext):
     # Endpointing min_delay=3.0 gives the student a 3-second buffer to pause/think.
     # preemptive_generation=False prevents Gemini from generating before the user finishes.
     session = AgentSession(
+        stt=agent.stt,
+        vad=agent.vad,
+        llm=agent.llm,
+        tts=agent.tts,
+        use_tts_aligned_transcript=True,
         turn_handling={
             "endpointing": {
                 "mode": "fixed",
@@ -597,6 +611,7 @@ async def entrypoint(ctx: JobContext):
         no_response_controller.watch_assistant_speech(ev.speech_handle)
 
     def _on_user_state_changed(ev):
+        logger.info("User state changed to: %r", ev.new_state)
         if ev.new_state == "speaking":
             no_response_controller.note_user_speech_started()
         elif ev.new_state == "listening":
