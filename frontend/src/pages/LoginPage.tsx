@@ -81,7 +81,7 @@ const KnowledgeNetworkBackground = () => {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-[#f8fafc]">
       {/* Soft radial background gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(99,102,241,0.025)_0%,rgba(99,102,241,0.005)_30%,transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_54%,rgba(99,102,241,0.06)_0%,rgba(99,102,241,0.015)_25%,transparent_45%)]" />
       
       {/* Animating knowledge network layer */}
       <motion.div 
@@ -110,8 +110,8 @@ const KnowledgeNetworkBackground = () => {
               x2={`${segment.node2.x}%`}
               y2={`${segment.node2.y}%`}
               stroke="#cbd5e1"
-              strokeWidth="0.25"
-              strokeOpacity="0.18"
+              strokeWidth="0.32"
+              strokeOpacity="0.32"
             />
           ))}
           <g filter="url(#mesh-energy-glow)">
@@ -122,11 +122,11 @@ const KnowledgeNetworkBackground = () => {
                 y1={`${segment.node1.y}%`}
                 x2={`${segment.node2.x}%`}
                 y2={`${segment.node2.y}%`}
-                stroke={segment.id % 3 === 0 ? '#cbd5e1' : '#a5b4fc'}
-                strokeWidth="0.4"
+                stroke={segment.id % 3 === 0 ? '#818cf8' : '#6366f1'}
+                strokeWidth="0.48"
                 strokeLinecap="round"
                 initial={{ strokeOpacity: 0 }}
-                animate={{ strokeOpacity: [0, segment.strength * 0.4, 0.02, 0] }}
+                animate={{ strokeOpacity: [0, segment.strength * 0.55, 0.05, 0] }}
                 transition={{
                   duration: segment.duration,
                   repeat: Infinity,
@@ -142,16 +142,16 @@ const KnowledgeNetworkBackground = () => {
               key={`node1-${n.id}`}
               cx={`${n.x}%`}
               cy={`${n.y}%`}
-              r={index % 5 === 0 ? 0.6 : 0.4}
-              fill="#cbd5e1"
-              fillOpacity={index % 7 === 0 ? 0.15 : 0.08}
+              r={index % 5 === 0 ? 0.68 : 0.45}
+              fill="#94a3b8"
+              fillOpacity={index % 7 === 0 ? 0.28 : 0.16}
             />
           ))}
         </svg>
       </motion.div>
 
       {/* Soft overlay gradient to ensure text readability */}
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.7),rgba(255,255,255,0.4)_48%,rgba(248,250,252,0.75))]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.48),rgba(255,255,255,0.24)_48%,rgba(248,250,252,0.58))]"></div>
     </div>
   );
 };
