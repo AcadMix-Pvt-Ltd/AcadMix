@@ -63,15 +63,14 @@ async def generate_interview_feedback_task(ctx, interview_id: str, college_id: s
         # Call LLM for feedback via Production Gateway
         try:
             from app.services.llm_gateway import gateway
+            from app.services.interview_service import get_feedback_system_prompt
 
-            FEEDBACK_PROMPT = """You are an expert interview coach. Analyze this transcript and return JSON:
-{"overall_score": <0-100>, "scores": {"technical_depth": <0-100>, "communication": <0-100>, "problem_solving": <0-100>, "confidence": <0-100>, "clarity": <0-100>, "domain_knowledge": <0-100>}, "per_question": [{"question": "", "rating": "strong|average|needs_work", "feedback": ""}], "strengths": [], "weaknesses": [], "improvement_tips": [], "overall_comment": ""}
-Return ONLY valid JSON."""
+            feedback_prompt = get_feedback_system_prompt(interview.interview_type)
 
             feedback_raw = await gateway.complete(
                 "interview",
                 messages=[
-                    {"role": "system", "content": FEEDBACK_PROMPT},
+                    {"role": "system", "content": feedback_prompt},
                     {"role": "user", "content": f"Transcript:\n\n{transcript}"},
                 ],
                 json_mode=True,

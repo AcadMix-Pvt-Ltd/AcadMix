@@ -572,12 +572,37 @@ class NoResponseController:
             logger.error(f"Failed to generate whiteboard hint: {e}")
             return NO_RESPONSE_PROMPT_1
 
+    async def _generate_hr_hint(self) -> str:
+        try:
+            last_q = next((msg.content for msg in reversed(self._agent.chat_ctx.messages) if msg.role == "assistant"), "")
+            
+            prompt = (
+                f"The candidate is silent or struggling to answer this HR/behavioral question: '{last_q}'.\n"
+                f"Write a friendly, supportive nudge or hint to help them answer or encourage them to speak. "
+                f"Do not answer the question or give too much away. Just give a single-sentence guidance tip or nudge (max 20 words)."
+            )
+            
+            hint = await gateway.complete(
+                purpose="interview",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=64
+            )
+            clean_hint = hint.strip().replace("\"", "").replace("'", "")
+            logger.info(f"Generated HR/behavioral hint for stuck candidate: {clean_hint}")
+            return clean_hint
+        except Exception as e:
+            logger.error(f"Failed to generate HR hint: {e}")
+            return NO_RESPONSE_PROMPT_1
+
     async def _run_reminder_flow(self, generation: int):
         """Execute the 2-stage no-response reminder logic."""
         try:
-            # ── Stage 0 → wait 15 s then nudge ────────────────────────────
+            is_hr_or_behavioral = self._agent.interview_type in ("hr", "behavioral")
+            delay = 20.0 if is_hr_or_behavioral else NO_RESPONSE_DELAY_SECONDS
+
+            # ── Stage 0 → wait delay then nudge ────────────────────────────
             if self._stage == 0:
-                await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+                await asyncio.sleep(delay)
                 if not self._is_current(generation):
                     return
 
@@ -587,6 +612,8 @@ class NoResponseController:
                     nudge_message = await self._generate_code_hint()
                 elif self._agent.whiteboard_active and self._agent.whiteboard_description:
                     nudge_message = await self._generate_whiteboard_hint()
+                elif is_hr_or_behavioral:
+                    nudge_message = await self._generate_hr_hint()
 
                 nudge = self._say_nudge(nudge_message)
                 await nudge.wait_for_playout()
@@ -594,8 +621,8 @@ class NoResponseController:
                     return
                 self._stage = 1
 
-            # ── Stage 1 → wait 15 s then close ───────────────────────────
-            await asyncio.sleep(NO_RESPONSE_DELAY_SECONDS)
+            # ── Stage 1 → wait delay then close ───────────────────────────
+            await asyncio.sleep(delay)
             if not self._is_current(generation):
                 return
 
@@ -642,6 +669,7 @@ class InterviewAgent(Agent):
         self.editor_active: bool = False
         self.whiteboard_active: bool = False
         self.whiteboard_description: str = ""
+        self.interview_type: str = "technical"
 
     async def on_user_turn_completed(
         self, turn_ctx: llm.ChatContext, new_message: llm.ChatMessage
@@ -808,6 +836,7 @@ async def entrypoint(ctx: JobContext):
         chat_ctx=initial_ctx,
         use_tts_aligned_transcript=True,
     )
+    agent.interview_type = interview_type
 
     # Let genuine candidate speech interrupt the AI, but resume after a short false-start window.
     # Endpointing min_delay=3.0 gives the student a 3-second buffer to pause/think.

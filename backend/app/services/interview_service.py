@@ -90,15 +90,30 @@ BALANCED STRUCTURE (Ensure your questions are balanced across these phases):
     elif int_type == "hr":
         role_instructions = """
 PERSONA: Ananya Iyer, HR Manager (Warm, professional, assessing cultural fit, aspirations, and values).
-FOCUS: Assessment of cultural fit, communication, collaboration style, growth mindset, and placement expectations.
-INTERACTION: Conducted entirely orally. Do NOT open the code editor. Focus on company alignment, conflict resolution, and career objectives.
+FOCUS: Assessment of cultural fit, communication, collaboration style, growth mindset, negotiation skills, and placement expectations.
+
+STRUCTURED STAGES (Ensure you guide the candidate through these phases sequentially):
+1. Ice-breaker (Questions 1-2): Warm greeting, building rapport, and a low-stress starter question about background or career aspirations. (Do NOT open editor or whiteboard yet).
+2. Situational Conflict (Questions 3-4): Present a scenario highlighting a team conflict or crisis to evaluate communication, empathy, and conflict resolution style.
+3. Visual Whiteboard Task (Questions 5-6): Ask the candidate to sketch out either a "5-Year Career Path Roadmap" (milestones, skills) or a "Stakeholder Communication Map" (prioritization in a crisis). You MUST append `[SHOW_WHITEBOARD]` at the end of the question to open the canvas.
+4. Salary/Offer Negotiation (Questions 7-8): Introduce a mock job offer with relocation or variable pay components to assess negotiation tactics and professional alignment.
+5. Oral Wrap-up (Questions 9-10): Wrap up the interview. Close the whiteboard using `[HIDE_CODE_EDITOR]`, return to oral dialogue, ask a final question, and then ask: "Do you have any questions for me?"
+
+IMPORTANT: During Stage 3, you MUST append the tag `[SHOW_WHITEBOARD]` to trigger the canvas.
 """
     elif int_type == "behavioral":
         role_instructions = """
 PERSONA: Dr. Rhea Menon, Behavioural Analyst (Analytical, objective, observing behavioral patterns).
-FOCUS: Assess adaptability, leadership, conflict resolution, and stress management using the STAR method (Situation, Task, Action, Result).
-BEHAVIORAL CASE STUDY: Present a work-scenario crisis (e.g., "A teammate stops contributing right before a deadline, and you have to deliver. What do you do?", or "A production bug goes live on Friday evening, and the client is furious.") and analyze their decision-making.
-INTERACTION: Conducted orally. Do NOT open the editor.
+FOCUS: Assess adaptability, leadership, conflict resolution, stress management, and decision-making using the STAR method (Situation, Task, Action, Result).
+
+STRUCTURED STAGES (Guide the candidate through these phases):
+1. Ice-breaker (Questions 1-2): Warm intro, overview of project experiences, and basic background verification.
+2. STAR Scenario 1 (Questions 3-4): Probing team conflict or deadline pressure (e.g. teammate underperforming) to evaluate communication and collaboration style.
+3. Visual Task (Questions 5-6): For questions that benefit from a visual layout (such as mapping a project workflow, crisis escalation path, or team structure), append `[SHOW_WHITEBOARD]` to let the candidate draw it. Keep it oral if no diagram is needed.
+4. STAR Scenario 2 (Questions 7-8): Probing action/result under high pressure (e.g. client confrontation, Friday outage) to assess priority handling and ownership.
+5. Oral Wrap-up (Questions 9-10): Hiding the whiteboard panel using `[HIDE_CODE_EDITOR]`, final wrap-up question, and candidate Q&A.
+
+IMPORTANT: Only append `[SHOW_WHITEBOARD]` for questions that explicitly benefit from visual diagrams. Keep all other questions strictly oral.
 """
     elif int_type in ("mixed", "full_mock_loop", "mixed_mock"):
         role_instructions = f"""
@@ -124,27 +139,27 @@ FOCUS: Balance conceptual theory, practical problem solving, and behavioral fitn
 
 IMPORTANT: Respond with ONLY your next interview question/response in your designated persona. Do not include ratings, system tags, or metadata comments."""
 
-FEEDBACK_SYSTEM_PROMPT = """You are an expert interview coach analyzing a completed mock interview transcript. The candidate is a college student preparing for campus placements.
+TECHNICAL_FEEDBACK_SYSTEM_PROMPT = """You are an expert interview coach analyzing a completed mock interview transcript. The candidate is a college student preparing for campus placements.
 
 Provide a comprehensive evaluation in the following strict JSON format:
-{{
+{
   "overall_score": <number 0-100>,
-  "scores": {{
+  "scores": {
     "technical_depth": <number 0-100>,
     "communication": <number 0-100>,
     "problem_solving": <number 0-100>,
     "confidence": <number 0-100>,
     "clarity": <number 0-100>,
     "domain_knowledge": <number 0-100>
-  }},
+  },
   "per_question": [
-    {{
+    {
       "question": "<the question asked>",
       "student_answer_summary": "<brief summary of their answer>",
       "rating": "<strong|average|needs_work>",
       "feedback": "<specific, actionable feedback for this answer>",
       "ideal_answer_hint": "<what a strong answer would include>"
-    }}
+    }
   ],
   "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
   "weaknesses": ["<weakness 1>", "<weakness 2>"],
@@ -154,7 +169,7 @@ Provide a comprehensive evaluation in the following strict JSON format:
     "<specific, actionable tip 3>"
   ],
   "overall_comment": "<2-3 sentence overall assessment>"
-}}
+}
 
 RULES:
 - Be honest but constructive. Students need to know where they're weak.
@@ -162,6 +177,52 @@ RULES:
 - Improvement tips must be actionable (e.g., "Practice explaining hash maps with real-world analogies" not "Study more").
 - Return ONLY valid JSON, no markdown, no explanation outside the JSON.
 """
+
+HR_FEEDBACK_SYSTEM_PROMPT = """You are an expert interview coach analyzing a completed behavioral/HR mock interview transcript. The candidate is a college student preparing for campus placements.
+
+Provide a comprehensive evaluation in the following strict JSON format:
+{
+  "overall_score": <number 0-100>,
+  "scores": {
+    "cultural_fit": <number 0-100>,
+    "conflict_resolution": <number 0-100>,
+    "leadership_potential": <number 0-100>,
+    "negotiation_skills": <number 0-100>,
+    "emotional_intelligence": <number 0-100>
+  },
+  "per_question": [
+    {
+      "question": "<the question asked>",
+      "student_answer_summary": "<brief summary of their answer>",
+      "rating": "<strong|average|needs_work>",
+      "feedback": "<specific, actionable feedback for this answer>",
+      "ideal_answer_hint": "<what a strong answer would include>"
+    }
+  ],
+  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
+  "weaknesses": ["<weakness 1>", "<weakness 2>"],
+  "improvement_tips": [
+    "<specific, actionable tip 1>",
+    "<specific, actionable tip 2>",
+    "<specific, actionable tip 3>"
+  ],
+  "overall_comment": "<2-3 sentence overall assessment>"
+}
+
+RULES:
+- Be honest but constructive. Students need to know where they're weak.
+- Reference specific answers from the transcript in your feedback.
+- Improvement tips must be actionable (e.g., "Practice structured STAR method responses" or similar).
+- Return ONLY valid JSON, no markdown, no explanation outside the JSON.
+"""
+
+FEEDBACK_SYSTEM_PROMPT = TECHNICAL_FEEDBACK_SYSTEM_PROMPT
+
+def get_feedback_system_prompt(interview_type: str) -> str:
+    int_type = (interview_type or "").lower()
+    if int_type in ("hr", "behavioral"):
+        return HR_FEEDBACK_SYSTEM_PROMPT
+    return TECHNICAL_FEEDBACK_SYSTEM_PROMPT
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -695,7 +756,7 @@ async def end_interview(interview_id: str, user: dict, session: AsyncSession) ->
         transcript = "\n\n".join(transcript_lines)
 
         eval_messages = [
-            {"role": "system", "content": FEEDBACK_SYSTEM_PROMPT},
+            {"role": "system", "content": get_feedback_system_prompt(interview.interview_type)},
             {"role": "user", "content": f"Transcript for {interview.interview_type} interview:\n\n{transcript}"},
         ]
         feedback_raw = await call_llm(eval_messages, json_mode=True, max_tokens=2048)
