@@ -123,10 +123,10 @@ const KnowledgeNetworkBackground = () => {
                 x2={`${segment.node2.x}%`}
                 y2={`${segment.node2.y}%`}
                 stroke={segment.id % 3 === 0 ? '#818cf8' : '#6366f1'}
-                strokeWidth="0.8"
+                strokeWidth="0.52"
                 strokeLinecap="round"
                 initial={{ strokeOpacity: 0 }}
-                animate={{ strokeOpacity: [0, segment.strength * 1.6, 0.1, 0] }}
+                animate={{ strokeOpacity: [0, segment.strength * 0.8, 0.04, 0] }}
                 transition={{
                   duration: segment.duration,
                   repeat: Infinity,
@@ -151,7 +151,7 @@ const KnowledgeNetworkBackground = () => {
       </motion.div>
 
       {/* Soft overlay gradient to ensure text readability */}
-      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.48),rgba(255,255,255,0.24)_48%,rgba(248,250,252,0.58))]"></div>
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.52),rgba(255,255,255,0.28)_48%,rgba(248,250,252,0.62))]"></div>
     </div>
   );
 };
