@@ -225,8 +225,8 @@ async def start_interview(req: dict, user: dict, session: AsyncSession) -> dict:
     result = await session.execute(stmt)
     used = result.scalar() or 0
     # Temporarily disabled AI limit checks for now as per CTO's instructions
-    if used >= settings.MOCK_INTERVIEW_MONTHLY_QUOTA:
-        raise HTTPException(status_code=429, detail=f"Monthly interview quota exceeded ({settings.MOCK_INTERVIEW_MONTHLY_QUOTA}/month). Resets next month.")
+    # if used >= settings.MOCK_INTERVIEW_MONTHLY_QUOTA:
+    #     raise HTTPException(status_code=429, detail=f"Monthly interview quota exceeded ({settings.MOCK_INTERVIEW_MONTHLY_QUOTA}/month). Resets next month.")
 
     interview_type = req.get("interview_type", "technical")
     mode = req.get("mode") or interview_type
