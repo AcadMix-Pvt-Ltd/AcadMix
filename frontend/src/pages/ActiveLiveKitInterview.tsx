@@ -205,8 +205,7 @@ const isRepeatRequest = (text: string): boolean => {
 const isClarificationTurn = (content: string): boolean => {
   const normalized = normalizeTranscriptText(content);
   if (!normalized) return false;
-  return [
-    // Original clarification phrases
+  const directClarification = [
     'i did not quite understand',
     "i didn't quite understand",
     'i do not understand',
@@ -220,39 +219,45 @@ const isClarificationTurn = (content: string): boolean => {
     'could you clarify',
     'can you clarify',
     'please clarify',
+    'clarify what you mean',
+    'what do you mean by',
     'could you continue',
     'please continue',
     'could you answer',
-    // No-response nudge phrases
+    'continue your answer',
+    'complete your answer',
+  ].some(phrase => normalized.includes(phrase));
+
+  const mentionedClarification =
+    normalized.includes('you mentioned') &&
+    [
+      'could you elaborate',
+      'can you elaborate',
+      'could you clarify',
+      'can you clarify',
+      'could you explain what you mean',
+      'can you explain what you mean',
+      'could you continue',
+      'can you continue',
+    ].some(phrase => normalized.includes(phrase));
+
+  return directClarification || mentionedClarification;
+};
+
+const isNoResponseNudge = (content: string): boolean => {
+  const normalized = normalizeTranscriptText(content);
+  if (!normalized) return false;
+  return [
     'i am still listening',
     'i still have not heard your response',
     'i still have not heard a response',
-    // Elaboration / follow-up phrases
-    'elaborate',
-    'explain why',
-    'explain how',
-    'explain further',
-    'explain more',
-    'explain in detail',
-    'tell me more',
-    'what do you mean',
-    'could you explain',
-    'can you explain',
-    'clarify',
-    'more details',
-    'specific example',
-    'concrete example',
-    'elaborate on',
-    'could you walk me through',
-    'can you walk me through',
-    'please expand on',
-    'go deeper',
   ].some(phrase => normalized.includes(phrase));
 };
 
 const turnKind = (role: 'assistant' | 'user', content: string): string => {
   if (role === 'user') return 'answer';
-  if (isClarificationTurn(content) || isRepeatRequest(content)) return 'nudge';
+  if (isNoResponseNudge(content)) return 'nudge';
+  if (isClarificationTurn(content) || isRepeatRequest(content)) return 'clarification';
   return 'question';
 };
 

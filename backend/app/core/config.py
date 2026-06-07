@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     
     # Assembly AI & LiveKit (AI Interview V2)
     ASSEMBLYAI_API_KEY: str = ""
+    ASSEMBLYAI_WEBHOOK_SECRET: str = ""
     LIVEKIT_URL: str = ""
     LIVEKIT_API_KEY: str = ""
     LIVEKIT_API_SECRET: str = ""

@@ -11,8 +11,10 @@ Redis client imported from app.core.security (shared pool — not service-level)
 """
 import json
 import logging
+import hmac
 from datetime import datetime, timezone
 from typing import Optional
+from urllib.parse import urlencode
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -539,7 +541,7 @@ async def append_conversation_turns(interview_id: str, req: dict, user: dict, se
         if role not in {"assistant", "user"} or not content:
             continue
         kind = turn.get("kind") or ("answer" if role == "user" else "question")
-        if kind not in {"question", "answer", "nudge"}:
+        if kind not in {"question", "answer", "clarification", "nudge"}:
             kind = "answer" if role == "user" else "question"
 
         key = (role, _normalize_turn_text(content))
@@ -791,6 +793,8 @@ async def process_audio_evaluation(interview_id: str, content: bytes, content_ty
 
     if not settings.ASSEMBLYAI_API_KEY:
         raise HTTPException(status_code=500, detail="AssemblyAI API Key not configured")
+    if not settings.ASSEMBLYAI_WEBHOOK_SECRET:
+        raise HTTPException(status_code=500, detail="AssemblyAI webhook secret not configured")
     
     import httpx
     
@@ -804,7 +808,8 @@ async def process_audio_evaluation(interview_id: str, content: bytes, content_ty
         audio_url = upload_resp.json()["upload_url"]
         
         transcript_url = "https://api.assemblyai.com/v2/transcript"
-        webhook_url = f"{base_url.rstrip('/')}/api/v1/interview/assemblyai_webhook"
+        webhook_query = urlencode({"token": settings.ASSEMBLYAI_WEBHOOK_SECRET})
+        webhook_url = f"{base_url.rstrip('/')}/api/v1/interview/assemblyai_webhook?{webhook_query}"
         payload = {
             "audio_url": audio_url,
             "sentiment_analysis": True,
@@ -828,17 +833,24 @@ async def process_audio_evaluation(interview_id: str, content: bytes, content_ty
         return {"message": "Audio evaluation started", "job_id": transcript_id}
 
 
-async def handle_assemblyai_webhook(payload: dict, session: AsyncSession) -> dict:
+async def handle_assemblyai_webhook(
+    payload: dict,
+    session: AsyncSession,
+    token: str | None = None,
+) -> dict:
     """Process the AssemblyAI callback, fetch the transcript metrics, and merge into DB."""
+    if (
+        not settings.ASSEMBLYAI_WEBHOOK_SECRET
+        or not token
+        or not hmac.compare_digest(token, settings.ASSEMBLYAI_WEBHOOK_SECRET)
+    ):
+        raise HTTPException(status_code=401, detail="Invalid AssemblyAI webhook token")
+
     transcript_id = payload.get("transcript_id")
     status = payload.get("status")
     
-    if not transcript_id or status != "completed":
-        return {"message": "Ignored"}
-        
-    # Find the interview by JSON field
-    from sqlalchemy import cast
-    from sqlalchemy.dialects.postgresql import JSONB
+    if not transcript_id:
+        raise HTTPException(status_code=400, detail="Missing AssemblyAI transcript_id")
     
     # We must do a manual text search or use jsonb contains
     # We will fetch recent interviews and filter manually if the direct query is complex, 
@@ -851,6 +863,23 @@ async def handle_assemblyai_webhook(payload: dict, session: AsyncSession) -> dic
     
     if not interview:
         return {"message": "Interview not found for this transcript"}
+
+    feedback = interview.ai_feedback or {}
+
+    if status == "error":
+        feedback["assembly_ai_status"] = "failed"
+        feedback["assembly_ai_error"] = (
+            payload.get("error")
+            or payload.get("error_message")
+            or "AssemblyAI transcription failed"
+        )
+        interview.ai_feedback = feedback
+        flag_modified(interview, "ai_feedback")
+        await session.commit()
+        return {"message": "AssemblyAI error recorded"}
+
+    if status != "completed":
+        return {"message": "AssemblyAI status ignored", "status": status}
         
     import httpx
     headers = {"authorization": settings.ASSEMBLYAI_API_KEY}
@@ -858,22 +887,31 @@ async def handle_assemblyai_webhook(payload: dict, session: AsyncSession) -> dic
     
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.get(transcript_url, headers=headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            
-            # Extract disfluencies and sentiment
-            feedback = interview.ai_feedback or {}
-            
-            # Basic merging of Assembly AI insights
-            feedback["assembly_ai_status"] = "completed"
-            
-            disfluencies_count = sum(1 for word in data.get("words", []) if word.get("text", "").lower() in ["um", "uh", "hmm", "mhm"])
-            feedback["disfluencies_count"] = disfluencies_count
-            
-            # Could also aggregate sentiment here if needed
-            
+        if resp.status_code != 200:
+            feedback["assembly_ai_status"] = "failed"
+            feedback["assembly_ai_error"] = f"Failed to fetch AssemblyAI transcript: HTTP {resp.status_code}"
             interview.ai_feedback = feedback
             flag_modified(interview, "ai_feedback")
             await session.commit()
+            return {"message": "AssemblyAI transcript fetch failed"}
+
+        data = resp.json()
+
+        # Basic merging of Assembly AI insights
+        feedback["assembly_ai_status"] = "completed"
+        feedback.pop("assembly_ai_error", None)
+
+        disfluencies_count = sum(
+            1
+            for word in data.get("words", [])
+            if word.get("text", "").lower() in ["um", "uh", "hmm", "mhm"]
+        )
+        feedback["disfluencies_count"] = disfluencies_count
+
+        # Could also aggregate sentiment here if needed
+
+        interview.ai_feedback = feedback
+        flag_modified(interview, "ai_feedback")
+        await session.commit()
             
     return {"message": "Success"}

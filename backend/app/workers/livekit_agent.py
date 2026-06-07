@@ -39,6 +39,7 @@ _gemini_api_key = os.environ.get("GEMINI_API_KEY", "")
 logger = logging.getLogger("acadmix.livekit_agent")
 
 NO_RESPONSE_DELAY_SECONDS = 15.0
+USER_TURN_FINALIZATION_GRACE_SECONDS = 3.0
 NO_RESPONSE_PROMPT_1 = "I am still listening. Please answer when you are ready."
 NO_RESPONSE_END_MESSAGE = (
     "I still have not heard a response, so I will end the mock interview now. "
@@ -52,6 +53,23 @@ _FILLER_WORDS = frozenset({
     "but", "mm", "mhm", "mmm", "huh", "alright", "actually", "basically",
 })
 
+_USEFUL_SHORT_INTENTS = (
+    "i don't know",
+    "i do not know",
+    "not sure",
+    "i am not sure",
+    "please repeat",
+    "can you repeat",
+    "could you repeat",
+    "repeat that",
+    "say that again",
+    "i missed that",
+    "i am ready",
+    "i'm ready",
+    "yes i am ready",
+    "yes i'm ready",
+)
+
 
 def is_meaningful_candidate_answer(text: str) -> bool:
     """Return True only if *text* looks like a real candidate answer.
@@ -62,9 +80,24 @@ def is_meaningful_candidate_answer(text: str) -> bool:
     cleaned = re.sub(r"\s+", " ", (text or "")).strip().lower()
     if not cleaned:
         return False
-    words = cleaned.split()
-    if len(words) <= 2 and all(w.strip(".,!?") in _FILLER_WORDS for w in words):
+    if any(intent in cleaned for intent in _USEFUL_SHORT_INTENTS):
+        return True
+
+    words = re.findall(r"[a-z0-9']+", cleaned)
+    if not words:
         return False
+    normalized_words = [w.strip("'") for w in words if w.strip("'")]
+    if not normalized_words:
+        return False
+
+    if all(word in _FILLER_WORDS for word in normalized_words):
+        return False
+
+    # Random one- or two-word fragments are usually room noise, ad snippets, or
+    # incomplete starts. Preserve them in transcript, but do not invoke Gemini.
+    if len(normalized_words) <= 2:
+        return False
+
     return True
 
 
@@ -262,6 +295,11 @@ class NoResponseController:
         if self._closed or not self._user_speech_active:
             return
         self._user_speech_active = False
+        generation = self._generation
+        self._cancel_task()
+        self._task = asyncio.create_task(
+            self._restart_after_unfinalized_speech(generation)
+        )
         # Intentionally do NOT restart the reminder flow here.
         # The timer will restart from ``note_user_turn_completed``
         # (meaningful answer → reset to stage 0) or
@@ -319,6 +357,17 @@ class NoResponseController:
             raise
         except Exception:
             logger.exception("No-response timer failed after assistant speech")
+
+    async def _restart_after_unfinalized_speech(self, generation: int):
+        try:
+            await asyncio.sleep(USER_TURN_FINALIZATION_GRACE_SECONDS)
+            if not self._is_current(generation):
+                return
+            await self._run_reminder_flow(generation)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("No-response timer failed after unfinalized user speech")
 
     async def _run_reminder_flow(self, generation: int):
         """Execute the 2-stage no-response reminder logic."""

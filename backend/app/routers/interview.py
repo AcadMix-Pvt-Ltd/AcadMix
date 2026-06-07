@@ -242,4 +242,4 @@ async def evaluate_audio(
 async def assemblyai_webhook(request: Request, session: AsyncSession = Depends(get_db)):
     """Handle async callbacks from AssemblyAI for audio evaluation."""
     payload = await request.json()
-    return await interview_service.handle_assemblyai_webhook(payload, session)
+    return await interview_service.handle_assemblyai_webhook(payload, session, request.query_params.get("token"))
