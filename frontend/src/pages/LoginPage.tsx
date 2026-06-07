@@ -401,7 +401,7 @@ const LoginPage = ({ onLogin }) => {
                         placeholder="6-digit code" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={6} />
                     </div>
                   </div>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-indigo-900/10 transition-all flex items-center justify-center gap-2">
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Verify Access <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
                 </form>
@@ -431,7 +431,7 @@ const LoginPage = ({ onLogin }) => {
                         placeholder="Linked mobile number" className="w-full bg-slate-50/50 border border-slate-200/80 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 rounded-2xl py-3 pl-11 pr-4 text-slate-900 text-sm font-medium transition-all !outline-none" maxLength={10} />
                     </div>
                   </div>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2 mt-2">
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading} className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-indigo-900/10 transition-all flex items-center justify-center gap-2 mt-2">
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Send OTP <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
                 </form>
@@ -465,7 +465,7 @@ const LoginPage = ({ onLogin }) => {
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
                     type="submit" disabled={loading}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-slate-900/10 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white rounded-2xl py-3.5 text-sm font-bold shadow-sm shadow-indigo-900/10 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {loading ? <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : <>Sign In <PaperPlaneTilt size={16} weight="bold" /></>}
                   </motion.button>
