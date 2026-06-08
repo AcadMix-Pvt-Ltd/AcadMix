@@ -75,8 +75,8 @@ export default function SimulationIDE({
         </div>
 
         {/* Output/Visualization Pane */}
-        <div className="w-1/2 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900/50">
-          <div className="flex items-center justify-between mb-4">
+        <div className="w-1/2 p-6 flex flex-col h-full min-h-0 bg-gray-50 dark:bg-gray-900/50">
+          <div className="flex items-center justify-between mb-4 flex-shrink-0">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
               Simulation Output
             </h3>
@@ -90,10 +90,10 @@ export default function SimulationIDE({
             )}
           </div>
           
-          <div className="w-full h-[calc(100%-2rem)] bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-inner">
+          <div className="w-full flex-1 min-h-0 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 shadow-inner flex flex-col overflow-hidden">
             {output ? (
               typeof output === 'string' ? (
-                <pre className="font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                <pre className="font-mono text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap h-full overflow-y-auto">
                   {output}
                 </pre>
               ) : (
