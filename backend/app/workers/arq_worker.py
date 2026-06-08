@@ -63,7 +63,7 @@ async def generate_interview_feedback_task(ctx, interview_id: str, college_id: s
         # Call LLM for feedback via Production Gateway
         try:
             from app.services.llm_gateway import gateway
-            from app.services.interview_service import get_feedback_system_prompt
+            from app.services.interview_service import get_feedback_system_prompt, repair_and_load_json
 
             feedback_prompt = get_feedback_system_prompt(interview.interview_type)
 
@@ -76,7 +76,7 @@ async def generate_interview_feedback_task(ctx, interview_id: str, college_id: s
                 json_mode=True,
                 max_tokens=3000,
             )
-            feedback = json.loads(feedback_raw)
+            feedback = repair_and_load_json(feedback_raw)
         except Exception as e:
             logger.error("[interview-feedback] LLM failed: %s", e)
             feedback = {

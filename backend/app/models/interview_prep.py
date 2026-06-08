@@ -34,6 +34,10 @@ class MockInterview(Base, SoftDeleteMixin):
     question_count   = Column(Integer, nullable=False, default=0)
     duration_seconds = Column(Integer, nullable=True)
     status           = Column(String, nullable=False, server_default='in_progress')       # in_progress/completed/abandoned
+    current_student_code = Column(Text, nullable=True)
+    current_student_language = Column(String, nullable=True, server_default='python')
+    whiteboard_description = Column(Text, nullable=True)
+    current_stage    = Column(String, nullable=False, server_default='icebreaker')
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     completed_at     = Column(DateTime(timezone=True), nullable=True)
 

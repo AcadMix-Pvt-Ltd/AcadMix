@@ -243,3 +243,68 @@ async def assemblyai_webhook(request: Request, session: AsyncSession = Depends(g
     """Handle async callbacks from AssemblyAI for audio evaluation."""
     payload = await request.json()
     return await interview_service.handle_assemblyai_webhook(payload, session, request.query_params.get("token"))
+
+
+@router.post("/interview/{interview_id}/sync-state")
+async def sync_state(
+    interview_id: str,
+    req: dict,
+    user: dict = Depends(require_role("student")),
+    session: AsyncSession = Depends(get_db),
+):
+    """Fallback HTTP state sync when WebRTC data channels are closed/failed."""
+    from sqlalchemy.future import select
+    from sqlalchemy.orm.attributes import flag_modified
+    stmt = select(models.MockInterview).where(
+        models.MockInterview.id == interview_id,
+        models.MockInterview.student_id == user["id"],
+        models.MockInterview.college_id == user["college_id"],
+    )
+    result = await session.execute(stmt)
+    interview = result.scalars().first()
+    if not interview:
+        raise HTTPException(status_code=404, detail="Interview session not found")
+
+    if "code" in req:
+        interview.current_student_code = req["code"]
+        flag_modified(interview, "current_student_code")
+    if "language" in req:
+        interview.current_student_language = req["language"]
+        flag_modified(interview, "current_student_language")
+    if "whiteboard_description" in req:
+        interview.whiteboard_description = req["whiteboard_description"]
+        flag_modified(interview, "whiteboard_description")
+    elif "whiteboard_image" in req:
+        try:
+            import base64
+            from app.services.llm_gateway import gateway
+            img_data = req["whiteboard_image"]
+            if img_data.startswith("data:image/png;base64,"):
+                base64_str = img_data.split(",", 1)[1]
+            else:
+                base64_str = img_data
+            
+            image_bytes = base64.b64decode(base64_str)
+            prompt = (
+                "The candidate is sketching their system design or visual answer on a whiteboard. "
+                "Write a concise, 2-sentence description of what they have drawn. "
+                "Describe the shapes, boxes, databases, servers, labels, or flow lines present in the drawing. "
+                "Keep it factual and direct so the interviewer knows what is on the whiteboard."
+            )
+            description = await gateway.complete(
+                purpose="interview",
+                messages=[{"role": "user", "content": prompt}],
+                media_bytes=image_bytes,
+                mime_type="image/png"
+            )
+            interview.whiteboard_description = description.strip()
+            flag_modified(interview, "whiteboard_description")
+        except Exception as ve:
+            print(f"Failed to process whiteboard image in sync-state: {ve}")
+            
+    if "current_stage" in req:
+        interview.current_stage = req["current_stage"]
+        flag_modified(interview, "current_stage")
+
+    await session.commit()
+    return {"status": "success"}

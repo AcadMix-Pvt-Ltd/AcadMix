@@ -23,6 +23,50 @@ from sqlalchemy import func as sqlfunc, extract
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import settings
+
+
+def repair_and_load_json(json_str: str) -> dict:
+    import re
+    import json
+    
+    cleaned = json_str.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+
+    start_idx = cleaned.find("{")
+    end_idx = cleaned.rfind("}")
+    if start_idx == -1 or end_idx == -1:
+        raise ValueError("No valid JSON object found in text")
+    
+    json_body = cleaned[start_idx:end_idx + 1]
+
+    # Fix trailing commas before closing braces/brackets
+    json_body = re.sub(r',\s*([\]}])', r'\1', json_body)
+
+    try:
+        return json.loads(json_body)
+    except json.JSONDecodeError as de:
+        try:
+            lines = json_body.split("\n")
+            repaired_lines = []
+            in_string = False
+            for line in lines:
+                quotes_count = line.count('"') - line.count('\\"')
+                if quotes_count % 2 != 0:
+                    in_string = not in_string
+                if in_string:
+                    repaired_lines.append(line + "\\n")
+                else:
+                    repaired_lines.append(line)
+            repaired_body = "".join(repaired_lines)
+            return json.loads(repaired_body)
+        except Exception:
+            raise de
 from app import models
 
 logger = logging.getLogger("acadmix.interview_service")
@@ -625,6 +669,17 @@ async def send_message(interview_id: str, content: str, user: dict, session: Asy
     interview.question_count = q_number
     flag_modified(interview, "conversation")
 
+    # Sync current_stage based on LLM response tags
+    if "[SHOW_CODE_EDITOR" in ai_response.upper():
+        interview.current_stage = "coding"
+        flag_modified(interview, "current_stage")
+    elif "[SHOW_WHITEBOARD]" in ai_response.upper():
+        interview.current_stage = "whiteboard"
+        flag_modified(interview, "current_stage")
+    elif "[HIDE_CODE_EDITOR]" in ai_response.upper():
+        interview.current_stage = "wrapup"
+        flag_modified(interview, "current_stage")
+
     return {
         "ai_response": ai_response,
         "question_number": q_number,
@@ -704,6 +759,21 @@ async def append_conversation_turns(interview_id: str, req: dict, user: dict, se
         interview.conversation = conversation
         interview.question_count = _conversation_question_count(conversation)
         flag_modified(interview, "conversation")
+        
+        # Scan for state-change tags in appended assistant turns to sync current_stage
+        for turn in raw_turns:
+            if turn.get("role") == "assistant":
+                content_upper = (turn.get("content") or "").upper()
+                if "[SHOW_CODE_EDITOR" in content_upper:
+                    interview.current_stage = "coding"
+                    flag_modified(interview, "current_stage")
+                elif "[SHOW_WHITEBOARD]" in content_upper:
+                    interview.current_stage = "whiteboard"
+                    flag_modified(interview, "current_stage")
+                elif "[HIDE_CODE_EDITOR]" in content_upper:
+                    interview.current_stage = "wrapup"
+                    flag_modified(interview, "current_stage")
+                    
         await session.commit()
 
     return {
@@ -761,8 +831,8 @@ async def end_interview(interview_id: str, user: dict, session: AsyncSession) ->
         ]
         feedback_raw = await call_llm(eval_messages, json_mode=True, max_tokens=2048)
         try:
-            feedback = json.loads(feedback_raw)
-        except json.JSONDecodeError:
+            feedback = repair_and_load_json(feedback_raw)
+        except Exception:
             feedback = {"overall_score": 50, "scores": {}, "overall_comment": "Feedback parsing failed."}
 
         interview.status = "completed"

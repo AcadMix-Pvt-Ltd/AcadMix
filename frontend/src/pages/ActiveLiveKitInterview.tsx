@@ -474,6 +474,16 @@ const WhiteboardPanel = ({
       console.error("Failed to publish whiteboard data:", err);
       toast.error("Failed to submit whiteboard design");
     }
+
+    try {
+      await api.post(`/interview/${room.name}/sync-state`, {
+        whiteboard_image: imgData,
+        current_stage: 'whiteboard'
+      });
+      console.log("Synced whiteboard image to backend via fallback HTTP");
+    } catch (err) {
+      console.error("Failed to sync whiteboard to backend via HTTP fallback:", err);
+    }
   };
   
   return (
@@ -714,7 +724,7 @@ export const ActiveLiveKitInterview = ({
   // Debounced background code state sync to the voice agent
   useEffect(() => {
     if (!showCodeEditor || rightPanelMode !== 'sandbox' || !code || !localParticipant) return;
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       try {
         const payload = JSON.stringify({ code, language: editorLanguage });
         const encoder = new TextEncoder();
@@ -724,9 +734,20 @@ export const ActiveLiveKitInterview = ({
       } catch (e) {
         console.error("Failed to sync code state:", e);
       }
+
+      try {
+        await api.post(`/interview/${room.name}/sync-state`, {
+          code,
+          language: editorLanguage,
+          current_stage: 'coding'
+        });
+        console.log("Synced code to backend via fallback HTTP");
+      } catch (err) {
+        console.error("Failed to sync code to backend via HTTP fallback:", err);
+      }
     }, 10000);
     return () => clearTimeout(timer);
-  }, [code, editorLanguage, showCodeEditor, rightPanelMode, localParticipant]);
+  }, [code, editorLanguage, showCodeEditor, rightPanelMode, localParticipant, room]);
 
   const handleRun = async () => {
     if (!code.trim() || running) return;

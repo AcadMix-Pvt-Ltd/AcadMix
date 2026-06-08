@@ -250,6 +250,19 @@ def make_strip_tags_and_code_blocks(room, agent):
             yield chunk
     return _transform
 
+def make_lenient_tag_cleaner():
+    async def _transform(text: AsyncIterable[str]) -> AsyncIterable[str]:
+        async for chunk in text:
+            cleaned = re.sub(
+                r'\[?\b(SHOW_CODE_EDITOR|HIDE_CODE_EDITOR|SHOW_WHITEBOARD)\b[^\w]*',
+                '',
+                chunk,
+                flags=re.IGNORECASE
+            )
+            cleaned = cleaned.replace("[", "").replace("]", "")
+            yield cleaned
+    return _transform
+
 MAX_DEEPGRAM_KEYTERMS = 80
 COMMON_DEEPGRAM_KEYTERMS = (
     "AcadMix",
@@ -528,6 +541,12 @@ class NoResponseController:
             code_draft = self._agent.current_student_code
             lang = self._agent.current_student_language
             
+            if not code_draft:
+                db_ctx = await get_interview_context(self._session.room.name)
+                if db_ctx and db_ctx.current_student_code:
+                    code_draft = db_ctx.current_student_code
+                    lang = db_ctx.current_student_language or lang
+            
             prompt = (
                 f"The candidate is silent while working on this coding question: '{last_q}'.\n"
                 f"Here is their current code draft in {lang}:\n"
@@ -552,6 +571,11 @@ class NoResponseController:
         try:
             last_q = next((msg.content for msg in reversed(self._agent.chat_ctx.messages) if msg.role == "assistant"), "")
             drawing_desc = self._agent.whiteboard_description
+            
+            if not drawing_desc:
+                db_ctx = await get_interview_context(self._session.room.name)
+                if db_ctx and db_ctx.whiteboard_description:
+                    drawing_desc = db_ctx.whiteboard_description
             
             prompt = (
                 f"The candidate is silent while designing a system on the whiteboard for this task: '{last_q}'.\n"
@@ -600,6 +624,15 @@ class NoResponseController:
             is_hr_or_behavioral = self._agent.interview_type in ("hr", "behavioral")
             delay = 20.0 if is_hr_or_behavioral else NO_RESPONSE_DELAY_SECONDS
 
+            # Fetch DB context to check dynamic fallback states
+            db_ctx = await get_interview_context(self._session.room.name)
+            current_stage = db_ctx.current_stage if db_ctx else "icebreaker"
+            db_code = db_ctx.current_student_code if db_ctx else ""
+            db_whiteboard = db_ctx.whiteboard_description if db_ctx else ""
+
+            is_editor_active = self._agent.editor_active or (current_stage == "coding")
+            is_whiteboard_active = self._agent.whiteboard_active or (current_stage == "whiteboard")
+
             # ── Stage 0 → wait delay then nudge ────────────────────────────
             if self._stage == 0:
                 await asyncio.sleep(delay)
@@ -608,9 +641,9 @@ class NoResponseController:
 
                 # Choose nudge message based on editor or whiteboard activity
                 nudge_message = NO_RESPONSE_PROMPT_1
-                if self._agent.editor_active and self._agent.current_student_code:
+                if is_editor_active and (self._agent.current_student_code or db_code):
                     nudge_message = await self._generate_code_hint()
-                elif self._agent.whiteboard_active and self._agent.whiteboard_description:
+                elif is_whiteboard_active and (self._agent.whiteboard_description or db_whiteboard):
                     nudge_message = await self._generate_whiteboard_hint()
                 elif is_hr_or_behavioral:
                     nudge_message = await self._generate_hr_hint()
@@ -849,6 +882,7 @@ async def entrypoint(ctx: JobContext):
         use_tts_aligned_transcript=True,
         tts_text_transforms=[
             make_strip_tags_and_code_blocks(ctx.room, agent),
+            make_lenient_tag_cleaner(),
             text_transforms.filter_markdown,
         ],
         turn_handling={
