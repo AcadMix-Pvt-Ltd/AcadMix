@@ -552,6 +552,20 @@ Speak naturally and professionally. Do NOT include any brackets, placeholders, o
     await session.flush()
     interview_id = interview.id
 
+    # Create message record in normalized table (dual-write)
+    first_msg = models.MockInterviewMessage(
+        college_id=user["college_id"],
+        student_id=user["id"],
+        interview_id=interview_id,
+        role="assistant",
+        content=first_question,
+        timestamp=now.isoformat(),
+        source="http",
+        kind="question",
+        q_number=1,
+    )
+    session.add(first_msg)
+
     return {
         "interview_id": interview_id,
         "first_question": first_question,
@@ -669,6 +683,32 @@ async def send_message(interview_id: str, content: str, user: dict, session: Asy
     interview.question_count = q_number
     flag_modified(interview, "conversation")
 
+    # Create message records in normalized table (dual-write)
+    user_msg = models.MockInterviewMessage(
+        college_id=interview.college_id,
+        student_id=interview.student_id,
+        interview_id=interview.id,
+        role="user",
+        content=content.strip(),
+        timestamp=now.isoformat(),
+        source="http",
+        kind="answer",
+        q_number=q_number,
+    )
+    ai_msg = models.MockInterviewMessage(
+        college_id=interview.college_id,
+        student_id=interview.student_id,
+        interview_id=interview.id,
+        role="assistant",
+        content=ai_response,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        source="http",
+        kind="question",
+        q_number=q_number,
+    )
+    session.add(user_msg)
+    session.add(ai_msg)
+
     # Sync current_stage based on LLM response tags
     if "[SHOW_CODE_EDITOR" in ai_response.upper():
         interview.current_stage = "coding"
@@ -760,6 +800,20 @@ async def append_conversation_turns(interview_id: str, req: dict, user: dict, se
         interview.question_count = _conversation_question_count(conversation)
         flag_modified(interview, "conversation")
         
+        # Dual write to normalized table
+        for turn_data in conversation[-appended:]:
+            msg_obj = models.MockInterviewMessage(
+                college_id=interview.college_id,
+                student_id=interview.student_id,
+                interview_id=interview.id,
+                role=turn_data["role"],
+                content=turn_data["content"],
+                timestamp=turn_data["timestamp"],
+                source=turn_data["source"],
+                kind=turn_data["kind"],
+            )
+            session.add(msg_obj)
+        
         # Scan for state-change tags in appended assistant turns to sync current_stage
         for turn in raw_turns:
             if turn.get("role") == "assistant":
@@ -819,10 +873,23 @@ async def end_interview(interview_id: str, user: dict, session: AsyncSession) ->
         now = datetime.now(timezone.utc)
         duration = int((now - interview.created_at.replace(tzinfo=timezone.utc)).total_seconds()) if interview.created_at else 0
 
+        # Fetch messages from new table, sorted by sequence or timestamp
+        stmt_msgs = select(models.MockInterviewMessage).where(
+            models.MockInterviewMessage.interview_id == interview_id,
+            models.MockInterviewMessage.is_deleted == False
+        ).order_by(models.MockInterviewMessage.q_number, models.MockInterviewMessage.created_at)
+        res_msgs = await session.execute(stmt_msgs)
+        messages = res_msgs.scalars().all()
+
         transcript_lines = []
-        for msg in (interview.conversation or []):
-            role_label = "Interviewer" if msg["role"] == "assistant" else "Candidate"
-            transcript_lines.append(f"{role_label}: {msg['content']}")
+        if messages:
+            for msg in messages:
+                role_label = "Interviewer" if msg.role == "assistant" else "Candidate"
+                transcript_lines.append(f"{role_label}: {msg.content}")
+        else:
+            for msg in (interview.conversation or []):
+                role_label = "Interviewer" if msg["role"] == "assistant" else "Candidate"
+                transcript_lines.append(f"{role_label}: {msg['content']}")
         transcript = "\n\n".join(transcript_lines)
 
         eval_messages = [
@@ -1039,7 +1106,9 @@ async def process_audio_evaluation(interview_id: str, content: bytes, content_ty
         feedback["assembly_ai_status"] = "processing"
         
         interview.ai_feedback = feedback
+        interview.assembly_ai_job_id = transcript_id
         flag_modified(interview, "ai_feedback")
+        flag_modified(interview, "assembly_ai_job_id")
         await session.commit()
         
         return {"message": "Audio evaluation started", "job_id": transcript_id}
@@ -1068,7 +1137,7 @@ async def handle_assemblyai_webhook(
     # We will fetch recent interviews and filter manually if the direct query is complex, 
     # but a simple direct query is better:
     stmt = select(models.MockInterview).where(
-        models.MockInterview.ai_feedback['assembly_ai_job_id'].astext == transcript_id
+        models.MockInterview.assembly_ai_job_id == transcript_id
     )
     result = await session.execute(stmt)
     interview = result.scalars().first()

@@ -53,11 +53,23 @@ async def generate_interview_feedback_task(ctx, interview_id: str, college_id: s
             logger.error("[interview-feedback] Interview not found: %s", interview_id)
             return {"status": "failed", "error": "Interview not found"}
 
-        # Build transcript
+        # Build transcript from normalized table (with legacy fallback)
+        stmt_msgs = select(models.MockInterviewMessage).where(
+            models.MockInterviewMessage.interview_id == interview_id,
+            models.MockInterviewMessage.is_deleted == False
+        ).order_by(models.MockInterviewMessage.q_number, models.MockInterviewMessage.created_at)
+        res_msgs = await session.execute(stmt_msgs)
+        messages = res_msgs.scalars().all()
+
         transcript_lines = []
-        for msg in (interview.conversation or []):
-            role_label = "Interviewer" if msg["role"] == "assistant" else "Candidate"
-            transcript_lines.append(f"{role_label}: {msg['content']}")
+        if messages:
+            for msg in messages:
+                role_label = "Interviewer" if msg.role == "assistant" else "Candidate"
+                transcript_lines.append(f"{role_label}: {msg.content}")
+        else:
+            for msg in (interview.conversation or []):
+                role_label = "Interviewer" if msg["role"] == "assistant" else "Candidate"
+                transcript_lines.append(f"{role_label}: {msg['content']}")
         transcript = "\n\n".join(transcript_lines)
 
         # Call LLM for feedback via Production Gateway

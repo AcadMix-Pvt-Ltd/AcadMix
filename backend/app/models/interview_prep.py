@@ -6,6 +6,7 @@ from sqlalchemy import Column, String, Integer, Float, ForeignKey, DateTime, Tex
 from sqlalchemy.sql import text as sa_text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import uuid
 from database import Base
 from app.models.core import SoftDeleteMixin
@@ -38,8 +39,31 @@ class MockInterview(Base, SoftDeleteMixin):
     current_student_language = Column(String, nullable=True, server_default='python')
     whiteboard_description = Column(Text, nullable=True)
     current_stage    = Column(String, nullable=False, server_default='icebreaker')
+    assembly_ai_job_id = Column(String, nullable=True, index=True)
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     completed_at     = Column(DateTime(timezone=True), nullable=True)
+
+    messages = relationship("MockInterviewMessage", back_populates="interview", cascade="all, delete-orphan")
+
+
+class MockInterviewMessage(Base, SoftDeleteMixin):
+    """Stores individual conversation turns of a mock interview (normalized table)."""
+    __tablename__ = "mock_interview_messages"
+
+    id           = Column(String, primary_key=True, index=True, default=generate_uuid)
+    college_id   = Column(String, ForeignKey("colleges.id", ondelete="CASCADE"), nullable=False, index=True)
+    student_id   = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    interview_id = Column(String, ForeignKey("mock_interviews.id", ondelete="CASCADE"), nullable=False, index=True)
+    
+    role         = Column(String, nullable=False)                        # assistant / user
+    content      = Column(Text, nullable=False)                          # message text
+    timestamp    = Column(String, nullable=True)                          # ISO string
+    source       = Column(String, nullable=False, server_default='http')  # livekit / http
+    kind         = Column(String, nullable=False, server_default='question') # question / answer / nudge / clarification
+    q_number     = Column(Integer, nullable=True)                        # sequence count
+    created_at   = Column(DateTime(timezone=True), server_default=func.now())
+
+    interview = relationship("MockInterview", back_populates="messages")
 
 
 class ResumeScore(Base, SoftDeleteMixin):
