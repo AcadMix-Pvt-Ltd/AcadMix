@@ -865,7 +865,7 @@ async def entrypoint(ctx: JobContext):
         stt=deepgram.STT(**_stt_options),
         llm=google.LLM(**_llm_kwargs),
         tts=cartesia.TTS(**tts_kwargs),
-        vad=silero.VAD.load(),
+        vad=silero.VAD.load(min_silence_duration=0.8),
         chat_ctx=initial_ctx,
         use_tts_aligned_transcript=True,
     )
